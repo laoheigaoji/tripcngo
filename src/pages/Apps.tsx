@@ -1,0 +1,332 @@
+import React, { useState, useEffect } from 'react';
+import { Plane, Bed, TrainFront, Globe, Youtube, Phone, Music, Shield, Play, PhoneCall } from 'lucide-react';
+
+const MENU_ITEMS = [
+  { id: 'apps', name: '旅行必备APP', icon: Plane },
+  { id: 'hotels', name: '酒店预定', icon: Bed },
+  { id: 'transit', name: '交通出行', icon: TrainFront },
+  { id: 'websites', name: '权威网站', icon: Globe },
+  { id: 'youtube', name: 'YouTube达人', icon: Youtube },
+  { id: 'tiktok', name: 'TikTok达人', icon: Music },
+  { id: 'phones', name: '服务热线', icon: PhoneCall },
+];
+
+const SECTIONS = [
+  {
+    id: 'apps',
+    title: '旅行必备APP',
+    icon: Plane,
+    items: [
+      {
+        name: 'WeChat(微信)',
+        desc: '不仅可以聊天，还可以支付、打车，在任何地方都可以使用',
+        logo: <div className="w-[52px] h-[52px] rounded-[14px] bg-[#07c160] flex items-center justify-center flex-shrink-0 text-white shadow-sm"><svg width="32" height="32" viewBox="0 0 24 24" fill="currentColor"><path d="M8.5 13.5c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5zm6 0c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5zm-3-5.5c-3.59 0-6.5 2.46-6.5 5.5 0 1.69.88 3.19 2.27 4.19l-.73 2.16 2.37-1.25c.81.23 1.68.36 2.59.36 3.59 0 6.5-2.46 6.5-5.5s-2.91-5.5-6.5-5.5z"/></svg></div>
+      },
+      {
+        name: 'Alipay(支付宝)',
+        desc: '几乎可以在所有地方使用，可以用于支付、外卖、打车、买票等',
+        logo: <div className="w-[52px] h-[52px] rounded-[14px] bg-[#1677ff] flex items-center justify-center flex-shrink-0 text-white font-bold text-2xl shadow-sm">支</div>
+      },
+      {
+        name: 'MeiTuan(美团)',
+        desc: '吃住行一条龙，帮助大家吃的更好，生活更好',
+        logo: <div className="w-[52px] h-[52px] rounded-[14px] bg-[#ffc300] flex items-center justify-center flex-shrink-0 text-amber-900 font-bold text-xl shadow-sm">美团</div>
+      },
+      {
+        name: 'Xiaohongshu(小红书)',
+        desc: '分享生活、美食、旅行、购物，分享一切美好的事物',
+        logo: <div className="w-[52px] h-[52px] rounded-[14px] bg-[#ff2442] flex items-center justify-center flex-shrink-0 text-white font-bold text-xl shadow-sm">小红书</div>
+      }
+    ]
+  },
+  {
+    id: 'hotels',
+    title: '酒店预定',
+    icon: Bed,
+    items: [
+      {
+        name: 'Trip(携程)',
+        desc: '中国一站式旅行服务平台，提供酒店、机票、火车票预订等服务',
+        logo: <div className="w-[52px] h-[52px] rounded-[14px] bg-[#2577e3] flex items-center justify-center flex-shrink-0 text-white font-bold text-lg shadow-sm tracking-tighter">Trip.</div>
+      },
+      {
+        name: 'Airbnb(爱彼迎)',
+        desc: '全球最大的民宿预订平台，提供短租、长租、公寓等多种住宿选择',
+        logo: <div className="w-[52px] h-[52px] rounded-[14px] bg-[#ff5a5f] flex items-center justify-center flex-shrink-0 text-white font-bold shadow-sm"><svg width="28" height="28" viewBox="0 0 24 24" fill="currentColor"><path d="M12.0003 1.25L1.5126 12.0063H3.9482L12.0003 3.7547L20.0523 12.0063H22.488L12.0003 1.25Z"/></svg></div>
+      },
+      {
+        name: 'Booking(缤客)',
+        desc: '全球酒店、民宿、度假村预订，支持灵活取消政策及多语言服务',
+        logo: <div className="w-[52px] h-[52px] rounded-[14px] bg-[#003580] flex items-center justify-center flex-shrink-0 text-white font-bold text-[10px] shadow-sm">Booking</div>
+      }
+    ]
+  },
+  {
+    id: 'transit',
+    title: '交通出行',
+    icon: TrainFront,
+    items: [
+      {
+        name: 'GaoDe(高德)',
+        desc: '中国领先的导航软件，提供实时路况、公交路线、驾车导航等服务',
+        logo: <div className="w-[52px] h-[52px] rounded-[14px] bg-gradient-to-br from-blue-400 to-blue-500 overflow-hidden flex items-center justify-center flex-shrink-0 shadow-sm relative"><div className="absolute w-[40px] h-[40px] bg-white rounded-full flex items-center justify-center"><Plane className="w-5 h-5 text-blue-500 transform -rotate-45" /></div></div>
+      },
+      {
+        name: 'DiDi(滴滴出行)',
+        desc: '中国主流网约车平台，支持英文界面及境外银行卡支付。',
+        logo: <div className="w-[52px] h-[52px] rounded-[14px] bg-[#fc9153] flex items-center justify-center flex-shrink-0 text-white font-bold text-center text-sm leading-tight shadow-sm">DiDi<br/><span className="text-[10px]">滴滴</span></div>
+      },
+      {
+        name: '12306(中国铁路)',
+        desc: '中国铁路客户服务中心，提供火车票预订、退票、改签等服务',
+        logo: <div className="w-[52px] h-[52px] rounded-[14px] bg-[#0f60aa] flex items-center justify-center flex-shrink-0 text-white font-bold text-[10px] text-center shadow-sm relative"><div className="absolute inset-x-0 bottom-1 flex justify-center"><span className="bg-white text-[#0f60aa] px-1 rounded-[4px] text-[8px]">中国铁路</span></div><span className="text-[14px] font-bold mt-[-8px]">12306</span></div>
+      }
+    ]
+  },
+  {
+    id: 'websites',
+    title: '权威网站',
+    icon: Globe,
+    items: [
+      {
+        name: '中国国家移民管理局(NIA)',
+        desc: '提供签证政策、入境免签时长等官方信息。',
+        logo: <div className="w-[52px] h-[52px] rounded-[14px] bg-white border border-yellow-200 border-2 flex items-center justify-center flex-shrink-0 text-red-600 shadow-sm"><Shield className="w-8 h-8 fill-red-600 text-yellow-400" /></div>
+      },
+      {
+        name: '中国文化和旅游部(MCT)',
+        desc: '提供文化和旅游政策、法律法规等官方信息。',
+        logo: <div className="w-[52px] h-[52px] rounded-[14px] bg-white border border-yellow-200 border-2 flex items-center justify-center flex-shrink-0 text-red-600 shadow-sm"><Globe className="w-8 h-8 fill-red-600 text-yellow-400" /></div>
+      },
+      {
+        name: '中国领事服务网(Consular Services)',
+        desc: '提供领事服务、签证政策、入境免签时长等官方信息。',
+        logo: <div className="w-[52px] h-[52px] rounded-[14px] bg-white border border-blue-200 border-2 flex items-center justify-center flex-shrink-0 text-blue-800 shadow-sm"><Shield className="w-8 h-8 text-blue-800" /></div>
+      },
+      {
+        name: '中国签证在线填表(COVA)',
+        desc: '在线填写申请表',
+        logo: <div className="w-[52px] h-[52px] rounded-[14px] bg-white border border-blue-200 flex items-center justify-center flex-shrink-0 text-blue-800 shadow-sm"><div className="w-8 h-8 bg-blue-800 rounded-full flex items-center justify-center"><span className="text-white text-[8px] font-bold">COVA</span></div></div>
+      },
+      {
+        name: '中国签证服务中心(CVASC)',
+        desc: '提供与中国普通签证申请相关的事务性服务的机构',
+        logo: <div className="w-[52px] h-[52px] rounded-[14px] bg-white border border-blue-200 flex items-center justify-center flex-shrink-0 text-blue-800 shadow-sm"><div className="w-8 h-8 bg-blue-600 rounded flex items-center justify-center"><Globe className="w-6 h-6 text-white" /></div></div>
+      }
+    ]
+  },
+  {
+    id: 'youtube',
+    title: 'YouTube达人',
+    icon: Youtube,
+    items: [
+      {
+        name: 'Liziqi(李子柒)',
+        desc: '知名中国乡村生活博主',
+        logo: <img src="https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&q=80&w=150" className="w-[52px] h-[52px] rounded-[14px] object-cover shadow-sm bg-gray-100 flex-shrink-0" alt="Liziqi" />
+      },
+      {
+        name: 'IShowSpeed(甲亢哥)',
+        desc: '2025年3月开启中国行',
+        logo: <img src="https://images.unsplash.com/photo-1548142813-c348350df52b?auto=format&fit=crop&q=80&w=150" className="w-[52px] h-[52px] rounded-[14px] object-cover shadow-sm bg-gray-100 flex-shrink-0" alt="Speed" />
+      },
+      {
+        name: 'Dianxi Xiaoge(滇西小哥)',
+        desc: '滇西小哥，一个地道的云南妹子',
+        logo: <img src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=150" className="w-[52px] h-[52px] rounded-[14px] object-cover shadow-sm bg-gray-100 flex-shrink-0" alt="Dianxi" />
+      },
+      {
+        name: 'The Food Ranger',
+        desc: '环游世界，品尝当地美食',
+        logo: <img src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80&w=150" className="w-[52px] h-[52px] rounded-[14px] object-cover shadow-sm bg-gray-100 flex-shrink-0" alt="Food Ranger" />
+      }
+    ]
+  },
+  {
+    id: 'tiktok',
+    title: 'TikTok达人',
+    icon: Music,
+    items: [
+      {
+        name: 'jieji.in.china',
+        desc: '8年前离开英国，开启中国之旅！全球体验旅行与刺激！',
+        logo: <img src="https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?auto=format&fit=crop&q=80&w=150" className="w-[52px] h-[52px] rounded-[14px] object-cover shadow-sm bg-gray-100 flex-shrink-0" alt="jieji" />
+      },
+      {
+        name: 'tc_inchina',
+        desc: '约旦皇室前管家，在中国生活10年中国！爱美食！爱中国❤️🔥',
+        logo: <img src="https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&q=80&w=150" className="w-[52px] h-[52px] rounded-[14px] object-cover shadow-sm bg-gray-100 flex-shrink-0" alt="tc_inchina" />
+      },
+      {
+        name: 'dabai_inchina',
+        desc: '大白，在英国主修中文，中国文化真的多姿多彩',
+        logo: <img src="https://images.unsplash.com/photo-1544725176-7c40e5a71c5e?auto=format&fit=crop&q=80&w=150" className="w-[52px] h-[52px] rounded-[14px] object-cover shadow-sm bg-gray-100 flex-shrink-0" alt="dabai" />
+      },
+      {
+        name: 'blondieinchina',
+        desc: '嗨，我是Amy！居住在中国的全职YouTuber。',
+        logo: <img src="https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&q=80&w=150" className="w-[52px] h-[52px] rounded-[14px] object-cover shadow-sm bg-gray-100 flex-shrink-0" alt="blondie" />
+      }
+    ]
+  },
+  {
+    id: 'phones',
+    title: '服务热线',
+    icon: PhoneCall,
+    items: [
+      {
+        name: '12308',
+        desc: '外交部全球领事热线',
+        logo: <div className="w-[52px] h-[52px] rounded-[14px] bg-gray-50 flex items-center justify-center flex-shrink-0 text-gray-500 border border-gray-100 shadow-sm"><PhoneCall className="w-6 h-6" /></div>
+      },
+      {
+        name: '12367',
+        desc: '国家移民管理局',
+        logo: <div className="w-[52px] h-[52px] rounded-[14px] bg-gray-50 flex items-center justify-center flex-shrink-0 text-gray-500 border border-gray-100 shadow-sm"><PhoneCall className="w-6 h-6" /></div>
+      },
+      {
+        name: '110',
+        desc: '报警电话',
+        logo: <div className="w-[52px] h-[52px] rounded-[14px] bg-gray-50 flex items-center justify-center flex-shrink-0 text-gray-400 border border-gray-100 shadow-sm"><PhoneCall className="w-6 h-6" /></div>
+      },
+      {
+        name: '119',
+        desc: '火警电话',
+        logo: <div className="w-[52px] h-[52px] rounded-[14px] bg-gray-50 flex items-center justify-center flex-shrink-0 text-gray-400 border border-gray-100 shadow-sm"><PhoneCall className="w-6 h-6" /></div>
+      },
+      {
+        name: '120',
+        desc: '急救电话',
+        logo: <div className="w-[52px] h-[52px] rounded-[14px] bg-gray-50 flex items-center justify-center flex-shrink-0 text-gray-400 border border-gray-100 shadow-sm"><PhoneCall className="w-6 h-6" /></div>
+      }
+    ]
+  }
+];
+
+export default function Apps() {
+  const [activeSection, setActiveSection] = useState('apps');
+
+  useEffect(() => {
+    // Basic Intersection Observer for active section highlighting
+    const observer = new IntersectionObserver((entries) => {
+      // Find the deeply intersecting entry
+      const visible = entries.find((entry) => entry.isIntersecting);
+      if (visible) {
+        setActiveSection(visible.target.id);
+      }
+    }, { rootMargin: '-20% 0px -60% 0px' });
+
+    SECTIONS.forEach(s => {
+      const el = document.getElementById(`section-${s.id}`);
+      if (el) observer.observe(el);
+    });
+
+    return () => observer.disconnect();
+  }, []);
+
+  const scrollToSection = (e: React.MouseEvent<HTMLAnchorElement>, id: string) => {
+    e.preventDefault();
+    const el = document.getElementById(`section-${id}`);
+    if (el) {
+      // Offset for sticky header if exists + padding
+      const y = el.getBoundingClientRect().top + window.scrollY - 100;
+      window.scrollTo({ top: y, behavior: 'smooth' });
+    }
+  };
+
+  return (
+    <div className="w-full bg-[#f9f9f9] pb-20">
+      {/* Header Banner */}
+      <section className="relative h-[480px] flex items-center pt-16 bg-gray-900 overflow-hidden">
+        <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1548818559-00f7e4a9e25d?auto=format&fit=crop&q=80&w=2000')] bg-cover bg-center" />
+        <div className="absolute inset-0 bg-black/40 bg-gradient-to-r from-black/80 via-black/40 to-transparent" />
+        
+        <div className="max-w-[1240px] w-full mx-auto px-6 relative z-10 text-left">
+          <h1 className="text-4xl md:text-5xl font-bold text-white mb-6 drop-shadow-md tracking-tight">
+            中国之旅必备应用 2026<span className="text-white/90 font-normal">（最新版）</span>
+          </h1>
+          <p className="text-lg md:text-xl text-white/90 max-w-3xl leading-relaxed drop-shadow-sm font-medium">
+            Google、Uber 在中国无法使用？无需担心。本指南为您收录 2026 年最受当地人喜爱的必备 App，涵盖移动支付、交通、社交、外卖，让您像本地人一样轻松畅游中国。
+          </p>
+        </div>
+      </section>
+
+      {/* Main Content Area */}
+      <div className="max-w-[1280px] mx-auto px-6 mt-12 flex flex-col lg:flex-row gap-8 lg:gap-12 relative items-start">
+        
+        {/* Left Sidebar Menu */}
+        <div className="w-full lg:w-[240px] flex-shrink-0 sticky top-24 z-20">
+           <div className="bg-white rounded-2xl p-4 shadow-sm border border-gray-100">
+             <nav className="space-y-1">
+               {MENU_ITEMS.map((item) => {
+                 const isActive = activeSection === item.id;
+                 return (
+                   <a 
+                     key={item.id}
+                     href={`#section-${item.id}`} 
+                     onClick={(e) => scrollToSection(e, item.id)}
+                     className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-colors ${
+                       isActive 
+                         ? 'bg-green-50 text-green-600 font-bold' 
+                         : 'text-gray-600 hover:bg-gray-50 font-medium'
+                     }`}
+                   >
+                     <item.icon className="w-[18px] h-[18px]" /> {item.name}
+                   </a>
+                 );
+               })}
+             </nav>
+           </div>
+        </div>
+
+        {/* Dynamic Content Sections */}
+        <div className="flex-1 space-y-12">
+           {SECTIONS.map((section) => (
+             <section key={section.id} id={`section-${section.id}`} className="scroll-mt-24">
+               <h2 className="text-xl font-bold text-gray-900 mb-6 flex items-center gap-2">
+                 <section.icon className="w-6 h-6" />
+                 {section.title}
+               </h2>
+               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                 {section.items.map((item, idx) => (
+                    <div key={idx} className="bg-white border border-gray-100 rounded-2xl p-5 flex items-start gap-4 hover:shadow-md transition-shadow">
+                      {item.logo}
+                      <div className="flex-1">
+                        <h3 className="font-bold text-gray-900 text-sm mb-1">{item.name}</h3>
+                        <p className="text-gray-500 text-xs leading-relaxed line-clamp-3">{item.desc}</p>
+                      </div>
+                    </div>
+                 ))}
+               </div>
+             </section>
+           ))}
+
+           {/* Ad Banner Mock */}
+           <div className="mt-16 bg-white rounded-2xl border border-gray-100 p-8 shadow-sm relative overflow-hidden flex flex-col md:flex-row items-center gap-8 justify-between">
+              <span className="absolute top-2 right-2 text-[10px] text-blue-400 bg-blue-50 px-1 py-[2px] rounded flex items-center border border-blue-100">
+                广告<svg className="w-3 h-3 ml-1" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 5v14M5 12h14"/></svg>
+              </span>
+              <div className="w-full md:w-[300px] h-[200px] md:h-[180px] bg-gray-100 rounded-xl overflow-hidden flex-shrink-0 shadow-inner">
+                 <img src="https://images.unsplash.com/photo-1541348263662-e06836264be4?auto=format&fit=crop&q=80&w=800" alt="F1 Race" className="w-full h-full object-cover" />
+              </div>
+              <div className="flex-1 text-center md:text-left flex flex-col justify-center items-center md:items-start py-4">
+                 <h3 className="text-3xl font-bold mb-4 whitespace-nowrap">Spa 2026 Tickets</h3>
+                 <div className="flex items-center justify-between w-full mt-auto">
+                    <div className="flex items-center gap-2 bg-yellow-400 font-bold px-2 py-1 rounded w-max text-sm">
+                      <div className="w-6 h-6 bg-black rounded-lg text-yellow-400 flex items-center justify-center text-xs relative">
+                         G<div className="absolute top-0 right-0 w-1.5 h-1.5 bg-red-500 rounded-full"></div>
+                      </div>
+                      Global-Tickets
+                    </div>
+                    <button className="bg-gray-900 text-white px-8 py-3 rounded-full font-bold hover:bg-gray-800 transition-colors shadow-md">
+                      Book Now
+                    </button>
+                 </div>
+              </div>
+           </div>
+        </div>
+
+      </div>
+    </div>
+  );
+}
