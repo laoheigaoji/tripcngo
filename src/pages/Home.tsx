@@ -112,6 +112,7 @@ export default function Home() {
             playsInline
             className="w-full h-full object-cover"
             src="https://static.tripcngo.com/video/12121.mp4"
+            poster="https://static.tripcngo.com/ing/image1.webp"
           />
           <div className="absolute inset-0 bg-black/50" />
         </div>
