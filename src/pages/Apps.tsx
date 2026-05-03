@@ -20,22 +20,26 @@ const SECTIONS = [
       {
         name: 'WeChat(微信)',
         desc: '不仅可以聊天，还可以支付、打车，在任何地方都可以使用',
-        logo: <img src="https://static.tripcngo.com/ing/weixin.webp" className="w-[52px] h-[52px] rounded-[14px] object-cover shadow-sm bg-gray-100 flex-shrink-0" alt="WeChat" />
+        logo: <img src="https://static.tripcngo.com/ing/weixin.webp" className="w-[52px] h-[52px] rounded-[14px] object-cover shadow-sm bg-gray-100 flex-shrink-0" alt="WeChat" />,
+        url: 'https://weixin.qq.com/'
       },
       {
         name: 'Alipay(支付宝)',
         desc: '几乎可以在所有地方使用，可以用于支付、外卖、打车、买票等',
-        logo: <img src="https://static.tripcngo.com/ing/zhifubao.webp" className="w-[52px] h-[52px] rounded-[14px] object-cover shadow-sm bg-gray-100 flex-shrink-0" alt="Alipay" />
+        logo: <img src="https://static.tripcngo.com/ing/zhifubao.webp" className="w-[52px] h-[52px] rounded-[14px] object-cover shadow-sm bg-gray-100 flex-shrink-0" alt="Alipay" />,
+        url: 'https://www.alipay.com/'
       },
       {
         name: 'MeiTuan(美团)',
         desc: '吃住行一条龙，帮助大家吃的更好，生活更好',
-        logo: <img src="https://static.tripcngo.com/ing/meituan.webp" className="w-[52px] h-[52px] rounded-[14px] object-cover shadow-sm bg-gray-100 flex-shrink-0" alt="MeiTuan" />
+        logo: <img src="https://static.tripcngo.com/ing/meituan.webp" className="w-[52px] h-[52px] rounded-[14px] object-cover shadow-sm bg-gray-100 flex-shrink-0" alt="MeiTuan" />,
+        url: 'https://www.meituan.com/'
       },
       {
         name: 'Xiaohongshu(小红书)',
         desc: '分享生活、美食、旅行、购物，分享一切美好的事物',
-        logo: <img src="https://static.tripcngo.com/ing/xiaohongshu.webp" className="w-[52px] h-[52px] rounded-[14px] object-cover shadow-sm bg-gray-100 flex-shrink-0" alt="Xiaohongshu" />
+        logo: <img src="https://static.tripcngo.com/ing/xiaohongshu.webp" className="w-[52px] h-[52px] rounded-[14px] object-cover shadow-sm bg-gray-100 flex-shrink-0" alt="Xiaohongshu" />,
+        url: 'https://www.xiaohongshu.com/'
       }
     ]
   },
@@ -47,17 +51,20 @@ const SECTIONS = [
       {
         name: 'Trip(携程)',
         desc: '中国一站式旅行服务平台，提供酒店、机票、火车票预订等服务',
-        logo: <img src="https://static.tripcngo.com/ing/xiecheng.webp" className="w-[52px] h-[52px] rounded-[14px] object-cover shadow-sm bg-gray-100 flex-shrink-0" alt="Trip" />
+        logo: <img src="https://static.tripcngo.com/ing/xiecheng.webp" className="w-[52px] h-[52px] rounded-[14px] object-cover shadow-sm bg-gray-100 flex-shrink-0" alt="Trip" />,
+        url: 'https://www.ctrip.com/'
       },
       {
         name: 'Airbnb(爱彼迎)',
         desc: '全球最大的民宿预订平台，提供短租、长租、公寓等多种住宿选择',
-        logo: <img src="https://static.tripcngo.com/ing/Airbnb.webp" className="w-[52px] h-[52px] rounded-[14px] object-cover shadow-sm bg-gray-100 flex-shrink-0" alt="Airbnb" />
+        logo: <img src="https://static.tripcngo.com/ing/Airbnb.webp" className="w-[52px] h-[52px] rounded-[14px] object-cover shadow-sm bg-gray-100 flex-shrink-0" alt="Airbnb" />,
+        url: 'https://www.airbnb.com/'
       },
       {
         name: 'Booking(缤客)',
         desc: '全球酒店、民宿、度假村预订，支持灵活取消政策及多语言服务',
-        logo: <img src="https://static.tripcngo.com/ing/Booking.webp" className="w-[52px] h-[52px] rounded-[14px] object-cover shadow-sm bg-gray-100 flex-shrink-0" alt="Booking" />
+        logo: <img src="https://static.tripcngo.com/ing/Booking.webp" className="w-[52px] h-[52px] rounded-[14px] object-cover shadow-sm bg-gray-100 flex-shrink-0" alt="Booking" />,
+        url: 'https://www.booking.com/'
       }
     ]
   },
@@ -69,17 +76,20 @@ const SECTIONS = [
       {
         name: 'GaoDe(高德)',
         desc: '中国领先的导航软件，提供实时路况、公交路线、驾车导航等服务',
-        logo: <img src="https://static.tripcngo.com/ing/gaode.webp" className="w-[52px] h-[52px] rounded-[14px] object-cover shadow-sm bg-gray-100 flex-shrink-0" alt="GaoDe" />
+        logo: <img src="https://static.tripcngo.com/ing/gaode.webp" className="w-[52px] h-[52px] rounded-[14px] object-cover shadow-sm bg-gray-100 flex-shrink-0" alt="GaoDe" />,
+        url: 'https://amap.com/'
       },
       {
         name: 'DiDi(滴滴出行)',
         desc: '中国主流网约车平台，支持英文界面及境外银行卡支付。',
-        logo: <img src="https://static.tripcngo.com/ing/didi.webp" className="w-[52px] h-[52px] rounded-[14px] object-cover shadow-sm bg-gray-100 flex-shrink-0" alt="DiDi" />
+        logo: <img src="https://static.tripcngo.com/ing/didi.webp" className="w-[52px] h-[52px] rounded-[14px] object-cover shadow-sm bg-gray-100 flex-shrink-0" alt="DiDi" />,
+        url: 'https://www.didiglobal.com/'
       },
       {
         name: '12306(中国铁路)',
         desc: '中国铁路客户服务中心，提供火车票预订、退票、改签等服务',
-        logo: <img src="https://static.tripcngo.com/ing/12306.webp" className="w-[52px] h-[52px] rounded-[14px] object-cover shadow-sm bg-gray-100 flex-shrink-0" alt="12306" />
+        logo: <img src="https://static.tripcngo.com/ing/12306.webp" className="w-[52px] h-[52px] rounded-[14px] object-cover shadow-sm bg-gray-100 flex-shrink-0" alt="12306" />,
+        url: 'https://www.12306.cn/'
       }
     ]
   },
@@ -91,27 +101,32 @@ const SECTIONS = [
       {
         name: '中国国家移民管理局(NIA)',
         desc: '提供签证政策、入境免签时长等官方信息。',
-        logo: <img src="https://static.tripcngo.com/ing/guohui.png" className="w-[52px] h-[52px] rounded-[14px] object-cover shadow-sm bg-gray-100 flex-shrink-0" alt="NIA" />
+        logo: <img src="https://static.tripcngo.com/ing/guohui.png" className="w-[52px] h-[52px] rounded-[14px] object-cover shadow-sm bg-gray-100 flex-shrink-0" alt="NIA" />,
+        url: 'https://www.nia.gov.cn/'
       },
       {
         name: '中国文化和旅游部(MCT)',
         desc: '提供文化和旅游政策、法律法规等官方信息。',
-        logo: <img src="https://static.tripcngo.com/ing/guohui.png" className="w-[52px] h-[52px] rounded-[14px] object-cover shadow-sm bg-gray-100 flex-shrink-0" alt="MCT" />
+        logo: <img src="https://static.tripcngo.com/ing/guohui.png" className="w-[52px] h-[52px] rounded-[14px] object-cover shadow-sm bg-gray-100 flex-shrink-0" alt="MCT" />,
+        url: 'https://www.mct.gov.cn/'
       },
       {
         name: '中国领事服务网(Consular Services)',
         desc: '提供领事服务、签证政策、入境免签时长等官方信息。',
-        logo: <img src="https://static.tripcngo.com/ing/qianzheng.png" className="w-[52px] h-[52px] rounded-[14px] object-cover shadow-sm bg-gray-100 flex-shrink-0" alt="Consular Services" />
+        logo: <img src="https://static.tripcngo.com/ing/qianzheng.png" className="w-[52px] h-[52px] rounded-[14px] object-cover shadow-sm bg-gray-100 flex-shrink-0" alt="Consular Services" />,
+        url: 'http://cs.mfa.gov.cn/'
       },
       {
         name: '中国签证在线填表(COVA)',
         desc: '在线填写申请表',
-        logo: <img src="https://static.tripcngo.com/ing/qianzheng.png" className="w-[52px] h-[52px] rounded-[14px] object-cover shadow-sm bg-gray-100 flex-shrink-0" alt="COVA" />
+        logo: <img src="https://static.tripcngo.com/ing/qianzheng.png" className="w-[52px] h-[52px] rounded-[14px] object-cover shadow-sm bg-gray-100 flex-shrink-0" alt="COVA" />,
+        url: 'https://cova.mfa.gov.cn/'
       },
       {
         name: '中国签证服务中心(CVASC)',
         desc: '提供与中国普通签证申请相关的事务性服务的机构',
-        logo: <img src="https://static.tripcngo.com/ing/qianzhengfuwu.jpg" className="w-[52px] h-[52px] rounded-[14px] object-cover shadow-sm bg-gray-100 flex-shrink-0" alt="CVASC" />
+        logo: <img src="https://static.tripcngo.com/ing/qianzhengfuwu.jpg" className="w-[52px] h-[52px] rounded-[14px] object-cover shadow-sm bg-gray-100 flex-shrink-0" alt="CVASC" />,
+        url: 'https://www.visaforchina.org/'
       }
     ]
   },
@@ -123,22 +138,26 @@ const SECTIONS = [
       {
         name: 'Liziqi(李子柒)',
         desc: '知名中国乡村生活博主',
-        logo: <img src="https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&q=80&w=150" className="w-[52px] h-[52px] rounded-[14px] object-cover shadow-sm bg-gray-100 flex-shrink-0" alt="Liziqi" />
+        logo: <img src="https://static.tripcngo.com/ing/liziqi.jpg" className="w-[52px] h-[52px] rounded-[14px] object-cover shadow-sm bg-gray-100 flex-shrink-0" alt="Liziqi" />,
+        url: 'https://www.youtube.com/@cnliziqi'
       },
       {
         name: 'IShowSpeed(甲亢哥)',
         desc: '2025年3月开启中国行',
-        logo: <img src="https://images.unsplash.com/photo-1548142813-c348350df52b?auto=format&fit=crop&q=80&w=150" className="w-[52px] h-[52px] rounded-[14px] object-cover shadow-sm bg-gray-100 flex-shrink-0" alt="Speed" />
+        logo: <img src="https://static.tripcngo.com/ing/ishowspeed.jpg" className="w-[52px] h-[52px] rounded-[14px] object-cover shadow-sm bg-gray-100 flex-shrink-0" alt="Speed" />,
+        url: 'https://www.youtube.com/@IShowSpeed'
       },
       {
         name: 'Dianxi Xiaoge(滇西小哥)',
         desc: '滇西小哥，一个地道的云南妹子',
-        logo: <img src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=150" className="w-[52px] h-[52px] rounded-[14px] object-cover shadow-sm bg-gray-100 flex-shrink-0" alt="Dianxi" />
+        logo: <img src="https://static.tripcngo.com/ing/dianxixiaoge.jpg" className="w-[52px] h-[52px] rounded-[14px] object-cover shadow-sm bg-gray-100 flex-shrink-0" alt="Dianxi" />,
+        url: 'https://www.youtube.com/@dianxixiaoge'
       },
       {
         name: 'The Food Ranger',
         desc: '环游世界，品尝当地美食',
-        logo: <img src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80&w=150" className="w-[52px] h-[52px] rounded-[14px] object-cover shadow-sm bg-gray-100 flex-shrink-0" alt="Food Ranger" />
+        logo: <img src="https://static.tripcngo.com/ing/thefoodranger.jpg" className="w-[52px] h-[52px] rounded-[14px] object-cover shadow-sm bg-gray-100 flex-shrink-0" alt="Food Ranger" />,
+        url: 'https://www.youtube.com/@thefoodranger'
       }
     ]
   },
@@ -150,22 +169,26 @@ const SECTIONS = [
       {
         name: 'jieji.in.china',
         desc: '8年前离开英国，开启中国之旅！全球体验旅行与刺激！',
-        logo: <img src="https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?auto=format&fit=crop&q=80&w=150" className="w-[52px] h-[52px] rounded-[14px] object-cover shadow-sm bg-gray-100 flex-shrink-0" alt="jieji" />
+        logo: <img src="https://static.tripcngo.com/ing/jieji.jpg" className="w-[52px] h-[52px] rounded-[14px] object-cover shadow-sm bg-gray-100 flex-shrink-0" alt="jieji" />,
+        url: 'https://www.tiktok.com/@jieji.in.china'
       },
       {
         name: 'tc_inchina',
         desc: '约旦皇室前管家，在中国生活10年中国！爱美食！爱中国❤️🔥',
-        logo: <img src="https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&q=80&w=150" className="w-[52px] h-[52px] rounded-[14px] object-cover shadow-sm bg-gray-100 flex-shrink-0" alt="tc_inchina" />
+        logo: <img src="https://static.tripcngo.com/ing/tc_inchina.jpg" className="w-[52px] h-[52px] rounded-[14px] object-cover shadow-sm bg-gray-100 flex-shrink-0" alt="tc_inchina" />,
+        url: 'https://www.tiktok.com/@tc_inchina'
       },
       {
         name: 'dabai_inchina',
         desc: '大白，在英国主修中文，中国文化真的多姿多彩',
-        logo: <img src="https://images.unsplash.com/photo-1544725176-7c40e5a71c5e?auto=format&fit=crop&q=80&w=150" className="w-[52px] h-[52px] rounded-[14px] object-cover shadow-sm bg-gray-100 flex-shrink-0" alt="dabai" />
+        logo: <img src="https://static.tripcngo.com/ing/dabai_inchina.jpg" className="w-[52px] h-[52px] rounded-[14px] object-cover shadow-sm bg-gray-100 flex-shrink-0" alt="dabai" />,
+        url: 'https://www.tiktok.com/@dabai_inchina'
       },
       {
         name: 'blondieinchina',
         desc: '嗨，我是Amy！居住在中国的全职YouTuber。',
-        logo: <img src="https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&q=80&w=150" className="w-[52px] h-[52px] rounded-[14px] object-cover shadow-sm bg-gray-100 flex-shrink-0" alt="blondie" />
+        logo: <img src="https://static.tripcngo.com/ing/blondieinchina.jpg" className="w-[52px] h-[52px] rounded-[14px] object-cover shadow-sm bg-gray-100 flex-shrink-0" alt="blondie" />,
+        url: 'https://www.tiktok.com/@blondieinchina'
       }
     ]
   },
@@ -177,27 +200,32 @@ const SECTIONS = [
       {
         name: '12308',
         desc: '外交部全球领事热线',
-        logo: <div className="w-[52px] h-[52px] rounded-[14px] bg-gray-50 flex items-center justify-center flex-shrink-0 text-gray-500 border border-gray-100 shadow-sm"><PhoneCall className="w-6 h-6" /></div>
+        logo: <div className="w-[52px] h-[52px] rounded-[14px] bg-gray-50 flex items-center justify-center flex-shrink-0 text-gray-500 border border-gray-100 shadow-sm"><PhoneCall className="w-6 h-6" /></div>,
+        url: 'tel:12308'
       },
       {
         name: '12367',
         desc: '国家移民管理局',
-        logo: <div className="w-[52px] h-[52px] rounded-[14px] bg-gray-50 flex items-center justify-center flex-shrink-0 text-gray-500 border border-gray-100 shadow-sm"><PhoneCall className="w-6 h-6" /></div>
+        logo: <div className="w-[52px] h-[52px] rounded-[14px] bg-gray-50 flex items-center justify-center flex-shrink-0 text-gray-500 border border-gray-100 shadow-sm"><PhoneCall className="w-6 h-6" /></div>,
+        url: 'tel:12367'
       },
       {
         name: '110',
         desc: '报警电话',
-        logo: <div className="w-[52px] h-[52px] rounded-[14px] bg-gray-50 flex items-center justify-center flex-shrink-0 text-gray-400 border border-gray-100 shadow-sm"><PhoneCall className="w-6 h-6" /></div>
+        logo: <div className="w-[52px] h-[52px] rounded-[14px] bg-gray-50 flex items-center justify-center flex-shrink-0 text-gray-400 border border-gray-100 shadow-sm"><PhoneCall className="w-6 h-6" /></div>,
+        url: 'tel:110'
       },
       {
         name: '119',
         desc: '火警电话',
-        logo: <div className="w-[52px] h-[52px] rounded-[14px] bg-gray-50 flex items-center justify-center flex-shrink-0 text-gray-400 border border-gray-100 shadow-sm"><PhoneCall className="w-6 h-6" /></div>
+        logo: <div className="w-[52px] h-[52px] rounded-[14px] bg-gray-50 flex items-center justify-center flex-shrink-0 text-gray-400 border border-gray-100 shadow-sm"><PhoneCall className="w-6 h-6" /></div>,
+        url: 'tel:119'
       },
       {
         name: '120',
         desc: '急救电话',
-        logo: <div className="w-[52px] h-[52px] rounded-[14px] bg-gray-50 flex items-center justify-center flex-shrink-0 text-gray-400 border border-gray-100 shadow-sm"><PhoneCall className="w-6 h-6" /></div>
+        logo: <div className="w-[52px] h-[52px] rounded-[14px] bg-gray-50 flex items-center justify-center flex-shrink-0 text-gray-400 border border-gray-100 shadow-sm"><PhoneCall className="w-6 h-6" /></div>,
+        url: 'tel:120'
       }
     ]
   }
@@ -289,13 +317,19 @@ export default function Apps() {
                </h2>
                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                  {section.items.map((item, idx) => (
-                    <div key={idx} className="bg-white border border-gray-100 rounded-2xl p-5 flex items-start gap-4 hover:shadow-md transition-shadow">
+                    <a 
+                      key={idx} 
+                      href={item.url} 
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                      className="bg-white border border-gray-100 rounded-2xl p-5 flex items-start gap-4 hover:shadow-md transition-shadow cursor-pointer group"
+                    >
                       {item.logo}
                       <div className="flex-1">
-                        <h3 className="font-bold text-gray-900 text-sm mb-1">{item.name}</h3>
+                        <h3 className="font-bold text-gray-900 text-sm mb-1 group-hover:text-green-600 transition-colors">{item.name}</h3>
                         <p className="text-gray-500 text-xs leading-relaxed line-clamp-3">{item.desc}</p>
                       </div>
-                    </div>
+                    </a>
                  ))}
                </div>
              </section>
