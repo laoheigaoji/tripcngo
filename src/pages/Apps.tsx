@@ -20,22 +20,22 @@ const SECTIONS = [
       {
         name: 'WeChat(微信)',
         desc: '不仅可以聊天，还可以支付、打车，在任何地方都可以使用',
-        logo: <div className="w-[52px] h-[52px] rounded-[14px] bg-[#07c160] flex items-center justify-center flex-shrink-0 text-white shadow-sm"><svg width="32" height="32" viewBox="0 0 24 24" fill="currentColor"><path d="M8.5 13.5c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5zm6 0c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5zm-3-5.5c-3.59 0-6.5 2.46-6.5 5.5 0 1.69.88 3.19 2.27 4.19l-.73 2.16 2.37-1.25c.81.23 1.68.36 2.59.36 3.59 0 6.5-2.46 6.5-5.5s-2.91-5.5-6.5-5.5z"/></svg></div>
+        logo: <img src="https://static.tripcngo.com/ing/weixin.webp" className="w-[52px] h-[52px] rounded-[14px] object-cover shadow-sm bg-gray-100 flex-shrink-0" alt="WeChat" />
       },
       {
         name: 'Alipay(支付宝)',
         desc: '几乎可以在所有地方使用，可以用于支付、外卖、打车、买票等',
-        logo: <div className="w-[52px] h-[52px] rounded-[14px] bg-[#1677ff] flex items-center justify-center flex-shrink-0 text-white font-bold text-2xl shadow-sm">支</div>
+        logo: <img src="https://static.tripcngo.com/ing/zhifubao.webp" className="w-[52px] h-[52px] rounded-[14px] object-cover shadow-sm bg-gray-100 flex-shrink-0" alt="Alipay" />
       },
       {
         name: 'MeiTuan(美团)',
         desc: '吃住行一条龙，帮助大家吃的更好，生活更好',
-        logo: <div className="w-[52px] h-[52px] rounded-[14px] bg-[#ffc300] flex items-center justify-center flex-shrink-0 text-amber-900 font-bold text-xl shadow-sm">美团</div>
+        logo: <img src="https://static.tripcngo.com/ing/meituan.webp" className="w-[52px] h-[52px] rounded-[14px] object-cover shadow-sm bg-gray-100 flex-shrink-0" alt="MeiTuan" />
       },
       {
         name: 'Xiaohongshu(小红书)',
         desc: '分享生活、美食、旅行、购物，分享一切美好的事物',
-        logo: <div className="w-[52px] h-[52px] rounded-[14px] bg-[#ff2442] flex items-center justify-center flex-shrink-0 text-white font-bold text-xl shadow-sm">小红书</div>
+        logo: <img src="https://static.tripcngo.com/ing/xiaohongshu.webp" className="w-[52px] h-[52px] rounded-[14px] object-cover shadow-sm bg-gray-100 flex-shrink-0" alt="Xiaohongshu" />
       }
     ]
   },
@@ -47,17 +47,17 @@ const SECTIONS = [
       {
         name: 'Trip(携程)',
         desc: '中国一站式旅行服务平台，提供酒店、机票、火车票预订等服务',
-        logo: <div className="w-[52px] h-[52px] rounded-[14px] bg-[#2577e3] flex items-center justify-center flex-shrink-0 text-white font-bold text-lg shadow-sm tracking-tighter">Trip.</div>
+        logo: <img src="https://static.tripcngo.com/ing/xiecheng.webp" className="w-[52px] h-[52px] rounded-[14px] object-cover shadow-sm bg-gray-100 flex-shrink-0" alt="Trip" />
       },
       {
         name: 'Airbnb(爱彼迎)',
         desc: '全球最大的民宿预订平台，提供短租、长租、公寓等多种住宿选择',
-        logo: <div className="w-[52px] h-[52px] rounded-[14px] bg-[#ff5a5f] flex items-center justify-center flex-shrink-0 text-white font-bold shadow-sm"><svg width="28" height="28" viewBox="0 0 24 24" fill="currentColor"><path d="M12.0003 1.25L1.5126 12.0063H3.9482L12.0003 3.7547L20.0523 12.0063H22.488L12.0003 1.25Z"/></svg></div>
+        logo: <img src="https://static.tripcngo.com/ing/Airbnb.webp" className="w-[52px] h-[52px] rounded-[14px] object-cover shadow-sm bg-gray-100 flex-shrink-0" alt="Airbnb" />
       },
       {
         name: 'Booking(缤客)',
         desc: '全球酒店、民宿、度假村预订，支持灵活取消政策及多语言服务',
-        logo: <div className="w-[52px] h-[52px] rounded-[14px] bg-[#003580] flex items-center justify-center flex-shrink-0 text-white font-bold text-[10px] shadow-sm">Booking</div>
+        logo: <img src="https://static.tripcngo.com/ing/Booking.webp" className="w-[52px] h-[52px] rounded-[14px] object-cover shadow-sm bg-gray-100 flex-shrink-0" alt="Booking" />
       }
     ]
   },
@@ -69,17 +69,17 @@ const SECTIONS = [
       {
         name: 'GaoDe(高德)',
         desc: '中国领先的导航软件，提供实时路况、公交路线、驾车导航等服务',
-        logo: <div className="w-[52px] h-[52px] rounded-[14px] bg-gradient-to-br from-blue-400 to-blue-500 overflow-hidden flex items-center justify-center flex-shrink-0 shadow-sm relative"><div className="absolute w-[40px] h-[40px] bg-white rounded-full flex items-center justify-center"><Plane className="w-5 h-5 text-blue-500 transform -rotate-45" /></div></div>
+        logo: <img src="https://static.tripcngo.com/ing/gaode.webp" className="w-[52px] h-[52px] rounded-[14px] object-cover shadow-sm bg-gray-100 flex-shrink-0" alt="GaoDe" />
       },
       {
         name: 'DiDi(滴滴出行)',
         desc: '中国主流网约车平台，支持英文界面及境外银行卡支付。',
-        logo: <div className="w-[52px] h-[52px] rounded-[14px] bg-[#fc9153] flex items-center justify-center flex-shrink-0 text-white font-bold text-center text-sm leading-tight shadow-sm">DiDi<br/><span className="text-[10px]">滴滴</span></div>
+        logo: <img src="https://static.tripcngo.com/ing/didi.webp" className="w-[52px] h-[52px] rounded-[14px] object-cover shadow-sm bg-gray-100 flex-shrink-0" alt="DiDi" />
       },
       {
         name: '12306(中国铁路)',
         desc: '中国铁路客户服务中心，提供火车票预订、退票、改签等服务',
-        logo: <div className="w-[52px] h-[52px] rounded-[14px] bg-[#0f60aa] flex items-center justify-center flex-shrink-0 text-white font-bold text-[10px] text-center shadow-sm relative"><div className="absolute inset-x-0 bottom-1 flex justify-center"><span className="bg-white text-[#0f60aa] px-1 rounded-[4px] text-[8px]">中国铁路</span></div><span className="text-[14px] font-bold mt-[-8px]">12306</span></div>
+        logo: <img src="https://static.tripcngo.com/ing/12306.webp" className="w-[52px] h-[52px] rounded-[14px] object-cover shadow-sm bg-gray-100 flex-shrink-0" alt="12306" />
       }
     ]
   },
@@ -91,27 +91,27 @@ const SECTIONS = [
       {
         name: '中国国家移民管理局(NIA)',
         desc: '提供签证政策、入境免签时长等官方信息。',
-        logo: <div className="w-[52px] h-[52px] rounded-[14px] bg-white border border-yellow-200 border-2 flex items-center justify-center flex-shrink-0 text-red-600 shadow-sm"><Shield className="w-8 h-8 fill-red-600 text-yellow-400" /></div>
+        logo: <img src="https://static.tripcngo.com/ing/guohui.png" className="w-[52px] h-[52px] rounded-[14px] object-cover shadow-sm bg-gray-100 flex-shrink-0" alt="NIA" />
       },
       {
         name: '中国文化和旅游部(MCT)',
         desc: '提供文化和旅游政策、法律法规等官方信息。',
-        logo: <div className="w-[52px] h-[52px] rounded-[14px] bg-white border border-yellow-200 border-2 flex items-center justify-center flex-shrink-0 text-red-600 shadow-sm"><Globe className="w-8 h-8 fill-red-600 text-yellow-400" /></div>
+        logo: <img src="https://static.tripcngo.com/ing/guohui.png" className="w-[52px] h-[52px] rounded-[14px] object-cover shadow-sm bg-gray-100 flex-shrink-0" alt="MCT" />
       },
       {
         name: '中国领事服务网(Consular Services)',
         desc: '提供领事服务、签证政策、入境免签时长等官方信息。',
-        logo: <div className="w-[52px] h-[52px] rounded-[14px] bg-white border border-blue-200 border-2 flex items-center justify-center flex-shrink-0 text-blue-800 shadow-sm"><Shield className="w-8 h-8 text-blue-800" /></div>
+        logo: <img src="https://static.tripcngo.com/ing/qianzheng.png" className="w-[52px] h-[52px] rounded-[14px] object-cover shadow-sm bg-gray-100 flex-shrink-0" alt="Consular Services" />
       },
       {
         name: '中国签证在线填表(COVA)',
         desc: '在线填写申请表',
-        logo: <div className="w-[52px] h-[52px] rounded-[14px] bg-white border border-blue-200 flex items-center justify-center flex-shrink-0 text-blue-800 shadow-sm"><div className="w-8 h-8 bg-blue-800 rounded-full flex items-center justify-center"><span className="text-white text-[8px] font-bold">COVA</span></div></div>
+        logo: <img src="https://static.tripcngo.com/ing/qianzheng.png" className="w-[52px] h-[52px] rounded-[14px] object-cover shadow-sm bg-gray-100 flex-shrink-0" alt="COVA" />
       },
       {
         name: '中国签证服务中心(CVASC)',
         desc: '提供与中国普通签证申请相关的事务性服务的机构',
-        logo: <div className="w-[52px] h-[52px] rounded-[14px] bg-white border border-blue-200 flex items-center justify-center flex-shrink-0 text-blue-800 shadow-sm"><div className="w-8 h-8 bg-blue-600 rounded flex items-center justify-center"><Globe className="w-6 h-6 text-white" /></div></div>
+        logo: <img src="https://static.tripcngo.com/ing/qianzhengfuwu.jpg" className="w-[52px] h-[52px] rounded-[14px] object-cover shadow-sm bg-gray-100 flex-shrink-0" alt="CVASC" />
       }
     ]
   },
