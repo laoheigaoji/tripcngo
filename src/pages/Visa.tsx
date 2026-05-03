@@ -364,7 +364,7 @@ export default function Visa() {
                     src="https://static.tripcngo.com/video/240hour.mp4" 
                     className="w-full h-auto object-cover block aspect-[9/16]"
                     playsInline
-                    poster="https://static.tripcngo.com/ing/image.webp"
+                    poster="https://static.tripcngo.com/ing/videobg.jpg"
                   />
                   <div className="play-btn absolute inset-0 flex items-center justify-center bg-black/10 transition-opacity">
                     <div className="w-16 h-16 bg-white/90 backdrop-blur-sm rounded-full flex items-center justify-center shadow-xl border border-white/50 pl-1.5">
