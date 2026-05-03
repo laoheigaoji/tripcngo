@@ -68,9 +68,9 @@ export default function VisaArrivalCard() {
                 </div>
               )}
             </div>
-            <div className="bg-gray-100 rounded-lg h-[200px] flex items-center justify-center text-gray-400">
+            <div className="bg-gray-100 rounded-lg flex items-center justify-center text-gray-400">
                {/* Replace with actual screenshots in production */}
-               <img src={step.image} alt={step.title} className="rounded-lg w-full h-full object-cover" />
+               <img src={step.image} alt={step.title} className="rounded-lg w-full h-auto object-contain" />
             </div>
           </div>
         ))}
