@@ -448,7 +448,19 @@ export const citiesData: Record<string, CityData> = {
       { year: '1927年', enYear: '1927 AD', title: '三镇合并', enTitle: 'Merger of Three Towns', desc: '武昌、汉口、汉阳正式合并，定名为“武汉”，确立了作为特大中心城市的地位。', enDesc: 'The three towns merged and were named "Wuhan," establishing its status as a major metropolis.' }
     ],
     attractions: [
-      { name: '黄鹤楼', enName: 'Yellow Crane Tower', desc: '江南三大名楼之首，俯瞰长江与武汉三镇全景的绝�  ningbo: {
+      { name: '黄鹤楼', enName: 'Yellow Crane Tower', desc: '江南三大名楼之首，俯瞰长江与武汉三镇全景的绝佳观景地。', enDesc: 'One of China\'s Three Famous Towers, offering panoramic views of the Yangtze River.', price: '70元', enPrice: '70 RMB', season: '全年', enSeason: 'All year', time: '1-2小时', enTime: '1-2h', rating: 'AAAAA' },
+      { name: '东湖生态旅游区', enName: 'East Lake Scenic Area', desc: '中国最大的城中湖之一，碧波万顷，风景秀丽，是武汉市民休闲的好去处。', enDesc: 'One of China\'s largest urban lakes with beautiful scenery and recreational facilities.', price: '免费', enPrice: 'Free', season: '全年', enSeason: 'All year', time: '2-3小时', enTime: '2-3h', rating: 'AAAAA' }
+    ],
+    transportation: [
+      { iconName: 'Airplane', title: '飞机', enTitle: 'Airplane', desc: '武汉天河国际机场是中部地区最大的航空枢纽，通达国内外主要城市。', enDesc: 'Wuhan Tianhe International Airport is Central China\'s largest aviation hub.', price: '航班密集，覆盖全球主要城市。', enPrice: 'High-frequency flights worldwide.' },
+      { iconName: 'Train', title: '高铁', enTitle: 'HSR', desc: '武汉站是全国重要的高铁枢纽，四通八达，是中国"米"字形高铁网络的中心。', enDesc: 'A major high-speed rail hub connecting all parts of China.', price: '至北京约4.5小时，至上海约3.5小时。', enPrice: '4.5h to Beijing, 3.5h to Shanghai.' }
+    ],
+    food: [
+      { name: '热干面', enName: 'Hot Dry Noodles', pinyin: 'Règān miàn', price: '¥6-15/份', desc: '武汉过早的灵魂，筋道的面条拌上芝麻酱，香气扑鼻。', enDesc: 'The iconic Wuhan breakfast, noodles with sesame paste.', ingredients: '碱水面、芝麻酱、萝卜丁、葱花。', enIngredients: 'Alkaline noodles, sesame paste, radish, scallions.', imageIdx: 89 },
+      { name: '武昌鱼', enName: 'Wuchang Fish', pinyin: 'Wǔchāng yú', price: '¥80-150/份', desc: '毛主席诗词中赞誉的名鱼，肉质细嫩，味道鲜美。', enDesc: 'Famous fish praised by Chairman Mao, tender and delicious.', ingredients: '武昌鱼、葱、姜、料酒。', enIngredients: 'Wuchang fish, scallions, ginger, wine.', imageIdx: 90 }
+    ]
+  },
+  ningbo: {
     id: 'ningbo',
     name: '宁波',
     enName: 'Ningbo',
@@ -504,12 +516,6 @@ export const citiesData: Record<string, CityData> = {
     food: [
       { name: '宁波汤圆', enName: 'Ningbo Rice Balls', pinyin: 'Níngbō tāngyuán', price: '¥10-20/份', desc: '宁波饮食最具代表性的名片，白如羊脂，软糯香甜。', enDesc: 'The most iconic Ningbo dish, famous for its smoothness and sweetness.', ingredients: '糯米、黑芝麻、猪油、白糖。', enIngredients: 'Sticky rice, black sesame, lard, sugar.', imageIdx: 87 },
       { name: '红膏炝蟹', enName: 'Red Roe Pickled Crab', pinyin: 'Hónggāo qiàngxiè', price: '¥100-200/份', desc: '地道的宁波咸鲜味，选材考究，色泽红亮，鲜美适口。', enDesc: 'Authentic Ningbo salty and fresh flavor with brilliant red roe.', ingredients: '梭子蟹、盐、白酒、香料。', enIngredients: 'Swimming crab, salt, wine, spices.', imageIdx: 88 }
-    ]
-  }, river and see city views.', price: '刷卡仅需1.5元，观光航线另计。', enPrice: 'Regular ferry only 1.5 RMB.' }
-    ],
-    food: [
-      { name: '热干面', enName: 'Hot Dry Noodles', pinyin: 'Rè gān miàn', price: '¥5-10/碗', desc: '武汉人的灵魂早餐，色泽黄亮，芝麻香气馥郁。', enDesc: 'The soul of Wuhan breakfast with a rich sesame aroma.', ingredients: '碱面、芝麻酱、香油、萝卜丁等。', enIngredients: 'Alkaline noodles, sesame paste, sesame oil, pickles.', imageIdx: 71 },
-      { name: '三鲜豆皮', enName: 'Three Fresh Bean Skin', pinyin: 'Sānxiān dòupí', price: '¥10-15/份', desc: '色泽金黄，外皮酥脆，内馅软糯咸鲜。', enDesc: 'Crispy skin with savory, soft, and glutinous filling.', ingredients: '绿豆皮、糯米、香菇、猪肉、笋丁。', enIngredients: 'Mung bean skin, sticky rice, meat, mushrooms.', imageIdx: 72 }
     ]
   },
   shangrao: {
