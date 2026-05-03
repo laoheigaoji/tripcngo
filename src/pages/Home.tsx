@@ -69,7 +69,7 @@ const FAQS = [
     q: "这240小时是从什么时候开始计算的?", 
     enQ: "When does the 240 hours start counting?",
     a: "240小时从入境当天的次日零时起计算，出境当天的24时止。例如：12月1日入境，则10天免签期限为12月2日0时至12月11日24时，必须在12月11日24时前出境。",
-    enA: "The 240 hours are calculated from 00:00 on the day following the day of entry until 24:00 on the day of exit."
+    enA: "The 240 hours are calculated from 00:00 on the day following the day of entry until 24:00 on the day of exit. For example, if entering on December 1st, the 10-day visa-free period is from 00:00 on December 2nd to 24:00 on December 11th."
   },
   { 
     q: "可以跨省旅游吗?", 
@@ -81,7 +81,121 @@ const FAQS = [
     q: "根据官方政策，我可以从香港进入大陆内地吗?", 
     enQ: "Can I enter mainland China from Hong Kong?",
     a: "不可以，根据政策规定，从香港、澳门、台湾地区入境的外国人不适用于240小时过境免签政策，您需要提前申请相应签证。",
-    enA: "No, travelers entering from HK, Macau, or Taiwan are generally not eligible for the transit visa-free policy and need a regular visa."
+    enA: "No, according to official policy, foreigners entering from Hong Kong, Macau, or Taiwan regions are not eligible for the 240-hour transit visa-free policy and must apply for the appropriate visa in advance."
+  },
+  { 
+    q: "可否入境后再购买出境机票？", 
+    enQ: "Can I purchase an outbound ticket after entry?",
+    a: "不可以，必须提前持有确定日期和座位的联程票。",
+    enA: "No, you must hold confirmed connecting tickets with specific dates and seats in advance."
+  },
+  { 
+    q: "从广州入境上海出境是否允许？", 
+    enQ: "Is it allowed to enter in Guangzhou and exit from Shanghai?",
+    a: "允许，支持不同口岸出入境。",
+    enA: "Yes, different ports of entry and exit are supported."
+  },
+  { 
+    q: "如何办理临时入境许可？", 
+    enQ: "How to apply for a temporary entry permit?",
+    a: "在指定口岸（如北京首都机场T3航站楼）设有专门柜台，需现场填写《临时入境外国人入境卡》，提交护照+联程机票，经边检审核后发放许可。",
+    enA: "Special counters are available at designated ports (e.g., Beijing Capital Airport Terminal 3). You need to fill out the Temporary Entry Card for Foreigners on-site, submit your passport and connecting flight ticket, and the permit will be issued after border inspection approval."
+  },
+  { 
+    q: "从香港/澳门转机是否适用？", 
+    enQ: "Is transit via Hong Kong/Macau allowed?",
+    a: "允许。例如美国→广州→香港西九龙，凭高铁票可申请免签；加拿大→珠海→澳门，凭船票同样适用。",
+    enA: "Yes. For example, USA→Guangzhou→Hong Kong West Kowloon with a high-speed rail ticket is eligible; Canada→Zhuhai→Macau with a ferry ticket is also applicable."
+  },
+  { 
+    q: "联程票可否包含陆路交通？", 
+    enQ: "Can connecting tickets include land transportation?",
+    a: "允许。如持有广州→香港高铁票、珠海→澳门船票等跨境陆海空联运票据均符合要求。",
+    enA: "Yes. Cross-border combined transport tickets such as Guangzhou→Hong Kong high-speed rail tickets and Zhuhai→Macau ferry tickets are acceptable."
+  },
+  { 
+    q: "证件丢失怎么办？", 
+    enQ: "What if I lose my documents?",
+    a: "立即向停留地公安机关报案，凭《护照报失证明》到出入境管理部门申请停留证件，同时联系本国使领馆补办旅行证件。",
+    enA: "Report to the local public security bureau immediately. Apply for a stay permit at the exit-entry administration with the Passport Loss Certificate, and contact your country's embassy or consulate to apply for a new travel document."
+  },
+  { 
+    q: "与互免签证如何选择？", 
+    enQ: "How to choose between visa-free and transit visa-free?",
+    a: "如属新加坡等互免国公民，建议直接使用30天免签（更灵活）；若仅过境则选240小时免签（无需签证费）。",
+    enA: "If you are a citizen of visa-free countries like Singapore, it is recommended to use the 30-day visa-free entry (more flexible); if only transiting, choose the 240-hour transit visa-free (no visa fee required)."
+  },
+  { 
+    q: "超期停留会怎样？", 
+    enQ: "What happens if I overstay?",
+    a: "每日处罚款500元，最高可处10日拘留并限期离境，且5年内不得申请过境免签。",
+    enA: "A fine of 500 RMB per day, up to 10 days detention and deportation, and ineligibility for transit visa-free for 5 years."
+  },
+  { 
+    q: "如何查询实时政策？", 
+    enQ: "How to check real-time policies?",
+    a: "微信搜索\"国家移民管理局\"小程序，或拨打12367热线（支持英/日/韩等8语种服务）。",
+    enA: "Search for \"National Immigration Administration\" mini-program on WeChat, or call the 12367 hotline (supports 8 languages including English, Japanese, Korean)."
+  },
+  { 
+    q: "哪些行为会被视为非法就业？", 
+    enQ: "What activities are considered illegal employment?",
+    a: "包括商业拍摄、网络直播获利、临时授课等，即使未签订劳动合同也可能被认定违法。",
+    enA: "Includes commercial filming, live streaming for profit, temporary teaching, etc. Even without a labor contract, these activities may be considered illegal."
+  },
+  { 
+    q: "北京首都机场办理流程有何特殊安排？", 
+    enQ: "What special arrangements exist at Beijing Capital Airport?",
+    a: "T3航站楼设立\"过境免签快速通道\"，配备英/日/韩三语服务专员，办理时间缩短至15分钟内。需注意每日22:00-6:00时段需前往24小时应急窗口办理。",
+    enA: "Terminal 3 has a 'Transit Visa-Free Express Lane' with English/Japanese/Korean speaking staff, reducing processing time to under 15 minutes. Note: between 22:00-06:00 daily, you must go to the 24-hour emergency window."
+  },
+  { 
+    q: "上海浦东机场转机如何衔接？", 
+    enQ: "How to connect at Shanghai Pudong Airport?",
+    a: "提供\"空铁联运\"服务，持高铁票可在卫星厅直接办理过境手续。例如：巴黎→上海→杭州东站的高铁联程票，可在隔离区内完成所有手续。",
+    enA: "Air-rail intermodal service is available. You can complete transit procedures directly at the satellite hall with a high-speed rail ticket. For example: Paris→Shanghai→Hangzhou East Station can be processed entirely within the transit area."
+  },
+  { 
+    q: "摄影爱好者有哪些限制？", 
+    enQ: "What restrictions apply to photography enthusiasts?",
+    a: "商业拍摄需申请工作签证，但个人旅游拍摄允许。禁飞区（如军事设施周边500米）严禁无人机航拍，违者最高罚款2万元。",
+    enA: "Commercial filming requires a work visa, but personal travel photography is permitted. Drone flights are strictly prohibited in no-fly zones (e.g., within 500 meters of military facilities), with a maximum fine of 20,000 RMB for violations."
+  },
+  { 
+    q: "联程票改签如何处理？", 
+    enQ: "How to handle ticket changes?",
+    a: "允许免费改签1次，需在停留期第7天前完成。例如原定D10香港航班改签至D11，需在D7前持新机票到入境口岸边检站备案。",
+    enA: "One free change is allowed, which must be completed before day 7 of your stay. For example, if changing a D10 Hong Kong flight to D11, you must register the new ticket at the entry port's border inspection station before D7."
+  },
+  { 
+    q: "跨境高铁票是否认可？", 
+    enQ: "Are cross-border high-speed rail tickets accepted?",
+    a: "中老铁路（昆明→万象）、中越铁路（南宁→河内）等国际班次车票均被认可，需提供纸质票与电子客票号双验证。",
+    enA: "International train tickets such as China-Laos Railway (Kunming→Vientiane) and China-Vietnam Railway (Nanning→Hanoi) are accepted. Both paper tickets and electronic ticket numbers are required for verification."
+  },
+  { 
+    q: "如何通过微信办理预审？", 
+    enQ: "How to apply for pre-approval via WeChat?",
+    a: "在\"移民局\"小程序提交护照首页+电子机票，AI系统10分钟生成《过境预审码》，可减少口岸办理时间50%。",
+    enA: "Submit your passport photo page + electronic ticket through the 'Immigration Bureau' mini-program. The AI system generates a Transit Pre-approval Code within 10 minutes, reducing port processing time by 50%."
+  },
+  { 
+    q: "哪些行为可能引发误会？", 
+    enQ: "What behaviors may cause misunderstandings?",
+    a: "避免在政府机关门前比\"V\"手势拍照、未经许可拍摄少数民族服饰者。宗教场所需注意着装要求（如寺庙不穿短裤入内）。",
+    enA: "Avoid making 'V' gestures for photos in front of government buildings and photographing people in ethnic minority costumes without permission. Dress appropriately at religious sites (e.g., no shorts in temples)."
+  },
+  { 
+    q: "突发疾病如何就医？", 
+    enQ: "What to do in case of a medical emergency?",
+    a: "持护照可在二级以上医院挂急诊，推荐北京协和/上海瑞金等53家涉外医院。保留医疗票据可申请停留延期。",
+    enA: "You can seek emergency treatment at hospitals above Level 2 with your passport. 53 foreign-related hospitals like Peking Union Medical College Hospital and Shanghai Ruijin Hospital are recommended. Keep medical receipts for possible stay extension applications."
+  },
+  { 
+    q: "突发疾病如何延期？", 
+    enQ: "How to apply for an extension due to medical emergency?",
+    a: "需提供医院诊断证明，在停留期满前3个工作日向所在地市级公安局出入境管理处申请，最长可延期30天。",
+    enA: "Provide a hospital diagnosis certificate and apply to the municipal exit-entry administration 3 working days before your stay expires. The maximum extension is 30 days."
   },
 ];
 
