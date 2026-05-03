@@ -3,6 +3,7 @@ import { useParams, Navigate } from 'react-router-dom';
 import { Clock, Navigation, Map, CloudRain, Sun, Cloud, Calendar, Building2, Users, MapPin, Tag, ArrowRight, Star, Plane, TrainFront, BusFront, Car, Bike, Train, Ship } from 'lucide-react';
 import { citiesData } from '../../data/citiesData';
 import { useLanguage } from '../../context/LanguageContext';
+import SEO from '../../components/SEO';
 
 const iconMap: Record<string, React.ElementType> = {
   Plane, TrainFront, BusFront, Car, Bike, Train, Ship
@@ -26,6 +27,12 @@ export default function CityDetail() {
 
   return (
     <div className="bg-gray-50 min-h-screen">
+      <SEO 
+        title={isEn ? city.enName : city.name}
+        description={getTranslatedValue(city.paragraphs[0], city.enParagraphs && city.enParagraphs[0])}
+        keywords={`${isEn ? city.enName : city.name}, 中国旅游城市, ${isEn ? 'Travel' : '旅游'}`}
+        image={city.heroImage}
+      />
       {/* Hero Section */}
       <div className="relative pt-24 pb-16 md:pt-32 md:pb-24 overflow-hidden">
         <div className="absolute inset-0 z-0">

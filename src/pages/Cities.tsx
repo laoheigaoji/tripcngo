@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
-import { ChevronRight, Heart, ThumbsUp, ChevronLeft } from 'lucide-react';
+import { Heart, ThumbsUp } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import SEO from '../components/SEO';
+import { useLanguage } from '../context/LanguageContext';
 
 const ALL_CITIES = [
   // Page 1
@@ -40,36 +42,44 @@ const ALL_CITIES = [
 const ITEMS_PER_PAGE = 9;
 
 export default function Cities() {
+  const { language, t } = useLanguage();
   const [currentPage, setCurrentPage] = useState(1);
   const totalPages = Math.ceil(ALL_CITIES.length / ITEMS_PER_PAGE);
   const currentCities = ALL_CITIES.slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE);
 
   return (
     <div className="w-full bg-[#f9f9f9] pb-20">
+      <SEO 
+        title={language === 'zh' ? '热门城市指南' : 'Popular City Guides'}
+        description={language === 'zh' 
+          ? '探索中国最受欢迎的城市。了解北京、上海、广州等40多个城市的深度旅游攻略、餐饮推荐和实用技巧。' 
+          : 'Explore the most popular cities in China. In-depth travel guides, food recommendations, and practical tips for over 40 cities including Beijing, Shanghai, and Guangzhou.'}
+        keywords={language === 'zh' ? '中国城市指南, 北京旅游, 上海旅游, 广州旅游, 中国热门目的地' : 'China city guides, Beijing travel, Shanghai travel, Guangzhou travel, popular China destinations'}
+      />
       <section className="relative h-[400px] flex items-center pt-16 bg-gray-900 overflow-hidden">
         <div className="absolute inset-0 bg-[url('https://static.tripcngo.com/ing/Fbanner_bg_2.jpg')] bg-cover bg-center" />
         <div className="absolute inset-0 bg-black/40" />
         <div className="max-w-[1240px] w-full mx-auto px-6 relative z-10 text-left">
           <h1 className="text-4xl md:text-5xl font-bold text-white mb-4 drop-shadow-md">
-            中国热门城市
+            {t('cities.hero.title')}
           </h1>
           <p className="text-white/95 text-base max-w-3xl drop-shadow-md">
-            探索中国最受欢迎的城市。了解北京、上海、广州有什么好玩的，发现顶级餐饮和购物推荐，甚至一些趣味知识，轻松规划您的行程。
+            {t('cities.hero.desc')}
           </p>
         </div>
       </section>
 
       <div className="max-w-[1240px] mx-auto px-6 mt-12 bg-[#f5fff9] rounded border border-green-500 border-dashed p-8 mb-12">
         <div className="text-center mb-6">
-          <h2 className="text-[28px] font-bold text-green-600 inline-block">中国简介</h2>
+          <h2 className="text-[28px] font-bold text-green-600 inline-block">{t('cities.intro.title')}</h2>
         </div>
         <div className="space-y-4 text-[15px] text-gray-700 leading-[1.8]">
-          <p>中华人民共和国，是世界上历史最悠久的国家之一，拥有5000年的文明历史。</p>
-          <p>中国位于亚洲东部，太平洋西岸，1949年建国，是一个人民民主专政的社会主义制度国家，也是世界上人口最多的国家之一，拥有14亿人口，国土面积约960万平方公里，是世界上面积第三大的国家。</p>
-          <p>中国的地势呈西高东低的三级阶梯，以高耸的青藏高原为起点，向东逐级下降至平原和海岸线。这种巨大的落差造就了从世界屋脊到东部沿海的丰富地貌，拥有包括沙漠、高原、盆地和平原等多样景观，并孕育了长江、黄河两大水系。</p>
-          <p>中国分为23个省、5个自治区、4个直辖市（北京、上海、天津、重庆）和2个特别行政区（香港、澳门）。首都北京是全国的政治和文化中心，而上海则是重要的经济和金融枢纽。</p>
-          <p>中国疆域辽阔、民族众多，共有56个官方认定的民族，以汉族为主体，通用汉语、汉字，汉族与少数民族统称为“中华民族”，自称“炎黄子孙”、“龙的传人”。</p>
-          <p>中国文化渊远流长、博大精深、绚烂多彩，是东亚文化圈的文化宗主国，在世界文化体系内占有重要地位，由于各地的地理位置、自然条件的差异，人文、经济方面也各有特点。传统文化艺术形式有诗词、戏曲、书法、国画等，而春节、元宵、清明、端午、中秋、重阳等则是中国重要的传统节日。</p>
+          <p>{t('cities.intro.p1')}</p>
+          <p>{t('cities.intro.p2')}</p>
+          <p>{t('cities.intro.p3')}</p>
+          <p>{t('cities.intro.p4')}</p>
+          <p>{t('cities.intro.p5')}</p>
+          <p>{t('cities.intro.p6')}</p>
         </div>
       </div>
 
@@ -80,7 +90,7 @@ export default function Cities() {
                 <div className="relative h-[240px] md:h-[260px] overflow-hidden cursor-pointer">
                   {/* Text Overlay for cities that might just use stock images */}
                   <div className="absolute inset-0 flex flex-col items-center justify-center z-10 p-6 pointer-events-none">
-                    <span className="text-white text-5xl md:text-6xl font-[STXingkai,cursive] tracking-widest drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)] opacity-90 mix-blend-overlay" style={{writingMode: city.id === 'beijing' ? 'horizontal-tb' : 'horizontal-tb'}}>{city.name}</span>
+                    <span className="text-white text-5xl md:text-6xl font-[STXingkai,cursive] tracking-widest drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)] opacity-90 mix-blend-overlay">{language === 'zh' ? city.name : city.id.charAt(0).toUpperCase() + city.id.slice(1)}</span>
                     <span className="text-white/80 text-[10px] sm:text-xs tracking-[0.4em] uppercase drop-shadow-md mt-2 font-mono whitespace-nowrap">{city.pinyin}</span>
                   </div>
                   <img src={city.img} alt={city.name} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" />
@@ -88,12 +98,12 @@ export default function Cities() {
                 </div>
                 <div className="p-4 flex items-center justify-between bg-white border-t border-gray-100">
                   <div>
-                    <span className="text-[15px] font-bold text-gray-900">{city.name}</span>
+                    <span className="text-[15px] font-bold text-gray-900">{language === 'zh' ? city.name : city.id.charAt(0).toUpperCase() + city.id.slice(1)}</span>
                     <div className="text-[13px] text-gray-400 mt-0.5">{city.id.charAt(0).toUpperCase() + city.id.slice(1)}</div>
                   </div>
-                  <div className="flex gap-2">
-                    <span className="flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium text-gray-500 bg-gray-50 rounded-full border border-gray-100"><Heart className="w-3.5 h-3.5 text-red-500 fill-red-500" /> {city.likes}</span>
-                    <span className="flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium text-gray-500 bg-gray-50 rounded-full border border-gray-100"><ThumbsUp className="w-3.5 h-3.5 text-green-500 fill-green-500" /> {city.helpful}</span>
+                  <div className="flex gap-2 text-gray-500">
+                    <span className="flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium bg-gray-50 rounded-full border border-gray-100 whitespace-nowrap"><Heart className="w-3.5 h-3.5 text-red-500 fill-red-500" /> {city.likes} {t('city.stats.wantToVisit')}</span>
+                    <span className="flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium bg-gray-50 rounded-full border border-gray-100 whitespace-nowrap"><ThumbsUp className="w-3.5 h-3.5 text-green-500 fill-green-500" /> {city.helpful} {t('city.stats.recommended')}</span>
                   </div>
                 </div>
               </Link>

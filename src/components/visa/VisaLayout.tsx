@@ -1,23 +1,26 @@
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { ChevronRight, Home } from 'lucide-react';
+import { useLanguage } from '../../context/LanguageContext';
 
 interface VisaLayoutProps {
   children: React.ReactNode;
   breadcrumbTitle: string;
 }
 
-const sidebarLinks = [
-  { text: '签证类型', path: '/visa/types' },
-  { text: '照片要求', path: '/visa/photo' },
-  { text: '费用标准', path: '/visa/fees' },
-  { text: '填写申请表', path: '/visa/form' },
-  { text: '入境卡填写指南', path: '/visa/arrival-card' },
-  { text: '材料下载', path: '/visa/downloads' },
+const sidebarLinks = (t: (key: string) => string) => [
+  { text: t('visa.menu.types'), path: '/visa/types' },
+  { text: t('visa.menu.photo'), path: '/visa/photo' },
+  { text: t('visa.menu.fee'), path: '/visa/fees' },
+  { text: t('visa.menu.form'), path: '/visa/form' },
+  { text: t('visa.menu.entryCard'), path: '/visa/arrival-card' },
+  { text: t('visa.menu.download'), path: '/visa/downloads' },
 ];
 
 export default function VisaLayout({ children, breadcrumbTitle }: VisaLayoutProps) {
   const location = useLocation();
+  const { t } = useLanguage();
+  const links = sidebarLinks(t);
 
   return (
     <div className="w-full flex-grow flex flex-col bg-[#fcfcfc]">
@@ -32,8 +35,8 @@ export default function VisaLayout({ children, breadcrumbTitle }: VisaLayoutProp
       >
         <div className="absolute inset-0 bg-black/40"></div>
         <div className="relative z-10 w-full max-w-7xl mx-auto px-6">
-          <h1 className="text-4xl md:text-5xl font-bold text-white mb-4">签证业务</h1>
-          <p className="text-lg text-white/90">全面了解中国签证信息，轻松办理签证，开启中国之旅</p>
+          <h1 className="text-4xl md:text-5xl font-bold text-white mb-4">{t('visa.hero.title')}</h1>
+          <p className="text-lg text-white/90">{t('visa.hero.desc')}</p>
         </div>
       </div>
 
@@ -42,11 +45,11 @@ export default function VisaLayout({ children, breadcrumbTitle }: VisaLayoutProp
         <div className="flex items-center text-sm text-gray-500 mb-8">
           <Link to="/" className="hover:text-[#1b887a] flex items-center">
             <Home className="w-4 h-4 mr-1" />
-            首页
+            {t('nav.home')}
           </Link>
           <ChevronRight className="w-4 h-4 mx-2" />
           <Link to="/visa" className="hover:text-[#1b887a]">
-            来华免签大全
+            {t('visa.mega.title')}
           </Link>
           <ChevronRight className="w-4 h-4 mx-2" />
           <span className="text-gray-900">{breadcrumbTitle}</span>
@@ -58,16 +61,16 @@ export default function VisaLayout({ children, breadcrumbTitle }: VisaLayoutProp
           {/* Sidebar */}
           <div className="w-full md:w-64 flex-shrink-0 bg-white border border-gray-100 rounded-sm shadow-sm p-4">
             <div className="text-center font-bold text-gray-800 py-3 mb-2 border-b border-gray-100">
-              — 签证业务 —
+              {t('visa.nav.title')}
             </div>
-            <nav className="flex flex-col">
-              {sidebarLinks.map((link) => {
+            <nav className="grid grid-cols-2 md:flex md:flex-col gap-2 md:gap-0">
+              {links.map((link) => {
                 const isActive = location.pathname === link.path;
                 return (
                   <Link
                     key={link.path}
                     to={link.path}
-                    className={`block py-3 px-4 text-[14px] transition-colors rounded-sm ${
+                    className={`block py-3 px-4 text-[14px] transition-colors rounded-sm text-center md:text-left ${
                       isActive 
                         ? 'bg-[#1b887a] text-white font-medium' 
                         : 'text-gray-600 hover:bg-gray-50 hover:text-[#1b887a]'
@@ -80,7 +83,7 @@ export default function VisaLayout({ children, breadcrumbTitle }: VisaLayoutProp
             </nav>
           </div>
 
-          /* Content */
+          {/* Main Content Area */}
           <div className="flex-1 w-full bg-white border border-gray-100 rounded-sm shadow-sm p-6 lg:p-8 min-h-[500px]">
             {children}
           </div>

@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Plane, Bed, TrainFront, Globe, Youtube, Phone, Music, Shield, Play, PhoneCall } from 'lucide-react';
+import { useLanguage } from '../context/LanguageContext';
+import SEO from '../components/SEO';
 
 const MENU_ITEMS = [
   { id: 'apps', name: '旅行必备APP', icon: Plane },
@@ -232,7 +234,18 @@ const SECTIONS = [
 ];
 
 export default function Apps() {
+  const { language, t } = useLanguage();
   const [activeSection, setActiveSection] = useState('apps');
+
+  const MENU_ITEMS = [
+    { id: 'apps', name: language === 'zh' ? '旅行必备APP' : 'Essential Apps', icon: Plane },
+    { id: 'hotels', name: language === 'zh' ? '酒店预定' : 'Hotel Booking', icon: Bed },
+    { id: 'transit', name: language === 'zh' ? '交通出行' : 'Transportation', icon: TrainFront },
+    { id: 'websites', name: language === 'zh' ? '权威网站' : 'Official Sites', icon: Globe },
+    { id: 'youtube', name: language === 'zh' ? 'YouTube达人' : 'YouTube Creators', icon: Youtube },
+    { id: 'tiktok', name: language === 'zh' ? 'TikTok达人' : 'TikTok Creators', icon: Music },
+    { id: 'phones', name: language === 'zh' ? '服务热线' : 'Service Hotlines', icon: PhoneCall },
+  ];
 
   useEffect(() => {
     // Basic Intersection Observer for active section highlighting
@@ -262,8 +275,30 @@ export default function Apps() {
     }
   };
 
+  const translatedSections = SECTIONS.map(section => ({
+    ...section,
+    title: language === 'zh' ? section.title : MENU_ITEMS.find(m => m.id === section.id)?.name || section.title,
+    items: section.items.map(item => ({
+      ...item,
+      desc: language === 'zh' ? item.desc : (item.name.includes('WeChat') ? 'Not just for chatting, but also for payments, taxi hailing, anytime, anywhere.' : 
+                                            item.name.includes('Alipay') ? 'Used almost everywhere for payments, food delivery, taxi, tickets, etc.' :
+                                            item.name.includes('MeiTuan') ? 'All-in-one for food, stay, and travel for a better life.' :
+                                            item.name.includes('Xiaohongshu') ? 'Life, food, travel, and shopping sharing platform.' :
+                                            item.name.includes('Trip') ? 'One-stop travel service for hotels, flights, and trains.' :
+                                            item.name.includes('GaoDe') ? 'Leading navigation app with real-time traffic and public transport.' :
+                                            item.name.includes('DiDi') ? 'Main ride-hailing platform with English interface and intl card support.' :
+                                            item.name.includes('12306') ? 'Official railway ticket booking service.' :
+                                            item.name.includes('NIA') ? 'Official info on visa policies and 240h transit visa-free.' :
+                                            item.desc)
+    }))
+  }));
+
   return (
     <div className="w-full bg-[#f9f9f9] pb-20">
+      <SEO 
+        title={t('nav.catalog')}
+        description={t('apps.hero.desc') || 'Essentials for China travel'}
+      />
       {/* Header Banner */}
       <section className="relative h-[480px] flex items-center pt-16 bg-gray-900 overflow-hidden">
         <div className="absolute inset-0 bg-[url('https://static.tripcngo.com/ing/mulubg.jpg')] bg-cover bg-center" />
@@ -271,10 +306,13 @@ export default function Apps() {
         
         <div className="max-w-[1240px] w-full mx-auto px-6 relative z-10 text-left">
           <h1 className="text-4xl md:text-5xl font-bold text-white mb-6 drop-shadow-md tracking-tight">
-            中国之旅必备应用 2026<span className="text-white/90 font-normal">（最新版）</span>
+            {language === 'zh' ? '中国之旅必备应用 2026' : 'Must-Have Apps for China 2026'}<span className="text-white/90 font-normal">{language === 'zh' ? '（最新版）' : ' (v2.0)'}</span>
           </h1>
           <p className="text-lg md:text-xl text-white/90 max-w-3xl leading-relaxed drop-shadow-sm font-medium">
-            Google、Uber 在中国无法使用？无需担心。本指南为您收录 2026 年最受当地人喜爱的必备 App，涵盖移动支付、交通、社交、外卖，让您像本地人一样轻松畅游中国。
+            {language === 'zh' 
+              ? 'Google、Uber 在中国无法使用？无需担心。本指南为您收录 2026 年最受当地人喜爱的必备 App，涵盖移动支付、交通、社交、外卖，让您像本地人一样轻松畅游中国。'
+              : 'Google and Uber don\'t work in China? No worries. This guide lists the 2026 essential apps favored by locals, covering mobile payments, transport, social media, and food delivery, helping you travel China like a pro.'
+            }
           </p>
         </div>
       </section>
@@ -283,7 +321,7 @@ export default function Apps() {
       <div className="max-w-[1280px] mx-auto px-6 mt-12 flex flex-col lg:flex-row gap-8 lg:gap-12 relative items-start">
         
         {/* Left Sidebar Menu */}
-        <div className="w-full lg:w-[240px] flex-shrink-0 sticky top-24 z-20">
+        <div className="hidden lg:block lg:w-[240px] flex-shrink-0 sticky top-24 z-20">
            <div className="bg-white rounded-2xl p-4 shadow-sm border border-gray-100">
              <nav className="space-y-1">
                {MENU_ITEMS.map((item) => {
@@ -309,7 +347,7 @@ export default function Apps() {
 
         {/* Dynamic Content Sections */}
         <div className="flex-1 space-y-12">
-           {SECTIONS.map((section) => (
+           {translatedSections.map((section) => (
              <section key={section.id} id={`section-${section.id}`} className="scroll-mt-24">
                <h2 className="text-xl font-bold text-gray-900 mb-6 flex items-center gap-2">
                  <section.icon className="w-6 h-6" />

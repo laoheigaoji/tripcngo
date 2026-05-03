@@ -1,16 +1,19 @@
 import React from 'react';
 import VisaLayout from '../../components/visa/VisaLayout';
+import { useLanguage } from '../../context/LanguageContext';
 
 export default function VisaForm() {
+  const { t } = useLanguage();
   return (
-    <VisaLayout breadcrumbTitle="填写申请表">
+    <VisaLayout breadcrumbTitle={t('visa.menu.form')}>
       <div className="w-full">
         <img 
           src="https://static.tripcngo.com/ing/shenqingbiao.png" 
-          alt="签证申请表" 
+          alt={t('visa.menu.form')} 
           className="w-full h-auto rounded-sm border border-gray-100 shadow-sm"
         />
       </div>
     </VisaLayout>
   );
 }
+

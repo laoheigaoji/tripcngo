@@ -460,64 +460,6 @@ export const citiesData: Record<string, CityData> = {
       { name: '武昌鱼', enName: 'Wuchang Fish', pinyin: 'Wǔchāng yú', price: '¥80-150/份', desc: '毛主席诗词中赞誉的名鱼，肉质细嫩，味道鲜美。', enDesc: 'Famous fish praised by Chairman Mao, tender and delicious.', ingredients: '武昌鱼、葱、姜、料酒。', enIngredients: 'Wuchang fish, scallions, ginger, wine.', imageIdx: 90 }
     ]
   },
-  ningbo: {
-    id: 'ningbo',
-    name: '宁波',
-    enName: 'Ningbo',
-    heroImage: 'https://images.unsplash.com/photo-1549480112-c28892ca8a27?q=80&w=2670&auto=format&fit=crop',
-    tags: [
-      { text: '144小时过境免签', enText: '144h Visa-Free', color: 'green' },
-      { text: '海丝枢纽', enText: 'Silk Road Hub', color: 'blue' },
-      { text: '院士之乡', enText: 'Home of Academicians', color: 'amber' }
-    ],
-    paragraphs: [
-      '宁波市（Ningbo City），简称“甬”，别称甬城。作为浙江省的副省级城市、计划单列市，宁波是中国东南沿海重要的港口城市和国家历史文化名城。它不仅拥有7000年的河姆渡文化底蕴，更是“海上丝绸之路”的重要起点之一。这种书卷气与海洋气息的交融，构成了宁波独特且厚重的城市底色。',
-      '宁波地处东海之滨、宁绍平原东部，境内江河纵横，拥有漫长的海岸线和众多的岛屿。这里属于亚热带季风气候，四季分明，雨量充沛。作为大运河的南端出海口，宁波自古以来便是连接内陆与海外的核心枢纽。这种得天独厚的地理环境，也造就了宁波人务实、开明且富有开拓精神的性格特征。',
-      '宁波的魅力，在于其深厚的藏书文化与宏大的海洋气魄的互补。您可以步入“南国书城”天一阁，在摩挲古籍中感受中国现存最古老私家藏书楼的文脉沉淀；也可以漫步在三江口的老外滩，在欧式建筑与江风中品味近代开埠的沧桑史。而宁波博物馆那极具张力的瓦爿墙建筑，则向世界展示着这座城市对历史记忆的现代重塑。',
-      '作为享誉世界的“宁波帮”故里，宁波自近代以来便以工商业发达而著称。不仅培育了众多的实业巨子，更是中国的“院士之乡”。这种重教、崇文且善经商的文化基因，让宁波在追求经济高速增长的同时，始终保持着深厚的人文关怀。饮食上，宁波汤圆的软糯香甜与红膏炝蟹的鲜美咸鲜，则是东海之滨最令人难忘的味觉记忆。',
-      '今天的宁波，正加速建设现代化滨海大都市。作为全球货物吞吐量最大的港口——宁波舟山港的所在地，宁波在守护蓝天碧海与历史遗址的同时，正深度融入全球贸易版图。在东海之滨，它正向世界展示着一种融合了古典温婉与科技繁华的现代化新图景。'
-    ],
-    enParagraphs: [
-      'Ningbo, historically known as "Yong," is a pivotal coastal city in Zhejiang Province and a National Historical and Cultural City. Home to the 7,000-year-old Hemudu Culture and a key gateway of the Maritime Silk Road, Ningbo blends a deep scholarly tradition with a bold maritime spirit, making it an essential political and economic hub in Southeast China.',
-      'Located on the East China Sea coast at the end of the Grand Canal, Ningbo enjoys a subtropical monsoon climate with distinct seasons. Its extensive coastline and strategic "Three Rivers Confluence" (Sanjiangkou) have made it a vital link between inland China and the world for millennia, fostering a local character that is famously pragmatic, open-minded, and pioneering.',
-      'The soul of Ningbo thrives on the synergy between its ancient library culture and its grand marine outlook. The Tianyi Pavilion, the oldest private library in China, preserves the city\'s scholarly lineage, while the Old Bund, with its unique blend of European architecture, tells the story of modern openness. The Ningbo Museum, with its iconic repurposed masonry walls, reimagines this historic memory for a modern world.',
-      'Known as the cradle of the "Ningbo Group" (influential Ningbo entrepreneurs) and the "Home of Academicians," the city boasts a long history of excellence in both commerce and academia. This culture of valuing education while excelling in industry has produced world-renowned figures. Culturally, the city is defined by its delicate flavors, from the sweet, smooth Ningbo Rice Balls to the savory raw mud crabs, reflecting its rich coastal heritage.',
-      'Today, Ningbo is evolving into a world-class modern coastal metropolis. As the site of the Ningbo-Zhoushan Port—the world\'s busiest by cargo tonnage—the city is accelerating its global integration while protecting its historical and marine environments. On the shores of the East China Sea, it presents a dynamic vision of a future where tradition and high-tech prosperity coexist in harmony.'
-    ],
-    stats: { wantToVisit: 62, recommended: 6 },
-    info: { area: '9.8K km²', population: '9.6M' },
-    bestTravelTime: {
-      strongText: '春季的4月至5月 和 秋季的9月至10月',
-      enStrongText: 'April to May (Spring) and September to October (Autumn)',
-      paragraphs: [
-        '春天的宁波海风柔和，是游览东钱湖和溪口风景区的最佳时间。',
-        '秋季，天高气爽，阳光明媚，是品尝东海海鲜、领略滨海城市魅力的黄金时期。',
-        '此外，元宵节期间去城隍庙体验地道的宁波汤圆文化也非常应景。'
-      ],
-      enParagraphs: [
-        'Spring offers gentle sea breezes, perfect for exploring Dongqian Lake and the Xikou scenic area.',
-        'Autumn brings clear skies and pleasant weather—ideal for savoring East China Sea seafood and the city\'s coastal charm.',
-        'Visiting during the Lantern Festival to experience the local rice ball tradition in the City God Temple is also a great choice.'
-      ]
-    },
-    history: [
-      { year: '约7000年前', enYear: '7,000 years ago', title: '河姆渡文化', enTitle: 'Hemudu Culture', desc: '河姆渡遗址的发现，证明了这里是长江流域乃至人类水稻种植的最早发源地之一。', enDesc: 'One of the earliest cradles of rice cultivation in the Yangtze River basin.' },
-      { year: '公元1561年', enYear: '1561 AD', title: '天一阁建阁', enTitle: 'Tianyi Pavilion Built', desc: '范钦创建天一阁，开启了中国现存最早私家藏书楼的历史，奠定了宁波的藏书文化根基。', enDesc: 'Fan Qin built the oldest surviving private library in China, grounding the city\'s culture.' },
-      { year: '1844年', enYear: '1844 AD', title: '开埠通商', enTitle: 'Opening of Port', desc: '作为近代著名通商口岸开埠，宁波老外滩见证了中外商贸与文化的深度融合。', enDesc: 'Ningbo opened as a major treaty port, seeing deep cultural and commercial integration.' }
-    ],
-    attractions: [
-      { name: '天一阁博物院', enName: 'Tianyi Pavilion Museum', desc: '中国现存最古老的私家藏书楼，感受其间散发的宁静书卷气与园林之美。', enDesc: 'China\'s oldest private library, famous for its scholarly and garden beauty.', price: '30元', enPrice: '30 RMB', season: '全年', enSeason: 'All year', time: '1-2小时', enTime: '1-2h', rating: 'AAAAA' },
-      { name: '宁波博物馆', enName: 'Ningbo Museum', desc: '王澍设计的标志性建筑，通过其独特的墙面艺术展现宁波的历史底蕴。', enDesc: 'An architectural masterpiece by Wang Shu showcasing regional history.', price: '免费(需预约)', enPrice: 'Free (Reservation required)', season: '全年', enSeason: 'All year', time: '2-3小时', enTime: '2-3h', rating: '国家一级博物馆' }
-    ],
-    transportation: [
-      { iconName: 'Ship', title: '轮渡/港口', enTitle: 'Ferry/Port', desc: '宁波是国际级港口枢纽，拥有成熟的滨海和内河航运网络。', enDesc: 'A world-class hub with advanced sea and river transport networks.', price: '客运航线丰富。', enPrice: 'Wide variety of passenger routes.' },
-      { iconName: 'Train', title: '高铁', enTitle: 'HSR', desc: '宁波站是华东地区重要的铁路枢纽，连接杭甬、甬台温等干线。', enDesc: 'A key rail hub in East China connecting major coastal lines.', price: '班次密集，通达各大核心城市。', enPrice: 'High-frequency connections to major cities.' }
-    ],
-    food: [
-      { name: '宁波汤圆', enName: 'Ningbo Rice Balls', pinyin: 'Níngbō tāngyuán', price: '¥10-20/份', desc: '宁波饮食最具代表性的名片，白如羊脂，软糯香甜。', enDesc: 'The most iconic Ningbo dish, famous for its smoothness and sweetness.', ingredients: '糯米、黑芝麻、猪油、白糖。', enIngredients: 'Sticky rice, black sesame, lard, sugar.', imageIdx: 87 },
-      { name: '红膏炝蟹', enName: 'Red Roe Pickled Crab', pinyin: 'Hónggāo qiàngxiè', price: '¥100-200/份', desc: '地道的宁波咸鲜味，选材考究，色泽红亮，鲜美适口。', enDesc: 'Authentic Ningbo salty and fresh flavor with brilliant red roe.', ingredients: '梭子蟹、盐、白酒、香料。', enIngredients: 'Swimming crab, salt, wine, spices.', imageIdx: 88 }
-    ]
-  },
   shangrao: {
     id: 'shangrao',
     name: '上饶',

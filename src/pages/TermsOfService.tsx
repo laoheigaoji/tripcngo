@@ -1,67 +1,80 @@
 import React from 'react';
+import { useLanguage } from '../context/LanguageContext';
+import SEO from '../components/SEO';
 
 const TermsOfService = () => {
+    const { language, t } = useLanguage();
     return (
-        <div className="max-w-4xl mx-auto px-6 py-12">
-            <h1 className="text-4xl font-bold mb-4">服务条款</h1>
-            <p className="text-gray-600 mb-8">了解tripcngo.com的权利与义务</p>
-            <div className="prose prose-green max-w-none text-gray-800">
-                <p className="text-sm text-gray-500 mb-8">最后更新日期：2025年4月26日</p>
+        <div className="bg-white">
+            <SEO 
+                title={t('terms.hero.title')}
+                description={t('terms.hero.subtitle')}
+                keywords={language === 'zh' ? '服务条款, tripcngo条款' : 'Terms of Service, tripcngo terms'}
+            />
+            {/* Hero Section */}
+            <div 
+                className="relative h-[400px] flex items-center justify-center bg-cover bg-center"
+                style={{ backgroundImage: 'url(https://static.tripcngo.com/ing/banner_bg_1.jpg)' }}
+            >
+                <div className="absolute inset-0 bg-black/40" />
+                <div className="relative text-center">
+                    <h1 className="text-white text-5xl font-bold mb-4">{t('terms.hero.title')}</h1>
+                    <p className="text-white/80 text-xl font-medium">{t('terms.hero.subtitle')}</p>
+                </div>
+            </div>
+
+            <div className="max-w-4xl mx-auto px-6 py-16">
+                <div className="prose prose-green max-w-none text-gray-800">
+                <p className="text-sm text-gray-500 mb-8">{t('privacy.lastUpdated')}</p>
                 
-                <h3 className="text-xl font-bold mt-8 mb-4">1. 服务内容</h3>
-                <p>本网站旨在为计划前往中国旅行的外国游客提供全面和便捷的服务。目前，本网站主要提供以下服务：</p>
-                <ul className="list-disc ml-6 space-y-2">
-                    <li><strong>首页：</strong> 展示中国热门旅游目的地、城市榜单、免签政策搜索、旅游资讯等。</li>
-                    <li><strong>签证政策：</strong> 提供各类中国签证的详细介绍、分国别指南、申请流程、常见问题解答、最新政策及入境须知、口岸信息等。</li>
-                    <li><strong>中国文化：</strong> 分类介绍中国传统文化、地域文化特色、文学特色等。</li>
-                    <li><strong>漫游攻略：</strong> 提供基于AI技术的个性化旅行计划生成，用户游记分享平台、中国日历旅行推荐等。</li>
-                    <li><strong>旅行导航：</strong> 推荐入境中国旅行必备APP或者网站等。</li>
-                    <li><strong>其他辅助功能：</strong> 提供多语言切换、网站地图、反馈建议渠道等。</li>
-                </ul>
-                <p>未来，随着APP的开发和上线，我们将提供更加智能化服务，包括个性化旅行计划智能生成、拍照实时翻译、火车在线购买、酒店在线预订、特色纪念品在线购买等。</p>
+                {language === 'zh' ? (
+                    <>
+                        <h3 className="text-xl font-bold mt-8 mb-4">1. 服务内容</h3>
+                        <p>本网站旨在为计划前往中国旅行的外国游客提供全面和便捷的服务。目前，本网站主要提供以下服务：</p>
+                        <ul className="list-disc ml-6 space-y-2">
+                            <li><strong>首页：</strong> 展示中国热门旅游目的地、城市榜单、免签政策搜索、旅游资讯等。</li>
+                            <li><strong>签证政策：</strong> 提供各类中国签证的详细介绍、分国别指南、申请流程、常见问题解答、最新政策及入境须知、口岸信息等。</li>
+                            <li><strong>中国文化：</strong> 分类介绍中国传统文化、地域文化特色、文学特色等。</li>
+                            <li><strong>漫游攻略：</strong> 提供基于AI技术的个性化旅行计划生成，用户游记分享平台、中国日历旅行推荐等。</li>
+                            <li><strong>旅行导航：</strong> 推荐入境中国旅行必备APP或者网站等。</li>
+                        </ul>
 
-                <h3 className="text-xl font-bold mt-8 mb-4">2. 用户行为规范</h3>
-                <p>在使用本网站时，您同意遵守以下规定：</p>
-                <ul className="list-disc ml-6 space-y-2">
-                    <li>不利用本网站从事任何非法活动或违反中国法律法规的行为。</li>
-                    <li>不侵犯本网站及任何第三方的合法权益，包括但不限于知识产权、隐私权等。</li>
-                    <li>不上传、发布、传播任何包含诽谤、淫秽、色情、暴力、威胁、骚扰等不良信息的言论或内容。</li>
-                    <li>不干扰、破坏本网站的正常运行，包括但不限于使用病毒、恶意软件等攻击网站。</li>
-                    <li>不进行任何未经授权的数据收集或抓取行为。</li>
-                    <li>您在本网站分享的游记、评论等内容，应保证其真实性、合法性，并同意本网对其进行展示、编辑和传播。</li>
-                </ul>
+                        <h3 className="text-xl font-bold mt-8 mb-4">2. 用户行为规范</h3>
+                        <p>在使用本网站时，您同意不从事任何非法活动，不侵犯第三方权益，不传播不良信息。我们保留对违反规定者终止服务的权利。</p>
 
-                <h3 className="text-xl font-bold mt-8 mb-4">3. 知识产权</h3>
-                <p>平台上的所有内容（包括但不限于文字、图片、视频、音频、商标、标识、设计等），除明确明示为第三方所有的内容外，其知识产权归本网站所有，并受中国及国际知识产权法律的保护。</p>
-                <p>未经本网站书面许可，您不得以任何方式：</p>
-                <ul className="list-disc ml-6 space-y-2">
-                    <li>复制、修改、传播、出售或以其他方式使用本网站的任何内容。</li>
-                    <li>对于用户在本网站分享的游记等内容，用户保证拥有合法的知识产权或已获得必要的授权。用户同意授予本网站在全球范围内免费、永久、不可撤销、非独占的许可，以使用、复制、修改、改编、出版、分发、展示这些内容，并将其用于宣传推广本网站及相关服务。</li>
-                </ul>
+                        <h3 className="text-xl font-bold mt-8 mb-4">3. 知识产权</h3>
+                        <p>平台上的所有内容其知识产权归本网站所有。未经书面许可，您不得以任何方式复制、修改或传播。对于用户分享的内容，用户授予本网站在全球范围内的使用许可。</p>
 
-                <h3 className="text-xl font-bold mt-8 mb-4">4. 免责声明</h3>
-                <p>请您仔细阅读以下免责声明：</p>
-                <ul className="list-disc ml-6 space-y-2">
-                    <li>本网站尽力提供准确、及时的信息，但不对信息的完整性、准确性、可靠性、适用性做出任何明示或暗示的保证。您理解并同意，您使用本站所产生的一切风险由您自行承担。</li>
-                    <li>本网站提供的签证政策、入境须知等信息仅供参考，具体请以中国相关政府部门的官方发布为准。</li>
-                    <li>本网站提供的第三方网站或APP的链接，旨在为您提供便利。我们不对这些第三方网站或APP的内容、服务或隐私政策承担任何责任。您访问这些链接或使用这些第三方服务时，应自行判断并承担相应的风险。</li>
-                    <li>对于因不可抗力（如自然灾害、网络故障、政府行为等）导致的服务中断或信息错误，本网站不承担任何责任。</li>
-                    <li>本网站利用AI技术生成的旅行计划仅供参考，用户应根据自身实际情况进行调整和决策。</li>
-                </ul>
+                        <h3 className="text-xl font-bold mt-8 mb-4">4. 免责声明</h3>
+                        <p>本网站尽力提供准确信息，但不对信息的完整性、及准确性做出保证。签证及入境指南仅供参考，请以官方发布为准。AI生成的计划仅供内部参考。</p>
+                    </>
+                ) : (
+                    <>
+                        <h3 className="text-xl font-bold mt-8 mb-4">1. Service Content</h3>
+                        <p>This website aims to provide comprehensive services for foreign tourists planning to travel to China, including:</p>
+                        <ul className="list-disc ml-6 space-y-2">
+                            <li><strong>Homepage:</strong> Showcasing destinations, rankings, visa-free search, and travel news.</li>
+                            <li><strong>Visa Policy:</strong> Detailed visa info, application guides, FAQ, and latest entry news.</li>
+                            <li><strong>Chinese Culture:</strong> Traditional and regional cultural features.</li>
+                            <li><strong>Travel Guides:</strong> AI-powered personalized itinerary generation and stories.</li>
+                            <li><strong>Navigation:</strong> Recommended travel apps and websites.</li>
+                        </ul>
 
-                <h3 className="text-xl font-bold mt-8 mb-4">5. 服务变更与终止</h3>
-                <p>本网站保留以下权利：</p>
-                <ul className="list-disc ml-6 space-y-2">
-                    <li>根据业务发展需要，随时修改、暂停或终止本网站的部门或全部服务，并有权修改本条款。我们将会在合理的时间内通过网站公告等方式告知您服务或条款的变更。您继续使用本网站的行为视为接受变更后的服务或条款。</li>
-                    <li>如果用户违反本条款的规定，本网站有权随时终止向其提供服务，并保留追究其法律责任的权利。</li>
-                </ul>
+                        <h3 className="text-xl font-bold mt-8 mb-4">2. User Conduct</h3>
+                        <p>By using this site, you agree not to engage in illegal activities, infringe on rights, or spread harmful content. We reserve the right to terminate service for violations.</p>
 
-                <h3 className="text-xl font-bold mt-8 mb-4">6. 争议解决</h3>
-                <p>本条款的解释、执行及因本条款产生的任何争议，均适用中华人民共和国法律。如果您与本网站之间发生任何争议，应首先通过友好协商解决。协商不成的，应提交至本网站所在地有管辖权的人民法院诉讼解决。</p>
+                        <h3 className="text-xl font-bold mt-8 mb-4">3. Intellectual Property</h3>
+                        <p>All content belongs to this website unless stated otherwise. Unauthorized copying or modification is prohibited. Users grant us a global license for shared stories.</p>
 
-                <h3 className="text-xl font-bold mt-8 mb-4">7. 联系我们</h3>
-                <p>如果您对本服务条款有任何疑问或意见，请通过以下方式与我们联系：</p>
-                <p className="mt-2">邮箱：fridaychow85@gmail.com</p>
+                        <h3 className="text-xl font-bold mt-8 mb-4">4. Disclaimer</h3>
+                        <p>We strive for accuracy but do not guarantee completeness. Visa and entry guides are for reference only—please refer to official sources. AI itineraries are reference suggestions.</p>
+                    </>
+                )}
+                
+                <h3 className="text-xl font-bold mt-8 mb-4">{language === 'zh' ? '5. 联系我们' : '5. Contact Us'}</h3>
+                <p>{language === 'zh' ? '如果您对本服务条款有任何疑问或意见，请通过以下方式与我们联系：' : 'If you have any questions or feedback regarding these terms, please contact us:'}</p>
+                <p className="mt-2">{language === 'zh' ? '邮箱' : 'Email'}: contact@tripcngo.com</p>
+            </div>
             </div>
         </div>
     );

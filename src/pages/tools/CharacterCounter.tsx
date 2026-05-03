@@ -1,8 +1,10 @@
 import React, { useState } from 'react';
-import Navbar from '../../components/Navbar';
 import Footer from '../../components/Footer';
+import { useLanguage } from '../../context/LanguageContext';
+import SEO from '../../components/SEO';
 
 const CharacterCounter = () => {
+    const { language, t } = useLanguage();
     const [text, setText] = useState('');
     
     const countStats = (str: string) => {
@@ -19,21 +21,31 @@ const CharacterCounter = () => {
 
     return (
         <div className="min-h-screen bg-neutral-50 text-neutral-900">
-            <Navbar />
-            <main className="pt-24 pb-12 max-w-4xl mx-auto px-6">
-                <header className="mb-10 text-center">
-                    <h1 className="text-4xl font-sans font-medium tracking-tight mb-2">中文字符计数器</h1>
-                    <p className="text-neutral-500 font-sans">粘贴文本，为您快速统计字符组成。</p>
-                </header>
+            <SEO 
+                title={t('tools.char.title')}
+                description={t('tools.char.desc')}
+            />
+            {/* Hero Section */}
+            <div 
+                className="relative h-[300px] flex items-center justify-center bg-cover bg-center"
+                style={{ backgroundImage: 'url(https://static.tripcngo.com/ing/banner_bg_1.jpg)' }}
+            >
+                <div className="absolute inset-0 bg-black/40" />
+                <div className="relative text-center">
+                    <h1 className="text-white text-5xl font-bold mb-4">{t('tools.char.title')}</h1>
+                    <p className="text-white/80 text-xl font-medium">{t('tools.char.desc')}</p>
+                </div>
+            </div>
 
+            <main className="pb-12 max-w-4xl mx-auto px-6 mt-12">
                 <section className="bg-white p-8 rounded-3xl shadow-sm border border-neutral-100 mb-8">
                     <div className="grid grid-cols-2 md:grid-cols-5 gap-6">
                         {[
-                            { label: '总字符', val: stats.char },
-                            { label: '中文', val: stats.chinese },
-                            { label: '英文', val: stats.english },
-                            { label: '数字', val: stats.digits },
-                            { label: '标点', val: stats.punctuations }
+                            { label: t('tools.char.total'), val: stats.char },
+                            { label: t('tools.char.zh'), val: stats.chinese },
+                            { label: t('tools.char.en'), val: stats.english },
+                            { label: t('tools.char.digits'), val: stats.digits },
+                            { label: t('tools.char.punc'), val: stats.punctuations }
                         ].map(({ label, val }) => (
                             <div key={label} className="bg-neutral-50 p-6 rounded-2xl text-center border border-neutral-100">
                                 <div className="text-neutral-500 text-sm font-semibold uppercase tracking-wider mb-2">{label}</div>
@@ -47,7 +59,7 @@ const CharacterCounter = () => {
                     className="w-full h-80 p-8 border border-neutral-200 rounded-3xl focus:ring-2 focus:ring-neutral-900 outline-none transition text-lg"
                     value={text}
                     onChange={(e) => setText(e.target.value)}
-                    placeholder="粘贴或输入文本以开始统计..."
+                    placeholder={t('tools.char.placeholder')}
                 />
             </main>
             <Footer />

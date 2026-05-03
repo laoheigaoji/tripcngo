@@ -38,7 +38,7 @@ export default function Navbar() {
       className={`fixed top-0 w-full z-50 transition-all duration-300 ${
         isScrolled 
           ? 'bg-[#1a1a1a] shadow-md py-4 text-white' 
-          : 'bg-gradient-to-b from-black/80 to-transparent py-5 text-white'
+          : 'bg-transparent py-5 text-white'
       }`}
     >
       <div className="max-w-[1400px] mx-auto px-6 flex justify-between items-center">
@@ -47,7 +47,7 @@ export default function Navbar() {
           <img src="https://api.iconify.design/game-icons:mountains.svg?color=white" alt="Logo" className="w-10 h-10" />
           <div className="flex flex-col">
             <span className="text-xl font-bold tracking-tight leading-tight">tripcngo.com</span>
-            <span className="text-[11px] text-gray-300 tracking-[0.2em] font-medium">漫游中国指南</span>
+            <span className="text-[11px] text-gray-300 tracking-[0.1em] font-medium">{t('nav.slogan')}</span>
           </div>
         </Link>
 
@@ -61,7 +61,7 @@ export default function Navbar() {
 
             return (
               <div key={item.name} className="relative group/nav">
-                {item.name === '工具' ? (
+                {isTools ? (
                   <button 
                     className={`flex items-center gap-1 text-[15px] transition-colors hover:text-gray-300 py-2 cursor-pointer ${isActive ? 'text-green-400' : 'text-white'}`}
                   >
@@ -106,9 +106,10 @@ export default function Navbar() {
                       <div className="flex-1 pl-10 py-2 flex flex-col justify-between">
                         <Link to="/visa/types" className="text-[14px] font-medium text-gray-800 hover:text-[#1b887a] block">{t('visa.types')}</Link>
                         <Link to="/visa/photo" className="text-[14px] font-medium text-gray-800 hover:text-[#1b887a] block">{t('visa.photo')}</Link>
-                        <Link to="#" className="text-[14px] font-medium text-gray-800 hover:text-[#1b887a] block">{t('visa.fee')}</Link>
-                        <Link to="#" className="text-[14px] font-medium text-gray-800 hover:text-[#1b887a] block">{t('visa.form')}</Link>
+                        <Link to="/visa/fees" className="text-[14px] font-medium text-gray-800 hover:text-[#1b887a] block">{t('visa.fee')}</Link>
+                        <Link to="/visa/form" className="text-[14px] font-medium text-gray-800 hover:text-[#1b887a] block">{t('visa.form')}</Link>
                         <Link to="/visa/arrival-card" className="text-[14px] font-medium text-gray-800 hover:text-[#1b887a] block">{t('visa.card')}</Link>
+                        <Link to="/visa/downloads" className="text-[14px] font-medium text-gray-800 hover:text-[#1b887a] block">{t('visa.menu.download')}</Link>
                       </div>
                     </div>
                   </div>
@@ -130,28 +131,28 @@ export default function Navbar() {
                           <Link to="/cities" className="text-green-600 text-[13px] hover:underline">{t('discover.moreCities')} &gt;&gt;</Link>
                         </div>
                         <div className="grid grid-cols-2 gap-y-3 gap-x-2 text-[13px]">
-                          <a href="#" className="hover:text-green-600 truncate">北京(Beijing)</a>
-                          <a href="#" className="hover:text-green-600 truncate">上海(Shanghai)</a>
-                          <a href="#" className="hover:text-green-600 truncate">广州(Guangzhou)</a>
-                          <a href="#" className="hover:text-green-600 truncate">深圳(Shenzhen)</a>
-                          <a href="#" className="hover:text-green-600 truncate">杭州(Hangzhou)</a>
-                          <a href="#" className="hover:text-green-600 truncate">重庆(Chongqing)</a>
-                          <a href="#" className="hover:text-green-600 truncate">成都(Chengdu)</a>
-                          <a href="#" className="hover:text-green-600 truncate">西安(Xi'an)</a>
-                          <a href="#" className="hover:text-green-600 truncate">长沙(Changsha)</a>
-                          <a href="#" className="hover:text-green-600 truncate">厦门(Xiamen)</a>
+                          <Link to="/cities/beijing" className="hover:text-green-600 truncate">{t('city.beijing')}(Beijing)</Link>
+                          <Link to="/cities/shanghai" className="hover:text-green-600 truncate">{t('city.shanghai')}(Shanghai)</Link>
+                          <Link to="/cities/guangzhou" className="hover:text-green-600 truncate">{t('city.guangzhou')}(Guangzhou)</Link>
+                          <Link to="/cities/shenzhen" className="hover:text-green-600 truncate">{t('city.shenzhen')}(Shenzhen)</Link>
+                          <Link to="/cities/hangzhou" className="hover:text-green-600 truncate">{t('city.hangzhou')}(Hangzhou)</Link>
+                          <Link to="/cities/chongqing" className="hover:text-green-600 truncate">{t('city.chongqing')}(Chongqing)</Link>
+                          <Link to="/cities/chengdu" className="hover:text-green-600 truncate">{t('city.chengdu')}(Chengdu)</Link>
+                          <Link to="/cities/xian" className="hover:text-green-600 truncate">{t('city.xian')}(Xi'an)</Link>
+                          <Link to="/cities/changsha" className="hover:text-green-600 truncate">{t('city.changsha')}(Changsha)</Link>
+                          <Link to="/cities/xiamen" className="hover:text-green-600 truncate">{t('city.xiamen')}(Xiamen)</Link>
                         </div>
                       </div>
                       
                       {/* Right Column: Guides */}
                       <div className="w-1/2 pl-6 space-y-6">
-                        <a href="#" className="flex items-start gap-3 group">
+                        <Link to="/articles" className="flex items-start gap-3 group">
                           <BookOpen className="w-5 h-5 text-green-600 mt-0.5 flex-shrink-0" />
                           <div>
                             <div className="font-bold text-[14px] text-gray-900 group-hover:text-green-600 transition-colors">{t('discover.guides')}</div>
                             <div className="text-[12px] text-gray-500 mt-1 leading-relaxed">{t('discover.guides.desc')}</div>
                           </div>
-                        </a>
+                        </Link>
                         <Link to="/guide" className="flex items-start gap-3 group">
                           <Compass className="w-5 h-5 text-green-600 mt-0.5 flex-shrink-0" />
                           <div>
@@ -239,13 +240,23 @@ export default function Navbar() {
           </div>
         </div>
 
-        {/* Mobile Toggle */}
-        <button 
-          className="md:hidden p-2 rounded-md"
-          onClick={() => setIsMobileMenuOpen(true)}
-        >
-          <Menu className="w-6 h-6 z-50" />
-        </button>
+        {/* Mobile Actions */}
+        <div className="md:hidden flex items-center gap-2">
+          <button 
+            className="p-2 rounded-full bg-white/10 border border-white/20 flex items-center justify-center mr-1"
+            onClick={() => setLanguage(language === 'zh' ? 'en' : 'zh')}
+            title={language === 'zh' ? 'Switch to English' : '切换为中文'}
+          >
+            <Globe className="w-5 h-5" />
+          </button>
+          
+          <button 
+            className="p-2 rounded-md"
+            onClick={() => setIsMobileMenuOpen(true)}
+          >
+            <Menu className="w-6 h-6 z-50" />
+          </button>
+        </div>
       </div>
 
       {/* Mobile Nav Overlay */}
@@ -259,7 +270,10 @@ export default function Navbar() {
             className="fixed inset-0 bg-[#1a1a1a] z-50 p-6 flex flex-col text-white h-screen overflow-y-auto"
           >
             <div className="flex justify-between items-center mb-10">
-              <span className="text-xl font-bold tracking-tight">tripcngo.com</span>
+              <div className="flex flex-col">
+                <span className="text-xl font-bold tracking-tight">tripcngo.com</span>
+                <span className="text-[10px] text-gray-400 tracking-wider -mt-1">{t('nav.slogan')}</span>
+              </div>
               <button 
                 className="p-2 hover:bg-white/10 rounded-md"
                 onClick={() => setIsMobileMenuOpen(false)}

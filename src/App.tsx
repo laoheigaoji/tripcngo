@@ -10,6 +10,7 @@ import Apps from './pages/Apps';
 import CityDetail from './pages/city/CityDetail';
 import VisaTypes from './pages/visa/VisaTypes';
 import VisaPhoto from './pages/visa/VisaPhoto';
+import VisaFees from './pages/visa/VisaFees';
 import VisaArrivalCard from './pages/visa/VisaArrivalCard';
 import VisaDownloads from './pages/visa/VisaDownloads';
 import VisaForm from './pages/visa/VisaForm';
@@ -17,6 +18,10 @@ import AboutUs from './pages/AboutUs';
 import PrivacyPolicy from './pages/PrivacyPolicy';
 import TermsOfService from './pages/TermsOfService';
 import Guide from './pages/Guide';
+import Feedback from './pages/Feedback';
+import GuideList from './pages/guide/GuideList';
+import GuideDetail from './pages/guide/GuideDetail';
+import Admin from './pages/Admin';
 import ZodiacCalculator from './pages/tools/ZodiacCalculator';
 import CharacterCounter from './pages/tools/CharacterCounter';
 import PinyinSegmentation from './pages/tools/PinyinSegmentation';
@@ -44,13 +49,18 @@ export default function App() {
             <Route path="visa" element={<Visa />} />
             <Route path="visa/types" element={<VisaTypes />} />
             <Route path="visa/photo" element={<VisaPhoto />} />
+            <Route path="visa/fees" element={<VisaFees />} />
             <Route path="visa/arrival-card" element={<VisaArrivalCard />} />
             <Route path="visa/downloads" element={<VisaDownloads />} />
             <Route path="visa/form" element={<VisaForm />} />
             <Route path="guide" element={<Guide />} />
+            <Route path="articles" element={<GuideList />} />
+            <Route path="articles/:id" element={<GuideDetail />} />
             <Route path="about" element={<AboutUs />} />
             <Route path="privacy" element={<PrivacyPolicy />} />
             <Route path="terms" element={<TermsOfService />} />
+            <Route path="feedback" element={<Feedback />} />
+            <Route path="admin" element={<Admin />} />
             <Route path="tools/zodiac" element={<ZodiacCalculator />} />
             <Route path="tools/counter" element={<CharacterCounter />} />
             <Route path="tools/pinyin" element={<PinyinSegmentation />} />

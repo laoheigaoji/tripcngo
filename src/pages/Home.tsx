@@ -3,6 +3,7 @@ import { motion } from 'motion/react';
 import { Search, ChevronRight, Heart, ThumbsUp, ChevronDown, ChevronUp, MapPin } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useLanguage } from '../context/LanguageContext';
+import SEO from '../components/SEO';
 
 const CITIES = [
   { id: 'haikou', name: '海口', enName: 'Haikou', pinyin: 'H A I K O U', img: 'https://static.tripcngo.com/ing/haikou.jpg', likes: 55, helpful: 1 },
@@ -216,6 +217,13 @@ export default function Home() {
 
   return (
     <div className="w-full bg-[#f7f7f7]">
+      <SEO 
+        title={language === 'zh' ? '首页' : 'Home'}
+        description={language === 'zh' 
+          ? 'tripcngo.com 是您的中国旅行终极指南。探索最新的144小时过境免签政策、寻找热门城市攻略及实用的中国旅行工具。' 
+          : 'tripcngo.com is your ultimate guide to traveling in China. Explore the latest 144-hour transit visa-free policies, top city guides, and practical travel tools.'}
+        keywords={language === 'zh' ? '中国旅游, 免签中国, 144小时过境免签, 中国旅行攻略, 中国城市指南' : 'China travel, visa free China, 144h transit visa free, China travel guide, Chinese cities'}
+      />
       {/* Hero Section */}
       <section className="relative h-screen min-h-[600px] flex items-center justify-center pt-20">
         <div className="absolute inset-0 overflow-hidden">

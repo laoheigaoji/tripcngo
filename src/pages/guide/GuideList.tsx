@@ -1,0 +1,216 @@
+import React, { useState, useEffect } from 'react';
+import { motion } from 'motion/react';
+import { Link } from 'react-router-dom';
+import { useLanguage } from '../../context/LanguageContext';
+import { ChevronRight, Heart, Eye } from 'lucide-react';
+import SEO from '../../components/SEO';
+
+interface Article {
+  _id: string;
+  title: string;
+  titleEn?: string;
+  subtitle: string;
+  subtitleEn?: string;
+  thumbnail: string;
+  category: string;
+  views: number;
+  likes: number;
+}
+
+const CATEGORIES = [
+  { id: 'All', key: 'guide.cat.all', icon: '📋', count: 54 },
+  { id: 'National Policy', key: 'guide.cat.policy', icon: '🛡️', count: 3 },
+  { id: 'Payment Methods', key: 'guide.cat.payment', icon: '💳', count: 7 },
+  { id: 'Transportation', key: 'guide.cat.transport', icon: '🚌', count: 10 },
+  { id: 'Practical Tools', key: 'guide.cat.tools', icon: '🛠️', count: 2 },
+  { id: 'City Guide', key: 'guide.cat.city', icon: '🏙️', count: 16 },
+  { id: 'Tradition', key: 'guide.cat.tradition', icon: '🎨', count: 9 },
+  { id: 'Food Culture', key: 'guide.cat.food', icon: '🥢', count: 7 },
+];
+
+export default function GuideList() {
+  const { language, t } = useLanguage();
+  const [activeCategory, setActiveCategory] = useState('All');
+  const [articles, setArticles] = useState<Article[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchArticles = async () => {
+      setLoading(true);
+      try {
+        const response = await fetch(`/api/articles?category=${activeCategory}`);
+        const data = await response.json();
+        setArticles(data);
+      } catch (error) {
+        console.error("Error fetching articles:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchArticles();
+  }, [activeCategory]);
+
+  return (
+    <div className="w-full bg-[#f7f7f7]">
+      <SEO 
+        title={t('discover.guides')}
+        description={language === 'zh' 
+          ? '获取最实用的中国旅行指南：从移动支付、交通换乘到目的地深度文化解析，助力您的每一次探索。' 
+          : 'Get the most practical China travel guides: from mobile payments and transportation to in-depth cultural analysis of destinations.'}
+        keywords={language === 'zh' ? '中国旅行指南, 中国支付攻略, 中国交通指南, 中国文化百科' : 'China travel guides, China payment guide, China transport guide, Chinese culture wiki'}
+      />
+      {/* Hero Header */}
+      <section className="relative h-[480px] flex items-center pt-20 overflow-hidden">
+        <div className="absolute inset-0">
+          <img 
+            src="https://static.tripcngo.com/ing/banner_bg_1.jpg" 
+            alt="Background" 
+            className="w-full h-full object-cover"
+          />
+          <div className="absolute inset-0 bg-black/60" />
+        </div>
+        
+        <div className="relative z-10 w-full max-w-[1400px] mx-auto px-6 text-left">
+          <motion.h1 
+            initial={{ opacity: 0, y: 20 }} 
+            animate={{ opacity: 1, y: 0 }}
+            className="text-5xl md:text-6xl font-black text-white mb-6 tracking-tight"
+          >
+            {t('discover.guides')}
+          </motion.h1>
+          <motion.p 
+            initial={{ opacity: 0, y: 20 }} 
+            animate={{ opacity: 1, y: 0 }} 
+            transition={{ delay: 0.1 }}
+            className="text-lg md:text-xl text-white/80 max-w-3xl leading-relaxed font-medium"
+          >
+            {language === 'zh' 
+              ? '从掌握移动支付到使用便捷高铁出行，我们的实用指南涵盖您所需的一切，获取交通、住宿和保持联系方面的实用技巧，确保您的旅程顺畅无阻。'
+              : 'From mastering mobile payments to high-speed rail, our practical guides cover everything you need to know. Get tips on transport, stay, and connectivity for a smooth journey.'}
+          </motion.p>
+        </div>
+      </section>
+
+      {/* Content Section */}
+      <section className="max-w-[1400px] mx-auto px-6 py-16">
+        <div className="flex flex-col lg:flex-row gap-8">
+          {/* Sidebar - Categories */}
+          <div className="w-full lg:w-[300px] shrink-0">
+             <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden sticky top-32">
+                <div className="p-2">
+                  {CATEGORIES.map((cat) => (
+                    <button
+                      key={cat.id}
+                      onClick={() => setActiveCategory(cat.id)}
+                      className={`w-full flex items-center justify-between p-4 rounded-lg transition-all group ${
+                        activeCategory === cat.id 
+                        ? 'bg-[#1b887a] text-white shadow-md' 
+                        : 'hover:bg-gray-50 text-gray-700'
+                      }`}
+                    >
+                      <div className="flex items-center gap-3">
+                        <span className="text-xl">{cat.icon}</span>
+                        <span className="font-bold text-sm">
+                          {t(cat.key)}
+                        </span>
+                      </div>
+                      <span className={`text-xs px-2 py-0.5 rounded-full ${
+                        activeCategory === cat.id ? 'bg-white/20' : 'bg-gray-100 text-gray-500'
+                      }`}>
+                        {cat.count}
+                      </span>
+                    </button>
+                  ))}
+                </div>
+             </div>
+          </div>
+
+          {/* Main List */}
+          <div className="flex-1 space-y-6">
+            {loading ? (
+              <div className="space-y-6">
+                {[1,2,3].map(i => (
+                  <div key={i} className="bg-white h-[200px] rounded-2xl animate-pulse" />
+                ))}
+              </div>
+            ) : articles.length > 0 ? (
+              articles.map((article) => (
+                <Link 
+                  key={article._id} 
+                  to={`/articles/${article._id}`}
+                  className="block group"
+                >
+                  <motion.div 
+                    initial={{ opacity: 0, y: 20 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    viewport={{ once: true }}
+                    className="bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-xl transition-all border border-gray-100 flex flex-col md:flex-row"
+                  >
+                    {/* Thumbnail */}
+                    <div className="md:w-[340px] h-[220px] shrink-0 relative overflow-hidden">
+                      <img 
+                        src={article.thumbnail || "https://images.unsplash.com/photo-1508804185872-d7badad00f7d?auto=format&fit=crop&q=80&w=800"} 
+                        alt={article.title}
+                        className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                      />
+                    </div>
+                    
+                    {/* Content */}
+                    <div className="flex-1 p-8 flex flex-col justify-between">
+                      <div>
+                        <div className="flex items-center gap-2 mb-2">
+                           <span className="px-2 py-0.5 bg-[#1b887a]/10 text-[#1b887a] text-[10px] font-bold rounded uppercase tracking-wider">
+                              {language === 'zh' ? article.category : article.category}
+                           </span>
+                        </div>
+                        <h2 className="text-2xl font-black text-gray-900 group-hover:text-[#1b887a] transition-colors mb-3 leading-tight">
+                          {language === 'en' && article.titleEn ? article.titleEn : article.title}
+                        </h2>
+                        <p className="text-gray-500 text-sm md:text-base line-clamp-3 leading-relaxed mb-6">
+                          {language === 'en' && article.subtitleEn ? article.subtitleEn : article.subtitle}
+                        </p>
+                      </div>
+                      
+                      <div className="flex items-center justify-between pt-4 border-t border-gray-50">
+                        <div className="flex items-center gap-6">
+                          <div className="text-gray-400 text-xs font-medium flex items-center gap-1">
+                            {article.views} {t('guide.views')}
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-1.5 text-gray-400 group-hover:text-red-400 transition-colors font-bold text-xs">
+                           <Heart className={`w-3.5 h-3.5 ${article.likes > 0 ? 'fill-red-400 text-red-400' : ''}`} />
+                           <span>{article.likes} {t('guide.helpful')}</span>
+                        </div>
+                      </div>
+                    </div>
+                  </motion.div>
+                </Link>
+              ))
+            ) : (
+              <div className="bg-white p-20 rounded-2xl text-center shadow-sm">
+                 <p className="text-gray-400 font-bold">{t('guide.noArticles')}</p>
+              </div>
+            )}
+
+            {/* Pagination Placeholder */}
+            <div className="pt-10 flex justify-center gap-2">
+               {[1, 2, 3, 4, 5, 6].map(p => (
+                 <button 
+                  key={p} 
+                  className={`w-10 h-10 rounded-lg flex items-center justify-center font-bold text-sm transition-all ${
+                    p === 1 ? 'bg-[#1b887a] text-white shadow-md' : 'bg-white text-gray-600 hover:bg-gray-100'
+                  }`}
+                 >
+                   {p}
+                 </button>
+               ))}
+               <button className="w-10 h-10 rounded-lg bg-white text-gray-600 flex items-center justify-center hover:bg-gray-100">
+                  <ChevronRight className="w-4 h-4" />
+               </button>
+            </div>
+          </div>
+        </div>
+      </section>
+    </div>
+  );
+}

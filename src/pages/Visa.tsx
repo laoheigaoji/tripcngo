@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Phone, ChevronDown, ChevronUp, FileText, Download, Camera, FileEdit, CreditCard, PenTool, ExternalLink } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useLanguage } from '../context/LanguageContext';
+import SEO from '../components/SEO';
 
 export default function Visa() {
   const { language, t } = useLanguage();
@@ -10,10 +11,10 @@ export default function Visa() {
   const MENU = [
     { name: t('visa.menu.types'), path: '/visa/types', icon: <FileText className="w-4 h-4" /> },
     { name: t('visa.menu.photo'), path: '/visa/photo', icon: <Camera className="w-4 h-4" /> },
-    { name: t('visa.menu.fee'), path: '#', icon: <CreditCard className="w-4 h-4" /> },
-    { name: t('visa.menu.form'), path: '#', icon: <PenTool className="w-4 h-4" /> },
-    { name: t('visa.menu.entryCard'), path: '#', icon: <FileEdit className="w-4 h-4" /> },
-    { name: t('visa.menu.download'), path: '#', icon: <Download className="w-4 h-4" /> },
+    { name: t('visa.menu.fee'), path: '/visa/fees', icon: <CreditCard className="w-4 h-4" /> },
+    { name: t('visa.menu.form'), path: '/visa/form', icon: <PenTool className="w-4 h-4" /> },
+    { name: t('visa.menu.entryCard'), path: '/visa/arrival-card', icon: <FileEdit className="w-4 h-4" /> },
+    { name: t('visa.menu.download'), path: '/visa/downloads', icon: <Download className="w-4 h-4" /> },
   ];
 
   const FAQS = [
@@ -28,19 +29,32 @@ export default function Visa() {
 
   return (
     <div className="w-full bg-[#f7f7f7] pb-20">
+      <SEO 
+        title={language === 'zh' ? '签证与免签政策' : 'Visa & Visa-Free Policy'}
+        description={language === 'zh' 
+          ? '了解中国最新的144/240小时过境免签政策、单方面免签国家名单、口岸详情及入境注意事项。' 
+          : 'Learn about China\'s latest 144/240-hour transit visa-free policies, list of unilateral visa-free countries, port details, and entry requirements.'}
+        keywords={language === 'zh' ? '中国签证, 144小时免签, 240小时免签, 过境免签, 中国入境政策' : 'China visa, 144h visa free, 240h visa free, transit visa free, China entry policy'}
+      />
       {/* Hero Map Section */}
-      <section className="relative h-[480px] w-full bg-[#759dd1] overflow-hidden flex items-center justify-center">
+      <section className="relative h-[650px] w-full bg-[#759dd1] overflow-hidden flex items-center justify-center">
         <img 
           src="https://upload.wikimedia.org/wikipedia/commons/thumb/e/e6/China_edcp_recolor.svg/1024px-China_edcp_recolor.svg.png" 
           alt="Map of China" 
-          className="h-[120%] opacity-80 object-contain translate-y-4"
+          className="h-[110%] opacity-80 object-contain -translate-y-8"
         />
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-white font-bold text-2xl tracking-widest mt-32">
+        {/* 地图叠加 */}
+        <img
+          src="https://static.tripcngo.com/ing/ditu.png"
+          alt="Map Overlay"
+          className="absolute inset-0 w-full h-full object-contain opacity-50 z-10"
+        />
+        <div className="absolute bottom-12 left-1/2 -translate-x-1/2 text-white font-bold text-3xl tracking-[0.5em] uppercase z-20">
           China
         </div>
         
         {/* Legend */}
-        <div className="absolute right-8 bottom-8 bg-white/90 backdrop-blur-sm p-4 rounded-md shadow-md text-sm text-gray-800">
+        <div className="absolute right-8 bottom-8 bg-white/90 backdrop-blur-sm p-4 rounded-md shadow-md text-sm text-gray-800 z-20">
           <div className="font-bold mb-2">{t('visa.hero.legendTitle')}</div>
           <div className="flex items-center gap-2 mb-1">
             <span className="w-3 h-3 bg-teal-400 rounded-sm"></span>
@@ -55,12 +69,12 @@ export default function Visa() {
 
       {/* Navigation Menu */}
       <div className="bg-white border-b border-gray-200 sticky top-0 z-40 shadow-sm">
-        <div className="max-w-[1400px] mx-auto px-6 overflow-x-auto">
-          <div className="flex items-center justify-center gap-10 py-5 whitespace-nowrap">
+        <div className="max-w-[1400px] mx-auto px-6">
+          <div className="grid grid-cols-2 sm:flex sm:items-center sm:justify-center gap-x-4 gap-y-3 sm:gap-10 py-4 sm:py-5">
             {MENU.map(item => (
-              <Link key={item.name} to={item.path} className="flex items-center gap-2 text-gray-700 hover:text-[var(--color-primary)] text-[15px] font-medium transition-colors">
-                <span className="text-green-600">{item.icon}</span>
-                {item.name}
+              <Link key={item.name} to={item.path} className="flex items-center gap-2 text-gray-700 hover:text-[var(--color-primary)] text-[13px] sm:text-[15px] font-medium transition-colors p-2 sm:p-0 rounded-lg hover:bg-gray-50 sm:hover:bg-transparent">
+                <span className="text-green-600 flex-shrink-0">{item.icon}</span>
+                <span className="truncate">{item.name}</span>
               </Link>
             ))}
           </div>
