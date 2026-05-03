@@ -14,11 +14,11 @@ const characters = [
 
 export default function Guide() {
   return (
-    <div className="min-h-screen bg-gray-50 pt-20">
+    <div className="min-h-screen bg-gray-50">
       {/* Hero Section */}
       <div className="relative h-[400px] flex items-center justify-center">
         <img 
-          src="https://images.unsplash.com/photo-1508804185872-d7badad00f7d?q=80&w=2000" 
+          src="https://static.tripcngo.com/ing/jingnangbg.jpg" 
           alt="China Travel Hero" 
           className="absolute inset-0 w-full h-full object-cover"
         />
