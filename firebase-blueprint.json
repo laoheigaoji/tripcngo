@@ -18,6 +18,18 @@
       },
       "required": ["title", "category", "createdAt", "updatedAt"]
     },
+    "city": {
+      "title": "City",
+      "description": "City detail data.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "enName": { "type": "string" },
+        "heroImage": { "type": "string" }
+      },
+      "required": ["id", "name", "enName"]
+    },
     "feedback": {
       "title": "Feedback",
       "description": "User feedback.",
@@ -35,6 +47,10 @@
     "/articles/{articleId}": {
       "schema": { "$ref": "#/entities/article" },
       "description": "Articles collection"
+    },
+    "/cities/{cityId}": {
+      "schema": { "$ref": "#/entities/city" },
+      "description": "Cities collection"
     },
     "/feedbacks/{feedbackId}": {
       "schema": { "$ref": "#/entities/feedback" },

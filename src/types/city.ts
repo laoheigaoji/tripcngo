@@ -40,6 +40,7 @@ export interface CityData {
     time: string;
     enTime?: string;
     rating?: string;
+    imageUrl?: string;
   }[];
   worldHeritage?: {
     name: string;
@@ -77,5 +78,6 @@ export interface CityData {
     ingredients: string;
     enIngredients?: string;
     imageIdx: number;
+    imageUrl?: string;
   }[];
 }

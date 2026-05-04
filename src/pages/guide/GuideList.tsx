@@ -51,7 +51,7 @@ export default function GuideList() {
         
         const snapshot = await getDocs(q);
         const data = snapshot.docs.map(doc => {
-          const docData = doc.data();
+          const docData = doc.data() as any;
           return {
             ...docData,
             _id: doc.id,

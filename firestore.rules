@@ -20,6 +20,22 @@ service cloud.firestore {
       return isSignedIn(); 
     }
 
+    // Validation for Cities
+    function isValidCity(data) {
+      return data.keys().hasAll(['id', 'name', 'enName']) &&
+             data.name is string && data.name.size() > 0 &&
+             data.enName is string && data.enName.size() > 0;
+    }
+
+    function isCurrentUserAdmin() {
+      return request.auth.token.email == "lianwo88@gmail.com";
+    }
+
+    match /cities/{cityId} {
+      allow read: if true;
+      allow create, update, delete: if (isAdmin() || isCurrentUserAdmin()) && isValidId(cityId);
+    }
+
     // Validation for Articles
     // Blueprint:
     // title (str), subtitle (str), content (str), category (str), views (number), likes (number), createdAt (timestamp), updatedAt (timestamp)

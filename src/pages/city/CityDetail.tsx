@@ -1,10 +1,10 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useParams, Navigate } from 'react-router-dom';
 import { Clock, Navigation, Map, CloudRain, Sun, Cloud, Calendar, Building2, Users, MapPin, Tag, ArrowRight, Star, Plane, TrainFront, BusFront, Car, Bike, Train, Ship } from 'lucide-react';
-import { citiesData } from '../../data/citiesData';
 import { useLanguage } from '../../context/LanguageContext';
 import SEO from '../../components/SEO';
-
+import { doc, getDoc } from 'firebase/firestore';
+import { db } from '../../lib/firebase';
 import WeatherWidget from '../../components/WeatherWidget';
 
 const iconMap: Record<string, React.ElementType> = {
@@ -15,12 +15,31 @@ export default function CityDetail() {
   const { id } = useParams<{ id: string }>();
   const { language, t } = useLanguage();
   const isEn = language === 'en';
-  
-  if (!id || !citiesData[id]) {
-    return <Navigate to="/cities" replace />;
-  }
+  const [city, setCity] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
 
-  const city = citiesData[id];
+  useEffect(() => {
+    const fetchCity = async () => {
+      if (!id) return;
+      try {
+        const docRef = doc(db, 'cities', id);
+        const docSnap = await getDoc(docRef);
+        if (docSnap.exists()) {
+          setCity({ ...docSnap.data(), id: docSnap.id });
+        } else {
+          console.warn("No such city with id:", id);
+        }
+      } catch (err) {
+        console.error("Error fetching city:", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchCity();
+  }, [id]);
+
+  if (loading) return <div className="p-20 text-center">Loading...</div>;
+  if (!city) return <Navigate to="/cities" replace />;
 
   const getTranslatedValue = (zh: any, en: any) => {
     if (isEn && en) return en;
@@ -160,7 +179,7 @@ export default function CityDetail() {
               <div key={idx} className="bg-white border text-left border-gray-100 rounded-xl overflow-hidden hover:shadow-xl transition-all duration-300 group flex flex-col">
                 <div className="h-48 bg-gray-100 relative overflow-hidden flex items-center justify-center">
                   <div className="absolute inset-0 bg-[#e6f4ea] opacity-30"></div>
-                  <img src={`https://images.unsplash.com/photo-1540202403-b712e0e026ee?w=600&q=80&auto=format&fit=crop&random=${idx}`} alt={spot.name} className="w-full h-full object-cover mix-blend-overlay opacity-80 group-hover:scale-105 transition-transform duration-500" />
+                  <img src={spot.imageUrl || `https://images.unsplash.com/photo-1540202403-b712e0e026ee?w=600&q=80&auto=format&fit=crop&random=${idx}`} alt={spot.name} className="w-full h-full object-cover mix-blend-overlay opacity-80 group-hover:scale-105 transition-transform duration-500" />
                   <div className="absolute z-10 font-bold text-gray-300/80 text-xl tracking-wider flex items-center gap-2">
                     <span className="text-green-700/60">tripcngo</span>
                     <span className="text-gray-500/60">.com</span>

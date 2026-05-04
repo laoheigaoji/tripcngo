@@ -7,15 +7,6 @@ import SEO from '../components/SEO';
 import { collection, query, orderBy, limit, getDocs } from 'firebase/firestore';
 import { db } from '../lib/firebase';
 
-const CITIES = [
-  { id: 'haikou', name: '海口', enName: 'Haikou', pinyin: 'H A I K O U', img: 'https://static.tripcngo.com/ing/haikou.jpg', likes: 55, helpful: 1 },
-  { id: 'fuzhou', name: '福州', enName: 'Fuzhou', pinyin: 'F U Z H O U', img: 'https://static.tripcngo.com/ing/fuzhou.jpg', likes: 3, helpful: 61 },
-  { id: 'harbin', name: '哈尔滨', enName: 'Harbin', pinyin: 'H A E R B I N', img: 'https://static.tripcngo.com/ing/haerbin.jpg', likes: 0, helpful: 0 },
-  { id: 'shenyang', name: '沈阳', enName: 'Shenyang', pinyin: 'S H E N Y A N G', img: 'https://static.tripcngo.com/ing/shengyang.jpg', likes: 1, helpful: 1 },
-  { id: 'wuhan', name: '武汉', enName: 'Wuhan', pinyin: 'W U H A N', img: 'https://static.tripcngo.com/ing/wuhan.jpg', likes: 1, helpful: 1 },
-  { id: 'shangrao', name: '上饶', enName: 'Shangrao', pinyin: 'S H A N G R A O', img: 'https://static.tripcngo.com/ing/shangrao.jpg', likes: 2, helpful: 1 },
-];
-
 const GUIDES = [
   { 
     img: 'https://static.tripcngo.com/ing/Fcover-1.webp', 
@@ -206,62 +197,8 @@ export default function Home() {
   const { language, t } = useLanguage();
   const [openFAQ, setOpenFAQ] = useState<number | null>(0);
   const [searchTerm, setSearchTerm] = useState('');
-  const [guides, setGuides] = useState<any[]>([
-    { 
-      id: 'QkcZoH7HCnISS0lCPUxz',
-      img: 'https://static.tripcngo.com/ing/Fcover-1.webp', 
-      title: '中国早餐完全指南：独一无二的早餐文化', 
-      enTitle: 'Ultimate China Breakfast Guide: A Unique Culture',
-      desc: '在中国，早餐不只是一餐饭，它是一种生活的哲学。清晨的热干面、滚烫的豆浆、蒸腾的小笼包——这些热气腾腾的食物里，藏着敬时间、爱生活的态度。广州人慢悠悠叹茶，武汉人急匆匆过早，北方吃面，南方喝粥。这篇...', 
-      enDesc: 'Breakfast in China is more than a meal; it is a philosophy. From hot noodles to steaming buns, explore the diverse culture of Chinese breakfast...',
-      views: 2 
-    },
-    { 
-      id: 'BtJXfgPbAMMDpB60NkCL',
-      img: 'https://static.tripcngo.com/ing/Fcover-2.webp', 
-      title: '中国Top 10街头美食：尝遍地道小吃，舌尖上的中国', 
-      enTitle: 'China Top 10 Street Food: Taste Authentic Snacks',
-      desc: '深度解析煎饼果子、肉夹馍、臭豆腐等十大国民小吃。涵盖南北地域特色、价格参考及卫生挑选技巧，让你大胆尝试，不用担心踩雷。', 
-      enDesc: 'In-depth analysis of high-profile snacks like Jianbing and Roujiamo. Covering regional specialties, pricing, and tips for safe street food...',
-      views: undefined 
-    },
-    { 
-      id: 'tk2LcCEAJczOfQmTJ7M0',
-      img: 'https://static.tripcngo.com/ing/Fcover-3.webp', 
-      title: '中国火锅完全指南：千年美食文化的沸腾之旅', 
-      enTitle: 'Complete Chinese Hotpot Guide: A Boiling Journey',
-      desc: '在中国怎么吃火锅？本文为您详解川渝麻辣、老北京铜锅、潮汕牛肉等六大流派对比。包含健康下锅顺序、海底捞/巴奴等品牌及生熟分开等安全提醒，带您找回最正宗的中国味。', 
-      enDesc: 'How to eat hotpot in China? Detailed comparison of major styles and safety tips to find the most authentic taste...',
-      views: undefined 
-    },
-    { 
-      id: 'moeqaDtohwMbhKLiqw8m',
-      img: 'https://static.tripcngo.com/ing/Fcover-4.webp', 
-      title: '中国上饶深度游攻略：从望仙谷到三清山，探索江西隐藏的仙境', 
-      enTitle: 'Shangrao Deep Travel Guide: Exploring Jiangxi\'s Hidden Fairyland',
-      desc: '上饶，这座江西的隐秘仙境，拥有令人心驰神往的自然美景和深厚的文化底蕴。本文将带您深入探索望仙谷和三清山的绝美风光，感受江西隐藏的仙境之旅。', 
-      enDesc: 'Explore the stunning landscapes of Wangxiangu and Mount Sanqing in Shangrao, Jiangxi...',
-      views: undefined 
-    },
-    { 
-      id: 'HSOLYn3wFO3kGAZO9RB9',
-      img: 'https://static.tripcngo.com/ing/Fcover-5.webp', 
-      title: '中国复姓大盘点：探探秘十大顶级复姓的起源和故事', 
-      enTitle: 'Chinese Compound Surnames: Origin & Stories of Top 10 Surnames',
-      desc: '中国不仅有百家姓，更有底蕴深厚的复姓文化。本文深度解读欧阳、诸葛、上官、司马等十大顶级复姓的起源故事、历史名人及文化内涵。', 
-      enDesc: 'Unlock the historical stories and cultural significance behind famous compound surnames like Ouyang and Zhuge...',
-      views: 2 
-    },
-    { 
-      id: 'GRmo7ggkrn1v58SyCRPv',
-      img: 'https://static.tripcngo.com/ing/Fcover-6.jpg', 
-      title: '中国孩子取名趋势大盘点', 
-      enTitle: 'Chinese Children\'s Naming Trends Overview',
-      desc: '随着时代的发展，中国孩子的取名趋势也在不断变化。本文将为您盘点近年来中国新生儿取名的热门趋势，带您了解不同时代的文化特色和家长的期望。', 
-      enDesc: 'With the development of the times, the trends in naming Chinese children are also constantly changing. This article will review the popular naming trends...',
-      views: undefined 
-    }
-  ]);
+  const [guides, setGuides] = useState<any[]>([]);
+  const [cities, setCities] = useState<any[]>([]);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -285,11 +222,24 @@ export default function Home() {
         console.error("Error fetching latest guides for home page", err);
       }
     };
+    const fetchCities = async () => {
+      try {
+        const snapshot = await getDocs(collection(db, 'cities'));
+        const data = snapshot.docs.map(doc => ({
+           ...(doc.data() as any),
+           id: doc.id
+        }));
+        setCities(data);
+      } catch (err) {
+        console.error("Error fetching cities", err);
+      }
+    }
     fetchGuides();
+    fetchCities();
   }, []);
 
   const handleSearch = () => {
-    const city = CITIES.find(c => c.name.includes(searchTerm) || c.enName.toLowerCase().includes(searchTerm.toLowerCase()));
+    const city = cities.find(c => c.name.includes(searchTerm) || c.enName.toLowerCase().includes(searchTerm.toLowerCase()));
     if (city) {
       navigate(`/cities/${city.id}`);
     } else {
@@ -410,7 +360,7 @@ export default function Home() {
             </button>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {CITIES.map((city) => (
+            {cities.map((city) => (
               <div 
                 key={city.id} 
                 className="relative group rounded-xl overflow-hidden cursor-pointer bg-white border border-gray-100 hover:shadow-lg transition-all duration-300"
@@ -426,8 +376,8 @@ export default function Home() {
                     <span className="ml-2 text-xs text-gray-500">{city.id.charAt(0).toUpperCase() + city.id.slice(1)}</span>
                   </div>
                   <div className="flex gap-3 text-gray-500">
-                    <span className="flex items-center gap-1 text-xs font-medium"><Heart className="w-3.5 h-3.5 text-red-500 fill-red-500" /> {city.likes}</span>
-                    <span className="flex items-center gap-1 text-xs font-medium"><ThumbsUp className="w-3.5 h-3.5 text-green-500 fill-green-500" /> {city.helpful}</span>
+                    <span className="flex items-center gap-1 text-xs font-medium"><Heart className="w-3.5 h-3.5 text-red-500 fill-red-500" /> {city.likes || 0}</span>
+                    <span className="flex items-center gap-1 text-xs font-medium"><ThumbsUp className="w-3.5 h-3.5 text-green-500 fill-green-500" /> {city.helpful || 0}</span>
                   </div>
                 </div>
               </div>

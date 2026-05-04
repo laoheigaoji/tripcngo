@@ -1,14 +1,17 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion } from 'motion/react';
-import { Trash2, Plus, LogOut, ChevronRight, Save, Image as ImageIcon, Filter, FileText, Languages } from 'lucide-react';
+import { Trash2, Plus, LogOut, ChevronRight, Save, Image as ImageIcon, Filter, FileText, Languages, Building2 } from 'lucide-react';
 import Markdown from 'react-markdown';
 import MDEditor from '@uiw/react-md-editor';
 import TurndownService from 'turndown';
 import { auth, db, storage } from '../lib/firebase';
 import { signInWithEmailAndPassword, signInWithPopup, GoogleAuthProvider, signOut, onAuthStateChanged, User } from 'firebase/auth';
-import { collection, getDocs, addDoc, updateDoc, deleteDoc, doc, serverTimestamp, query, orderBy } from 'firebase/firestore';
+import { collection, getDocs, addDoc, updateDoc, deleteDoc, doc, serverTimestamp, query, orderBy, setDoc } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { GoogleGenAI } from '@google/genai';
+import { CityData } from '../types/city';
+import { citiesData } from '../data/citiesData';
+import CityForm from '../components/CityForm';
 
 const ai = new GoogleGenAI({ apiKey: 'AIzaSyCPa14dQA03__FwIz0A_ohmnY4DooWRd40' });
 
@@ -43,6 +46,7 @@ interface Article {
 export default function Admin() {
   const [user, setUser] = useState<User | null>(null);
   const [articles, setArticles] = useState<Article[]>([]);
+  const [cities, setCities] = useState<CityData[]>([]);
   const [loading, setLoading] = useState(false);
   const [uploadingImages, setUploadingImages] = useState(0);
   const [formData, setFormData] = useState({
@@ -56,12 +60,76 @@ export default function Admin() {
     category: 'National Policy'
   });
   const [showForm, setShowForm] = useState(false);
+  const [showCityForm, setShowCityForm] = useState(false);
+  const [editingCity, setEditingCity] = useState<CityData | null>(null);
+  const [activeAdminView, setActiveAdminView] = useState<'articles' | 'cities'>('articles');
   const [editingId, setEditingId] = useState<string | null>(null);
   const [isPreview, setIsPreview] = useState(false);
   const [activeTab, setActiveTab] = useState<'zh' | 'en'>('zh');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [citySearchTerm, setCitySearchTerm] = useState('');
+  const [articleSearchTerm, setArticleSearchTerm] = useState('');
   const [filterCategory, setFilterCategory] = useState<string>('All');
+  const [cityBatchInput, setCityBatchInput] = useState('');
+  const [cityBatchStatus, setCityBatchStatus] = useState('');
+  const [isBatchGenerating, setIsBatchGenerating] = useState(false);
+
+  const cleanJSON = (text: string) => {
+    let jsonString = text.replace(/```json\s*/g, '').replace(/```\s*/g, '');
+    const start = jsonString.indexOf('{');
+    const end = jsonString.lastIndexOf('}');
+    if (start !== -1 && end !== -1) {
+      jsonString = jsonString.substring(start, end + 1);
+    }
+    return jsonString;
+  };
+
+  const handleBatchGenerate = async () => {
+    const citiesToGen = cityBatchInput.split('\n').map(c => c.trim()).filter(c => c);
+    if(citiesToGen.length === 0) return;
+
+    setIsBatchGenerating(true);
+    setCityBatchStatus(`Starting: 0/${citiesToGen.length}`);
+
+    for (let i =0; i < citiesToGen.length; i++) {
+        const cityName = citiesToGen[i];
+        setCityBatchStatus(`Generating: ${cityName} (${i+1}/${citiesToGen.length})`);
+        
+        try {
+            const prompt = `Generate detailed, comprehensive city information for the city: '${cityName}'.
+                Return a JSON object that matches the following structure exactly.
+                Ensure ALL text fields are provided in BOTH Chinese and English.
+                IMPORTANT: Provide relevant public image URLs for heroImage and attraction.imageUrl.
+
+                Structure: {
+                  name: string,
+                  enName: string,
+                  info: {area: string, population: string},
+                  bestTravelTime: {strongText: string, enStrongText: string, paragraphs: string[], enParagraphs: string[]},
+                  history: [{year: string, enYear: string, title: string, enTitle: string, desc: string, enDesc: string}],
+                  attractions: [{name: string, enName: string, desc: string, enDesc: string, price: string, enPrice: string, season: string, enSeason: string, time: string, enTime: string, imageUrl: string}],
+                  transportation: [{iconName: "Plane", title: string, enTitle: string, desc: string, enDesc: string, price: string, enPrice: string}],
+                  food: [{name: string, enName: string, pinyin: string, price: string, desc: string, enDesc: string, ingredients: string, enIngredients: string, imageIdx: number, imageUrl: string}],
+                  heroImage: string
+                }`;
+            const res = await ai.models.generateContent({
+                model: 'gemini-3-flash-preview',
+                contents: prompt,
+            });
+            const generatedData = JSON.parse(cleanJSON(res.text || '{}'));
+            
+            // Save to Firestore
+            await addDoc(collection(db, 'cities'), { ...generatedData });
+        } catch (err) {
+            console.error(`Failed to generate ${cityName}:`, err);
+        }
+    }
+    
+    setCityBatchStatus("Done.");
+    setIsBatchGenerating(false);
+    fetchCities();
+  };
   
   const fileInputRef = useRef<HTMLInputElement>(null);
   const thumbnailInputRef = useRef<HTMLInputElement>(null);
@@ -381,6 +449,7 @@ export default function Admin() {
         // Allow any authenticated user in since there is no public registration
         setUser(currentUser);
         fetchArticles();
+        fetchCities();
       } else {
         setUser(null);
       }
@@ -425,6 +494,20 @@ export default function Admin() {
         createdAt: doc.data().createdAt?.toDate().toISOString() || new Date().toISOString()
       })) as Article[];
       setArticles(data);
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
+  const fetchCities = async () => {
+    try {
+      const q = query(collection(db, 'cities'), orderBy('name', 'asc'));
+      const snapshot = await getDocs(q);
+      const data = snapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data()
+      })) as CityData[];
+      setCities(data);
     } catch (error) {
       console.error(error);
     }
@@ -479,6 +562,58 @@ export default function Admin() {
     }
   };
 
+  const handleSaveCity = async (city: CityData) => {
+    setLoading(true);
+    try {
+      if (city.id) {
+        await setDoc(doc(db, 'cities', city.id), { ...city }, { merge: true });
+      } else {
+        const newDocRef = doc(collection(db, 'cities'));
+        await setDoc(newDocRef, { ...city, id: newDocRef.id });
+      }
+      setShowCityForm(false);
+      setEditingCity(null);
+      fetchCities();
+    } catch (e) {
+      console.error(e);
+      alert('保存失败');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const deleteCity = async (id: string) => {
+    if (!window.confirm('确定删除此城市？')) return;
+    try {
+      await deleteDoc(doc(db, 'cities', id));
+      fetchCities();
+    } catch (e) {
+      console.error(e);
+      alert('删除失败');
+    }
+  };
+
+  const migrateCities = async () => {
+    if (!window.confirm('确定将旧数据导入Firestore？')) return;
+    setLoading(true);
+    try {
+      console.log("Starting migration. Data count:", Object.values(citiesData).length);
+      for (const city of Object.values(citiesData)) {
+        console.log("Migrating:", city.name, "with ID:", city.id);
+        const cityRef = doc(db, 'cities', city.id);
+        await setDoc(cityRef, city);
+        console.log("Migrated successfully:", city.name);
+      }
+      alert('迁移完成');
+    } catch (e) {
+      console.error("Migration error:", e);
+      alert('迁移失败: ' + (e instanceof Error ? e.message : String(e)));
+    } finally {
+      setLoading(false);
+      fetchCities();
+    }
+  };
+
   const handleEdit = (article: Article) => {
     setFormData({
       title: article.title || '',
@@ -495,9 +630,13 @@ export default function Admin() {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
-  const filteredArticles = filterCategory === 'All' 
+  const filteredArticles = (filterCategory === 'All' 
     ? articles 
-    : articles.filter(a => a.category === filterCategory);
+    : articles.filter(a => a.category === filterCategory)
+  ).filter(article => 
+    article.title.toLowerCase().includes(articleSearchTerm.toLowerCase()) || 
+    (article.subtitle && article.subtitle.toLowerCase().includes(articleSearchTerm.toLowerCase()))
+  );
 
   if (!user) {
     return (
@@ -577,10 +716,16 @@ export default function Admin() {
         </div>
         <nav className="flex-1 p-4 space-y-2">
           <button 
-            onClick={() => setShowForm(false)}
-            className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-bold transition-all ${!showForm ? 'bg-[#1b887a] text-white shadow-md' : 'text-gray-500 hover:bg-gray-50'}`}
+            onClick={() => { setActiveAdminView('articles'); setShowForm(false); }}
+            className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-bold transition-all ${activeAdminView === 'articles' && !showForm ? 'bg-[#1b887a] text-white shadow-md' : 'text-gray-500 hover:bg-gray-50'}`}
           >
             <FileText className="w-5 h-5" /> 内容管理
+          </button>
+          <button 
+            onClick={() => { setActiveAdminView('cities'); setShowForm(false); }}
+            className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-bold transition-all ${activeAdminView === 'cities' && !showForm ? 'bg-[#1b887a] text-white shadow-md' : 'text-gray-500 hover:bg-gray-50'}`}
+          >
+            <Building2 className="w-5 h-5" /> 城市管理
           </button>
         </nav>
         <div className="p-4 border-t border-gray-100 pb-8">
@@ -834,63 +979,135 @@ export default function Admin() {
             </motion.div>
           ) : (
             <>
-              {/* Filter */}
-              <div className="mb-6 flex items-center gap-3">
-                <Filter className="w-5 h-5 text-gray-400" />
-                <div className="flex flex-wrap gap-2">
-                  {Object.entries(filterCategoryMap).map(([catId, label]) => (
-                    <button
-                      key={catId}
-                      onClick={() => setFilterCategory(catId)}
-                      className={`px-4 py-1.5 rounded-full text-sm font-bold transition-all ${filterCategory === catId ? 'bg-gray-800 text-white' : 'bg-white text-gray-500 border border-gray-200 hover:border-gray-300'}`}
-                    >
-                      {label}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              {/* Grid */}
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {filteredArticles.map((article) => (
-                   <motion.div 
-                     key={article._id}
-                     layout
-                     initial={{ opacity: 0 }}
-                     animate={{ opacity: 1 }}
-                     className="bg-white rounded-3xl shadow-sm border border-gray-200 overflow-hidden group hover:shadow-md transition-all flex flex-col h-full"
-                   >
-                      <div className="p-6 flex-1 flex flex-col">
-                         <div className="flex justify-between items-start mb-4">
-                            <span className="px-3 py-1 bg-gray-50 text-[10px] font-bold text-gray-500 rounded-full uppercase tracking-widest">{categoryMap[article.category] || article.category}</span>
-                            <span className="text-[11px] text-gray-400 font-medium">{new Date(article.createdAt).toLocaleDateString()}</span>
-                         </div>
-                         <h3 className="text-lg font-black text-gray-900 mb-2 group-hover:text-[#1b887a] transition-colors">{article.title}</h3>
-                         <p className="text-sm text-gray-500 line-clamp-2 mb-6 flex-1">{article.subtitle}</p>
-                         <div className="flex justify-between items-center bg-gray-50 p-2 rounded-2xl">
-                            <button 
-                              onClick={() => deleteArticle(article._id)}
-                              className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-xl transition-all"
-                            >
-                              <Trash2 className="w-5 h-5" />
-                            </button>
-                            <button 
-                              onClick={() => handleEdit(article)}
-                              className="flex items-center gap-1 text-[#1b887a] font-bold text-sm px-4 py-2 hover:bg-[#1b887a]/10 rounded-xl transition-all"
-                            >
-                               编辑 <ChevronRight className="w-4 h-4 ml-1" />
-                            </button>
-                         </div>
-                      </div>
-                   </motion.div>
-                ))}
-                
-                {filteredArticles.length === 0 && (
-                  <div className="col-span-full py-20 text-center text-gray-400 font-medium bg-white rounded-3xl border border-gray-100 border-dashed">
-                    当前分类下暂无文章...
+              {activeAdminView === 'articles' ? (
+                <>
+                   {/* Filter for articles and search */}
+                  <div className="mb-6 flex items-center gap-3">
+                    <Filter className="w-5 h-5 text-gray-400" />
+                    <div className="flex flex-wrap gap-2 flex-1">
+                      {Object.entries(filterCategoryMap).map(([catId, label]) => (
+                        <button
+                          key={catId}
+                          onClick={() => setFilterCategory(catId)}
+                          className={`px-4 py-1.5 rounded-full text-sm font-bold transition-all ${filterCategory === catId ? 'bg-gray-800 text-white' : 'bg-white text-gray-500 border border-gray-200 hover:border-gray-300'}`}
+                        >
+                          {label}
+                        </button>
+                      ))}
+                    </div>
+                    <input 
+                      type="text" 
+                      placeholder="搜索文章..." 
+                      className="px-4 py-2 border border-gray-200 rounded-full text-sm outline-none focus:border-[#1b887a]"
+                      value={articleSearchTerm}
+                      onChange={e => setArticleSearchTerm(e.target.value)}
+                    />
                   </div>
-                )}
-              </div>
+
+                  {/* Grid of articles */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {filteredArticles.map((article) => (
+                       <motion.div 
+                         key={article._id}
+                         layout
+                         initial={{ opacity: 0 }}
+                         animate={{ opacity: 1 }}
+                         className="bg-white rounded-3xl shadow-sm border border-gray-200 overflow-hidden group hover:shadow-md transition-all flex flex-col h-full"
+                       >
+                          <div className="p-6 flex-1 flex flex-col">
+                             <div className="flex justify-between items-start mb-4">
+                                <span className="px-3 py-1 bg-gray-50 text-[10px] font-bold text-gray-500 rounded-full uppercase tracking-widest">{categoryMap[article.category] || article.category}</span>
+                                <span className="text-[11px] text-gray-400 font-medium">{new Date(article.createdAt).toLocaleDateString()}</span>
+                             </div>
+                             <h3 className="text-lg font-black text-gray-900 mb-2 group-hover:text-[#1b887a] transition-colors">{article.title}</h3>
+                             <p className="text-sm text-gray-500 line-clamp-2 mb-6 flex-1">{article.subtitle}</p>
+                             <div className="flex justify-between items-center bg-gray-50 p-2 rounded-2xl">
+                                <button 
+                                  onClick={() => deleteArticle(article._id)}
+                                  className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-xl transition-all"
+                                >
+                                  <Trash2 className="w-5 h-5" />
+                                </button>
+                                <button 
+                                  onClick={() => handleEdit(article)}
+                                  className="flex items-center gap-1 text-[#1b887a] font-bold text-sm px-4 py-2 hover:bg-[#1b887a]/10 rounded-xl transition-all"
+                                >
+                                   编辑 <ChevronRight className="w-4 h-4 ml-1" />
+                                </button>
+                             </div>
+                          </div>
+                       </motion.div>
+                    ))}
+                    
+                    {filteredArticles.length === 0 && (
+                      <div className="col-span-full py-20 text-center text-gray-400 font-medium bg-white rounded-3xl border border-gray-100 border-dashed">
+                        当前分类下暂无文章...
+                      </div>
+                    )}
+                  </div>
+                </>
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  <div className="col-span-full space-y-4 mb-6">
+                    <div className="p-4 bg-white rounded-xl border border-gray-200">
+                      <h3 className="font-bold mb-2">批量城市生成控制台</h3>
+                      <textarea 
+                        className="w-full p-2 border rounded" 
+                        rows={3} 
+                        placeholder="请输入城市名称，每行一个"
+                        value={cityBatchInput}
+                        onChange={e => setCityBatchInput(e.target.value)}
+                      />
+                      <div className="flex gap-2 mt-2">
+                        <button 
+                          onClick={handleBatchGenerate} 
+                          disabled={isBatchGenerating}
+                          className="px-4 py-2 bg-[#1b887a] text-white rounded-lg font-bold"
+                        >
+                          {isBatchGenerating ? '生成中...' : '开始批量生成'}
+                        </button>
+                        <span className="text-sm text-gray-500 self-center">{cityBatchStatus}</span>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="col-span-full p-4 bg-white rounded-xl border border-gray-200 flex flex-col md:flex-row gap-4 items-center justify-between">
+                     <div className="flex items-center gap-4 w-full">
+                        <input 
+                           type="text" 
+                           placeholder="搜索城市..." 
+                           className="flex-1 px-4 py-2 border border-gray-200 rounded-full text-sm outline-none focus:border-[#1b887a]"
+                           value={citySearchTerm}
+                           onChange={e => setCitySearchTerm(e.target.value)}
+                        />
+                     </div>
+                     <button onClick={migrateCities} className="px-4 py-2 bg-yellow-500 text-white rounded-lg font-bold text-sm whitespace-nowrap">迁移旧数据</button>
+                  </div>
+                  {cities.filter(c => c.name.includes(citySearchTerm) || (c.enName && c.enName.toLowerCase().includes(citySearchTerm.toLowerCase()))).map((city) => (
+                     <div key={city.id} className="bg-white p-6 rounded-3xl shadow-sm border border-gray-200 flex flex-col justify-between">
+                        <div>
+                          <h3 className="font-bold text-lg">{city.name} ({city.enName})</h3>
+                        </div>
+                        <div className="flex gap-2 mt-4">
+                           <button onClick={() => { setEditingCity(city); setShowCityForm(true); }} className="px-4 py-2 bg-gray-100 rounded-xl font-bold text-sm">编辑</button>
+                           <button onClick={() => deleteCity(city.id)} className="px-4 py-2 text-white bg-red-500 rounded-xl font-bold text-sm">删除</button>
+                        </div>
+                     </div>
+                  ))}
+                  <button 
+                    onClick={() => { setEditingCity(null); setShowCityForm(true); }}
+                    className="flex flex-col items-center justify-center p-6 bg-gray-50 rounded-3xl border border-gray-200 border-dashed text-gray-400 hover:text-[#1b887a] hover:border-[#1b887a] transition-all"
+                  >
+                     <Plus className="w-8 h-8 mb-2" /> 新增城市
+                  </button>
+                  {showCityForm && (
+                     <CityForm 
+                       city={editingCity} 
+                       onClose={() => { setShowCityForm(false); setEditingCity(null); }}
+                       onSave={handleSaveCity}
+                     />
+                  )}
+                </div>
+              )}
             </>
           )}
         </div>

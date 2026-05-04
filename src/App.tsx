@@ -22,6 +22,7 @@ import Feedback from './pages/Feedback';
 import GuideList from './pages/guide/GuideList';
 import GuideDetail from './pages/guide/GuideDetail';
 import Admin from './pages/Admin';
+import Migration from './pages/Migration';
 import ZodiacCalculator from './pages/tools/ZodiacCalculator';
 import CharacterCounter from './pages/tools/CharacterCounter';
 import PinyinSegmentation from './pages/tools/PinyinSegmentation';
@@ -105,6 +106,7 @@ export default function App() {
       <BrowserRouter>
         <Routes>
           <Route path="/admin" element={<Admin />} />
+          <Route path="/migration" element={<Migration />} />
           <Route path="/:langParam/*" element={<LangRouteWrapper />} />
           <Route path="*" element={<RootRedirect />} />
         </Routes>
