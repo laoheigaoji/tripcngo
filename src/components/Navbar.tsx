@@ -96,7 +96,7 @@ export default function Navbar() {
           </div>
         </div>
       )}
-      <div className={`w-full max-w-[1400px] mx-auto px-6 flex justify-between items-center transition-all duration-300 ${isScrolled ? 'py-4' : 'py-5'}`}>
+      <div className={`w-full max-w-[1400px] mx-auto px-6 flex justify-between items-center transition-all duration-300 ${isScrolled ? 'py-3' : 'py-6'}`}>
         {/* Logo */}
         <Link to="/" className="flex items-center gap-3">
           <img src="https://api.iconify.design/game-icons:mountains.svg?color=white" alt="Logo" className="w-10 h-10" />
@@ -107,7 +107,7 @@ export default function Navbar() {
         </Link>
 
         {/* Desktop Nav */}
-        <nav className="hidden md:flex items-center gap-8 font-medium relative">
+        <nav className="hidden lg:flex items-center gap-10 font-medium relative">
           {navLinks.map((item) => {
             const isActive = location.pathname === item.path || (item.path !== '/' && location.pathname.startsWith(item.path));
             const isDiscover = item.name === t('nav.discover');
@@ -253,14 +253,14 @@ export default function Navbar() {
         </nav>
 
         {/* Tools and Lang */}
-        <div className="hidden md:flex items-center gap-4 text-sm font-medium">
+        <div className="hidden lg:flex items-center gap-6">
           <div className="relative group/lang">
             <button 
-              className="flex items-center gap-2 cursor-pointer hover:text-gray-300 transition-colors bg-white/10 px-3 py-1.5 rounded-full border border-white/20"
+              className="flex items-center gap-2 cursor-pointer hover:bg-white/20 transition-all bg-white/10 px-4 py-2 rounded-full border border-white/20 backdrop-blur-sm text-sm"
               onClick={() => setIsLangDropdownOpen(!isLangDropdownOpen)}
             >
               <Globe className="w-4 h-4" />
-              <span>{t('nav.lang.code')} {t('nav.lang')}</span>
+              <span className="font-medium tracking-wide uppercase">{t('nav.lang.code')} {t('nav.lang')}</span>
               <ChevronDown className={`w-3.5 h-3.5 transition-transform duration-200 ${isLangDropdownOpen ? 'rotate-180' : ''}`} />
             </button>
 

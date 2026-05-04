@@ -85,22 +85,45 @@ export default function Admin() {
     return jsonString;
   };
 
+  const proxyImageToStorage = async (url: string, path: string) => {
+    if (!url || !url.startsWith('http')) return url;
+    try {
+      const response = await fetch(url);
+      const blob = await response.blob();
+      const storageRef = ref(storage, path);
+      const snapshot = await uploadBytes(storageRef, blob);
+      return await getDownloadURL(snapshot.ref);
+    } catch (e) {
+      console.warn("Failed to proxy image via direct fetch:", url, e);
+      try {
+        const proxyUrl = `https://wsrv.nl/?url=${encodeURIComponent(url)}`;
+        const res = await fetch(proxyUrl);
+        const blob = await res.blob();
+        const storageRef = ref(storage, path);
+        const snapshot = await uploadBytes(storageRef, blob);
+        return await getDownloadURL(snapshot.ref);
+      } catch (e2) {
+        return url; 
+      }
+    }
+  };
+
   const handleBatchGenerate = async () => {
     const citiesToGen = cityBatchInput.split('\n').map(c => c.trim()).filter(c => c);
     if(citiesToGen.length === 0) return;
 
     setIsBatchGenerating(true);
-    setCityBatchStatus(`Starting: 0/${citiesToGen.length}`);
+    setCityBatchStatus(`正在启动: 0/${citiesToGen.length}`);
 
     for (let i =0; i < citiesToGen.length; i++) {
         const cityName = citiesToGen[i];
-        setCityBatchStatus(`Generating: ${cityName} (${i+1}/${citiesToGen.length})`);
+        setCityBatchStatus(`正在生成并转存图片: ${cityName} (${i+1}/${citiesToGen.length})`);
         
         try {
             const prompt = `Generate detailed, comprehensive city information for the city: '${cityName}'.
                 Return a JSON object that matches the following structure exactly.
                 Ensure ALL text fields are provided in BOTH Chinese and English.
-                IMPORTANT: Provide relevant public image URLs for heroImage and attraction.imageUrl.
+                IMPORTANT: For 'heroImage', 'attractions.imageUrl', and 'food.imageUrl', provide high-quality Unsplash image URLs (e.g. https://images.unsplash.com/photo-...). Pick the most iconic landmarks for the city.
 
                 Structure: {
                   name: string,
@@ -114,20 +137,40 @@ export default function Admin() {
                   heroImage: string
                 }`;
             const res = await ai.models.generateContent({
-                model: 'gemini-3-flash-preview',
+                model: 'gemini-2.0-flash',
                 contents: prompt,
             });
-            const generatedData = JSON.parse(cleanJSON(res.text || '{}'));
+            const data = JSON.parse(cleanJSON(res.text || '{}'));
+
+            // Proxy images to storage
+            if (data.heroImage) {
+               data.heroImage = await proxyImageToStorage(data.heroImage, `city_covers/${Date.now()}-${cityName}-hero.jpg`);
+            }
+            if (data.attractions) {
+              for (const attr of data.attractions) {
+                if (attr.imageUrl) {
+                  attr.imageUrl = await proxyImageToStorage(attr.imageUrl, `attractions/${Date.now()}-${cityName}-${attr.name}.jpg`);
+                }
+              }
+            }
+            if (data.food) {
+              for (const f of data.food) {
+                if (f.imageUrl) {
+                  f.imageUrl = await proxyImageToStorage(f.imageUrl, `food/${Date.now()}-${cityName}-${f.name}.jpg`);
+                }
+              }
+            }
             
             // Save to Firestore
-            await addDoc(collection(db, 'cities'), { ...generatedData });
+            await addDoc(collection(db, 'cities'), { ...data });
         } catch (err) {
             console.error(`Failed to generate ${cityName}:`, err);
         }
     }
     
-    setCityBatchStatus("Done.");
+    setCityBatchStatus("全部生成并转存完成！");
     setIsBatchGenerating(false);
+    setCityBatchInput('');
     fetchCities();
   };
   
@@ -406,7 +449,7 @@ export default function Admin() {
 
       if (formData.title) {
         const titleRes = await ai.models.generateContent({
-            model: 'gemini-3-flash-preview',
+            model: 'gemini-2.0-flash',
             contents: `Translate the following Chinese article title to English. Only output the translated text:\n\n${formData.title}`,
         });
         titleEnExp = titleRes.text || '';
@@ -414,7 +457,7 @@ export default function Admin() {
 
       if (formData.subtitle) {
         const subtitleRes = await ai.models.generateContent({
-            model: 'gemini-3-flash-preview',
+            model: 'gemini-2.0-flash',
             contents: `Translate the following Chinese article subtitle to English. Only output the translated text:\n\n${formData.subtitle}`,
         });
         subtitleEnExp = subtitleRes.text || '';
@@ -422,7 +465,7 @@ export default function Admin() {
 
       if (formData.content) {
         const contentRes = await ai.models.generateContent({
-            model: 'gemini-3-flash-preview',
+            model: 'gemini-2.0-flash',
             contents: `Translate the following Chinese markdown content to English. Preserve all markdown formatting, links, and image syntactic structures exactly as they are. Output only the translated markdown:\n\n${formData.content}`,
         });
         contentEnExp = contentRes.text || '';

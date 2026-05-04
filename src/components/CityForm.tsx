@@ -58,6 +58,29 @@ export default function CityForm({ city, onClose, onSave }: CityFormProps) {
     if (url) updateFormData('heroImage', url);
   };
 
+  const proxyImageToStorage = async (url: string, path: string) => {
+    if (!url || !url.startsWith('http')) return url;
+    try {
+      const response = await fetch(url);
+      const blob = await response.blob();
+      const storageRef = ref(storage, path);
+      const snapshot = await uploadBytes(storageRef, blob);
+      return await getDownloadURL(snapshot.ref);
+    } catch (e) {
+      console.warn("Failed to proxy image via direct fetch:", url, e);
+      try {
+        const proxyUrl = `https://wsrv.nl/?url=${encodeURIComponent(url)}`;
+        const res = await fetch(proxyUrl);
+        const blob = await res.blob();
+        const storageRef = ref(storage, path);
+        const snapshot = await uploadBytes(storageRef, blob);
+        return await getDownloadURL(snapshot.ref);
+      } catch (e2) {
+        return url; 
+      }
+    }
+  };
+
   const handleGenerate = async () => {
     if (!formData.name) {
       alert('请输入城市名称');
@@ -68,7 +91,7 @@ export default function CityForm({ city, onClose, onSave }: CityFormProps) {
       const prompt = `Generate detailed, comprehensive city information for the city: '${formData.name}'. 
       Return a JSON object that matches the following TypeScript structure exactly. 
       Ensure ALL text fields (descriptions, titles, paragraphs, etc.) are provided in BOTH Chinese and English.
-      IMPORTANT: For 'heroImage' and attraction 'imageUrl', provide relevant, high-quality public image URLs (e.g., from Unsplash using https://images.unsplash.com/... or similar).
+      IMPORTANT: For 'heroImage', 'attractions.imageUrl', and 'food.imageUrl', provide high-quality Unsplash image URLs (e.g. https://images.unsplash.com/photo-...).
       
       Structure: {
         name: string,
@@ -83,12 +106,12 @@ export default function CityForm({ city, onClose, onSave }: CityFormProps) {
         history: [{year: string, enYear: string, title: string, enTitle: string, desc: string, enDesc: string}],
         attractions: [{name: string, enName: string, desc: string, enDesc: string, price: string, enPrice: string, season: string, enSeason: string, time: string, enTime: string, imageUrl: string}],
         transportation: [{iconName: \"Plane\", title: string, enTitle: string, desc: string, enDesc: string, price: string, enPrice: string}],
-        food: [{name: string, enName: string, pinyin: string, price: string, desc: string, enDesc: string, ingredients: string, enIngredients: string, imageIdx: number}]
+        food: [{name: string, enName: string, pinyin: string, price: string, desc: string, enDesc: string, ingredients: string, enIngredients: string, imageIdx: number, imageUrl: string}]
       }
       Respond ONLY with the raw JSON object.`;
       
       const res = await ai.models.generateContent({
-        model: 'gemini-3-flash-preview',
+        model: 'gemini-2.0-flash',
         contents: prompt,
       });
       
@@ -105,8 +128,28 @@ export default function CityForm({ city, onClose, onSave }: CityFormProps) {
         return jsonString;
       };
 
-      const generatedData = JSON.parse(cleanJSON(responseText));
-      setFormData(prev => ({ ...prev, ...generatedData }));
+      const data = JSON.parse(cleanJSON(responseText));
+      
+      // Proxy images to storage
+      if (data.heroImage) {
+        data.heroImage = await proxyImageToStorage(data.heroImage, `city_covers/${Date.now()}-${formData.name}-hero.jpg`);
+      }
+      if (data.attractions) {
+        for (const attr of data.attractions) {
+          if (attr.imageUrl) {
+            attr.imageUrl = await proxyImageToStorage(attr.imageUrl, `attractions/${Date.now()}-${formData.name}-${attr.name}.jpg`);
+          }
+        }
+      }
+      if (data.food) {
+        for (const f of data.food) {
+          if (f.imageUrl) {
+            f.imageUrl = await proxyImageToStorage(f.imageUrl, `food/${Date.now()}-${formData.name}-${f.name}.jpg`);
+          }
+        }
+      }
+
+      setFormData(prev => ({ ...prev, ...data }));
     } catch (err) {
       console.error(err);
       alert('生成失败: ' + (err instanceof Error ? err.message : String(err)));

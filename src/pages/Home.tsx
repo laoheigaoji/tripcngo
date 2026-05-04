@@ -7,57 +7,6 @@ import SEO from '../components/SEO';
 import { collection, query, orderBy, limit, getDocs } from 'firebase/firestore';
 import { db } from '../lib/firebase';
 
-const GUIDES = [
-  { 
-    img: 'https://static.tripcngo.com/ing/Fcover-1.webp', 
-    title: '中国早餐完全指南：独一无二的早餐文化', 
-    enTitle: 'Ultimate China Breakfast Guide: A Unique Culture',
-    desc: '在中国，早餐不只是一餐饭，它是一种生活的哲学。清晨的热干面、滚烫的豆浆、蒸腾的小笼包——这些热气腾腾的食物里，藏着敬时间、爱生活的态度。广州人慢悠悠叹茶，武汉人急匆匆过早，北方吃面，南方喝粥。这篇...', 
-    enDesc: 'Breakfast in China is more than a meal; it is a philosophy. From hot noodles to steaming buns, explore the diverse culture of Chinese breakfast...',
-    views: 2 
-  },
-  { 
-    img: 'https://static.tripcngo.com/ing/Fcover-2.webp', 
-    title: '中国Top 10街头美食：尝遍地道小吃，舌尖上的中国', 
-    enTitle: 'China Top 10 Street Food: Taste Authentic Snacks',
-    desc: '深度解析煎饼果子、肉夹馍、臭豆腐等十大国民小吃。涵盖南北地域特色、价格参考及卫生挑选技巧，让你大胆尝试，不用担心踩雷。', 
-    enDesc: 'In-depth analysis of high-profile snacks like Jianbing and Roujiamo. Covering regional specialties, pricing, and tips for safe street food...',
-    views: undefined 
-  },
-  { 
-    img: 'https://static.tripcngo.com/ing/Fcover-3.webp', 
-    title: '中国火锅完全指南：千年美食文化的沸腾之旅', 
-    enTitle: 'Complete Chinese Hotpot Guide: A Boiling Journey',
-    desc: '在中国怎么吃火锅？本文为您详解川渝麻辣、老北京铜锅、潮汕牛肉等六大流派对比。包含健康下锅顺序、海底捞/巴奴等品牌及生熟分开等安全提醒，带您找回最正宗的中国味。', 
-    enDesc: 'How to eat hotpot in China? Detailed comparison of major styles and safety tips to find the most authentic taste...',
-    views: undefined 
-  },
-  { 
-    img: 'https://static.tripcngo.com/ing/Fcover-4.webp', 
-    title: '中国上饶深度游攻略：从望仙谷到三清山，探索江西隐藏的仙境', 
-    enTitle: 'Shangrao Deep Travel Guide: Exploring Jiangxi\'s Hidden Fairyland',
-    desc: '上饶，这座江西的隐秘仙境，拥有令人心驰神往的自然美景和深厚的文化底蕴。本文将带您深入探索望仙谷和三清山的绝美风光，感受江西隐藏的仙境之旅。', 
-    enDesc: 'Explore the stunning landscapes of Wangxiangu and Mount Sanqing in Shangrao, Jiangxi...',
-    views: undefined 
-  },
-  { 
-    img: 'https://static.tripcngo.com/ing/Fcover-5.webp', 
-    title: '中国复姓大盘点：探探秘十大顶级复姓的起源和故事', 
-    enTitle: 'Chinese Compound Surnames: Origin & Stories of Top 10 Surnames',
-    desc: '中国不仅有百家姓，更有底蕴深厚的复姓文化。本文深度解读欧阳、诸葛、上官、司马等十大顶级复姓的起源故事、历史名人及文化内涵。', 
-    enDesc: 'Unlock the historical stories and cultural significance behind famous compound surnames like Ouyang and Zhuge...',
-    views: 2 
-  },
-  { 
-    img: 'https://static.tripcngo.com/ing/Fcover-6.jpg', 
-    title: '中国孩子取名趋势大盘点', 
-    enTitle: 'Chinese Baby Naming Trends: Modern vs Traditional',
-    desc: '揭秘中国名字的时代变迁。了解中国父母的命名趋势，如何从古籍中为孩子取一个好中文名字。', 
-    enDesc: 'Discover how modern Chinese parents choose names and the trends shifting from simple to more classical influences...',
-    views: 77 
-  },
-];
-
 const FAQS = [
   { 
     q: "这240小时是从什么时候开始计算的?", 
@@ -118,85 +67,14 @@ const FAQS = [
     enQ: "How to choose between visa-free and transit visa-free?",
     a: "如属新加坡等互免国公民，建议直接使用30天免签（更灵活）；若仅过境则选240小时免签（无需签证费）。",
     enA: "If you are a citizen of visa-free countries like Singapore, it is recommended to use the 30-day visa-free entry (more flexible); if only transiting, choose the 240-hour transit visa-free (no visa fee required)."
-  },
-  { 
-    q: "超期停留会怎样？", 
-    enQ: "What happens if I overstay?",
-    a: "每日处罚款500元，最高可处10日拘留并限期离境，且5年内不得申请过境免签。",
-    enA: "A fine of 500 RMB per day, up to 10 days detention and deportation, and ineligibility for transit visa-free for 5 years."
-  },
-  { 
-    q: "如何查询实时政策？", 
-    enQ: "How to check real-time policies?",
-    a: "微信搜索\"国家移民管理局\"小程序，或拨打12367热线（支持英/日/韩等8语种服务）。",
-    enA: "Search for \"National Immigration Administration\" mini-program on WeChat, or call the 12367 hotline (supports 8 languages including English, Japanese, Korean)."
-  },
-  { 
-    q: "哪些行为会被视为非法就业？", 
-    enQ: "What activities are considered illegal employment?",
-    a: "包括商业拍摄、网络直播获利、临时授课等，即使未签订劳动合同也可能被认定违法。",
-    enA: "Includes commercial filming, live streaming for profit, temporary teaching, etc. Even without a labor contract, these activities may be considered illegal."
-  },
-  { 
-    q: "北京首都机场办理流程有何特殊安排？", 
-    enQ: "What special arrangements exist at Beijing Capital Airport?",
-    a: "T3航站楼设立\"过境免签快速通道\"，配备英/日/韩三语服务专员，办理时间缩短至15分钟内。需注意每日22:00-6:00时段需前往24小时应急窗口办理。",
-    enA: "Terminal 3 has a 'Transit Visa-Free Express Lane' with English/Japanese/Korean speaking staff, reducing processing time to under 15 minutes. Note: between 22:00-06:00 daily, you must go to the 24-hour emergency window."
-  },
-  { 
-    q: "上海浦东机场转机如何衔接？", 
-    enQ: "How to connect at Shanghai Pudong Airport?",
-    a: "提供\"空铁联运\"服务，持高铁票可在卫星厅直接办理过境手续。例如：巴黎→上海→杭州东站的高铁联程票，可在隔离区内完成所有手续。",
-    enA: "Air-rail intermodal service is available. You can complete transit procedures directly at the satellite hall with a high-speed rail ticket. For example: Paris→Shanghai→Hangzhou East Station can be processed entirely within the transit area."
-  },
-  { 
-    q: "摄影爱好者有哪些限制？", 
-    enQ: "What restrictions apply to photography enthusiasts?",
-    a: "商业拍摄需申请工作签证，但个人旅游拍摄允许。禁飞区（如军事设施周边500米）严禁无人机航拍，违者最高罚款2万元。",
-    enA: "Commercial filming requires a work visa, but personal travel photography is permitted. Drone flights are strictly prohibited in no-fly zones (e.g., within 500 meters of military facilities), with a maximum fine of 20,000 RMB for violations."
-  },
-  { 
-    q: "联程票改签如何处理？", 
-    enQ: "How to handle ticket changes?",
-    a: "允许免费改签1次，需在停留期第7天前完成。例如原定D10香港航班改签至D11，需在D7前持新机票到入境口岸边检站备案。",
-    enA: "One free change is allowed, which must be completed before day 7 of your stay. For example, if changing a D10 Hong Kong flight to D11, you must register the new ticket at the entry port's border inspection station before D7."
-  },
-  { 
-    q: "跨境高铁票是否认可？", 
-    enQ: "Are cross-border high-speed rail tickets accepted?",
-    a: "中老铁路（昆明→万象）、中越铁路（南宁→河内）等国际班次车票均被认可，需提供纸质票与电子客票号双验证。",
-    enA: "International train tickets such as China-Laos Railway (Kunming→Vientiane) and China-Vietnam Railway (Nanning→Hanoi) are accepted. Both paper tickets and electronic ticket numbers are required for verification."
-  },
-  { 
-    q: "如何通过微信办理预审？", 
-    enQ: "How to apply for pre-approval via WeChat?",
-    a: "在\"移民局\"小程序提交护照首页+电子机票，AI系统10分钟生成《过境预审码》，可减少口岸办理时间50%。",
-    enA: "Submit your passport photo page + electronic ticket through the 'Immigration Bureau' mini-program. The AI system generates a Transit Pre-approval Code within 10 minutes, reducing port processing time by 50%."
-  },
-  { 
-    q: "哪些行为可能引发误会？", 
-    enQ: "What behaviors may cause misunderstandings?",
-    a: "避免在政府机关门前比\"V\"手势拍照、未经许可拍摄少数民族服饰者。宗教场所需注意着装要求（如寺庙不穿短裤入内）。",
-    enA: "Avoid making 'V' gestures for photos in front of government buildings and photographing people in ethnic minority costumes without permission. Dress appropriately at religious sites (e.g., no shorts in temples)."
-  },
-  { 
-    q: "突发疾病如何就医？", 
-    enQ: "What to do in case of a medical emergency?",
-    a: "持护照可在二级以上医院挂急诊，推荐北京协和/上海瑞金等53家涉外医院。保留医疗票据可申请停留延期。",
-    enA: "You can seek emergency treatment at hospitals above Level 2 with your passport. 53 foreign-related hospitals like Peking Union Medical College Hospital and Shanghai Ruijin Hospital are recommended. Keep medical receipts for possible stay extension applications."
-  },
-  { 
-    q: "突发疾病如何延期？", 
-    enQ: "How to apply for an extension due to medical emergency?",
-    a: "需提供医院诊断证明，在停留期满前3个工作日向所在地市级公安局出入境管理处申请，最长可延期30天。",
-    enA: "Provide a hospital diagnosis certificate and apply to the municipal exit-entry administration 3 working days before your stay expires. The maximum extension is 30 days."
-  },
+  }
 ];
 
 export default function Home() {
-  const { language, t } = useLanguage();
-  const [openFAQ, setOpenFAQ] = useState<number | null>(0);
+  const { t, language } = useLanguage();
+  const [openFAQ, setOpenFAQ] = useState<number | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
+  const [isSearchFocused, setIsSearchFocused] = useState(false);
   const [guides, setGuides] = useState<any[]>([]);
   const [cities, setCities] = useState<any[]>([]);
   const navigate = useNavigate();
@@ -215,11 +93,9 @@ export default function Home() {
            enDesc: doc.data().subtitleEn || '',
            views: doc.data().views || undefined
         }));
-        if (data.length > 0) {
-           setGuides(data);
-        }
+        setGuides(data);
       } catch (err) {
-        console.error("Error fetching latest guides for home page", err);
+        console.error("Error fetching latest guides", err);
       }
     };
     const fetchCities = async () => {
@@ -233,19 +109,27 @@ export default function Home() {
       } catch (err) {
         console.error("Error fetching cities", err);
       }
-    }
+    };
     fetchGuides();
     fetchCities();
   }, []);
 
   const handleSearch = () => {
-    const city = cities.find(c => c.name.includes(searchTerm) || c.enName.toLowerCase().includes(searchTerm.toLowerCase()));
+    const city = cities.find(c => 
+      c.name.includes(searchTerm.trim()) || 
+      (c.enName && c.enName.toLowerCase().includes(searchTerm.trim().toLowerCase()))
+    );
     if (city) {
       navigate(`/cities/${city.id}`);
-    } else {
-      alert(language === 'zh' ? '未找到该城市' : 'City not found');
     }
   };
+
+  const filteredCities = searchTerm.trim() 
+    ? cities.filter(c => 
+        c.name.includes(searchTerm.trim()) || 
+        (c.enName && c.enName.toLowerCase().includes(searchTerm.trim().toLowerCase()))
+      ).slice(0, 5)
+    : [];
 
   return (
     <div className="w-full bg-[#f7f7f7]">
@@ -256,8 +140,9 @@ export default function Home() {
           : 'tripcngo.com is your ultimate guide to traveling in China. Explore the latest 144-hour transit visa-free policies, top city guides, and practical travel tools.'}
         keywords={language === 'zh' ? '中国旅游, 免签中国, 144小时过境免签, 中国旅行攻略, 中国城市指南' : 'China travel, visa free China, 144h transit visa free, China travel guide, Chinese cities'}
       />
+      
       {/* Hero Section */}
-      <section className="relative h-screen min-h-[600px] flex items-center justify-center pt-20">
+      <section className="relative h-screen min-h-[700px] flex px-6 pb-20 pt-32">
         <div className="absolute inset-0 overflow-hidden">
           <video 
             autoPlay 
@@ -268,51 +153,99 @@ export default function Home() {
             src="https://static.tripcngo.com/video/12121.mp4"
             poster="https://static.tripcngo.com/ing/image1.webp"
           />
-          <div className="absolute inset-0 bg-black/50" />
+          <div className="absolute inset-0 bg-black/40" />
         </div>
         
-        <div className="relative z-10 w-full max-w-[1400px] mx-auto px-6 text-center">
-          <motion.h1 
-            initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
-            className="text-4xl md:text-6xl font-black text-white tracking-widest mb-6"
-          >
-            {t('hero.ultimate')}
-          </motion.h1>
-          <motion.p 
-            initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}
-            className="text-lg md:text-xl text-white/90 mb-12 font-medium"
-          >
-            {t('hero.desc')}
-          </motion.p>
+        <div className="relative z-10 w-full max-w-[1400px] mx-auto flex flex-col justify-end items-center">
+          <div className="max-w-4xl mx-auto text-center mb-12">
+            <motion.h1 
+              initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }}
+              className="text-5xl md:text-7xl font-bold text-white tracking-tight leading-[1.1] mb-6 drop-shadow-lg"
+            >
+              {t('hero.ultimate')}
+            </motion.h1>
+            <motion.p 
+              initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}
+              className="text-xl md:text-2xl text-white/90 font-medium drop-shadow-md"
+            >
+              {t('hero.desc')}
+            </motion.p>
+          </div>
           
           <motion.div 
-            initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}
-            className="w-full max-w-[640px] mx-auto bg-white rounded-lg overflow-hidden shadow-2xl"
+            initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}
+            className="w-full max-w-[800px] backdrop-blur-xl bg-white/20 p-2 rounded-[2rem] shadow-2xl border border-white/30 relative"
           >
-            <div className="flex border-b border-gray-100 bg-gray-50">
-              <button className="flex-1 py-3 text-sm font-medium bg-white text-gray-900 border-none outline-none">{t('hero.dest')}</button>
+            <div className="flex gap-2 p-1 mb-1">
+              <button className="px-6 py-2.5 rounded-full text-[15px] font-bold bg-white text-[#1b887a] shadow-sm">
+                {t('hero.dest')}
+              </button>
               <button 
                 onClick={() => navigate('/tools/name')}
-                className="flex-1 py-3 text-sm font-medium text-gray-500 hover:text-gray-900 border-none outline-none transition-colors">{t('hero.aiName')}</button>
+                className="px-6 py-2.5 rounded-full text-[15px] font-bold text-white hover:bg-white/10 transition-colors"
+              >
+                {t('hero.aiName')}
+              </button>
             </div>
-            <div className="px-2 py-2.5 flex items-center justify-between">
-              <div className="flex-1 flex items-center pl-4 pr-2">
-                <MapPin className="w-5 h-5 text-gray-400 flex-shrink-0" />
+            
+            <div className="bg-white rounded-[1.5rem] p-1.5 flex items-center relative group">
+              <div className="flex-1 flex items-center px-4">
+                <MapPin className="w-5 h-5 text-gray-400 mr-2" />
                 <input 
                   type="text" 
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
+                  onFocus={() => setIsSearchFocused(true)}
+                  onBlur={() => setTimeout(() => setIsSearchFocused(false), 200)}
                   placeholder={t('hero.searchPlaceholder')} 
-                  className="flex-1 px-3 py-2 outline-none text-gray-800 bg-transparent text-sm w-full"
+                  className="w-full py-3.5 outline-none text-gray-800 text-[16px]"
                 />
               </div>
               <button 
                 onClick={handleSearch}
-                className="bg-[#1b887a] hover:bg-[#008055] text-white px-5 py-2 rounded-md font-medium transition-colors flex items-center gap-2 text-sm flex-shrink-0">
+                className="bg-[#1b887a] hover:bg-[#008055] text-white px-8 py-3.5 rounded-[1.2rem] font-bold transition-all flex items-center gap-2 active:scale-95 shadow-md flex-shrink-0"
+              >
                 {t('hero.start')}
-                <Search className="w-4 h-4 text-white" />
+                <Search className="w-5 h-5" />
               </button>
             </div>
+
+            {/* Search Suggestions Dropdown */}
+            {isSearchFocused && searchTerm.trim() && (
+              <motion.div 
+                initial={{ opacity: 0, scale: 0.95, y: 10 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                className="absolute left-0 right-0 bottom-[calc(100%+12px)] bg-white rounded-2xl shadow-2xl overflow-hidden z-[50] border border-gray-100"
+              >
+                {filteredCities.length > 0 ? (
+                  <div className="p-2">
+                    {filteredCities.map((city) => (
+                      <button
+                        key={city.id}
+                        onClick={() => navigate(`/cities/${city.id}`)}
+                        className="w-full flex items-center gap-4 p-3 hover:bg-gray-50 rounded-xl transition-colors text-left group"
+                      >
+                        <div className="w-12 h-12 rounded-lg overflow-hidden flex-shrink-0 bg-gray-100">
+                          <img 
+                            src={city.heroImage || 'https://images.unsplash.com/photo-1540202403-b712e0e026ee?w=100&q=80&auto=format&fit=crop'} 
+                            alt={city.name}
+                            className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
+                          />
+                        </div>
+                        <div>
+                          <div className="font-bold text-gray-900 text-base">{city.name}</div>
+                          <div className="text-sm text-gray-500">{city.enName} {city.name}</div>
+                        </div>
+                      </button>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="p-8 text-center text-gray-500 font-medium">
+                    {language === 'zh' ? '未找到相关城市' : 'No matching cities found'}
+                  </div>
+                )}
+              </motion.div>
+            )}
           </motion.div>
         </div>
       </section>
@@ -360,24 +293,24 @@ export default function Home() {
             </button>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {cities.map((city) => (
+            {cities.slice(0, 6).map((city) => (
               <div 
                 key={city.id} 
                 className="relative group rounded-xl overflow-hidden cursor-pointer bg-white border border-gray-100 hover:shadow-lg transition-all duration-300"
                 onClick={() => navigate(`/cities/${city.id}`)}
               >
                 <div className="relative h-[240px] md:h-[260px]">
-                  <img src={city.img} alt={language === 'zh' ? city.name : city.enName} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                  <img src={city.heroImage || city.img} alt={language === 'zh' ? city.name : city.enName} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
                   <div className="absolute inset-0 bg-black/10 group-hover:bg-transparent transition-colors" />
                 </div>
                 <div className="p-4 flex items-center justify-between bg-white border-t border-gray-100">
                   <div>
                     <span className="text-[15px] font-bold text-gray-900">{language === 'zh' ? city.name : city.enName}</span>
-                    <span className="ml-2 text-xs text-gray-500">{city.id.charAt(0).toUpperCase() + city.id.slice(1)}</span>
+                    <span className="ml-2 text-xs text-gray-500 font-medium uppercase tracking-wider">{city.enName}</span>
                   </div>
                   <div className="flex gap-3 text-gray-500">
                     <span className="flex items-center gap-1 text-xs font-medium"><Heart className="w-3.5 h-3.5 text-red-500 fill-red-500" /> {city.likes || 0}</span>
-                    <span className="flex items-center gap-1 text-xs font-medium"><ThumbsUp className="w-3.5 h-3.5 text-green-500 fill-green-500" /> {city.helpful || 0}</span>
+                    <span className="flex items-center gap-1 text-xs font-medium"><ThumbsUp className="w-3.5 h-3.5 text-[#1b887a] fill-[#1b887a]" /> {city.helpful || 0}</span>
                   </div>
                 </div>
               </div>
@@ -397,7 +330,9 @@ export default function Home() {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-y-10 gap-x-8">
           {guides.map((guide, i) => (
              <div key={i} className="flex flex-col sm:flex-row gap-5 bg-transparent cursor-pointer group" onClick={() => navigate(`/articles/${guide.id}`)}>
-               <img src={guide.img} alt={language === 'zh' ? guide.title : guide.enTitle} className="w-full sm:w-[200px] h-[140px] object-cover rounded-md flex-shrink-0 shadow-sm border border-gray-200 group-hover:opacity-90 transition-opacity" />
+               <div className="w-full sm:w-[200px] h-[140px] overflow-hidden rounded-md flex-shrink-0 shadow-sm border border-gray-200">
+                  <img src={guide.img} alt={language === 'zh' ? guide.title : guide.enTitle} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
+               </div>
                <div className="flex flex-col py-1">
                  <h3 className="text-[17px] font-bold text-gray-900 leading-snug group-hover:text-[#1b887a] transition-colors mb-2 line-clamp-2">
                     {language === 'zh' ? guide.title : guide.enTitle}
@@ -426,15 +361,25 @@ export default function Home() {
           
           <div className="space-y-4">
             {FAQS.map((faq, i) => (
-              <div key={i} className="bg-white rounded-md overflow-hidden cursor-pointer" onClick={() => setOpenFAQ(openFAQ === i ? null : i)}>
+              <div key={i} className="bg-white rounded-md overflow-hidden shadow-sm border border-gray-100 cursor-pointer" onClick={() => setOpenFAQ(openFAQ === i ? null : i)}>
                 <div className="px-6 py-5 flex justify-between items-center text-gray-900 font-bold hover:bg-gray-50 transition-colors border-b border-gray-100/50">
                   <div className="flex gap-4">
-                    <span>{i + 1}.</span>
+                    <span className="text-[#1b887a]">{i + 1}.</span>
                     <span>{language === 'zh' ? faq.q : faq.enQ}</span>
                   </div>
                   {openFAQ === i ? <ChevronUp className="w-5 h-5 text-gray-400" /> : <ChevronDown className="w-5 h-5 text-gray-400" />}
                 </div>
-                {openFAQ === i && <div className="px-12 py-5 bg-white text-gray-600 leading-relaxed">{language === 'zh' ? faq.a : faq.enA}</div>}
+                {openFAQ === i && (
+                  <motion.div 
+                    initial={{ height: 0, opacity: 0 }}
+                    animate={{ height: 'auto', opacity: 1 }}
+                    className="overflow-hidden"
+                  >
+                    <div className="px-12 py-5 bg-white text-gray-600 leading-relaxed border-t border-gray-50">
+                      {language === 'zh' ? faq.a : faq.enA}
+                    </div>
+                  </motion.div>
+                )}
               </div>
             ))}
           </div>
