@@ -1,32 +1,62 @@
-import express from "express";
-import { createServer as createViteServer } from "vite";
-import path from "path";
-import { fileURLToPath } from "url";
-import mongoose from "mongoose";
+import { Hono } from "hono";
+import { serveStatic } from "hono/cloudflare-workers";
+import { mongoose } from "mongoose";
 import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3";
 import axios from "axios";
 import crypto from "crypto";
 import nodemailer from "nodemailer";
 
-// Feedback Transporter
-const transporter = nodemailer.createTransport({
-  service: 'gmail',
-  auth: {
-    user: process.env.GMAIL_USER,
-    pass: process.env.GMAIL_APP_PASSWORD,
-  },
-});
+type Bindings = {
+  MONGODB_URI: string;
+  GMAIL_USER: string;
+  GMAIL_APP_PASSWORD: string;
+  R2_ENDPOINT: string;
+  R2_ACCESS_KEY_ID: string;
+  R2_SECRET_ACCESS_KEY: string;
+  R2_BUCKET: string;
+  R2_PUBLIC_URL: string;
+  DEEPSEEK_API_KEY: string;
+  ADMIN_USERNAME: string;
+  ADMIN_PASSWORD: string;
+};
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
+const app = new Hono<{ Bindings: Bindings }>();
 
-// MongoDB Connection
-const MONGODB_URI = process.env.MONGODB_URI || "mongodb+srv://752675:Aa752675@cluster0.simmm5o.mongodb.net/Tripcngo";
+// ========== 1. 全局初始化 ==========
+let mongoConn: typeof mongoose | null = null;
 
-mongoose.connect(MONGODB_URI)
-  .then(() => console.log("Connected to MongoDB via Express Server"))
-  .catch(err => console.error("MongoDB connection error:", err));
+// 连接 MongoDB（Workers 环境用短连接，每次请求复用）
+async function getMongo(c: any) {
+  if (!mongoConn) {
+    mongoConn = await mongoose.connect(c.env.MONGODB_URI);
+  }
+  return mongoConn;
+}
 
+// Feedback 邮件发送
+function createTransporter(c: any) {
+  return nodemailer.createTransport({
+    service: "gmail",
+    auth: {
+      user: c.env.GMAIL_USER,
+      pass: c.env.GMAIL_APP_PASSWORD,
+    },
+  });
+}
+
+// R2 客户端
+function getS3Client(c: any) {
+  return new S3Client({
+    region: "auto",
+    endpoint: c.env.R2_ENDPOINT,
+    credentials: {
+      accessKeyId: c.env.R2_ACCESS_KEY_ID,
+      secretAccessKey: c.env.R2_SECRET_ACCESS_KEY,
+    },
+  });
+}
+
+// ========== 2. Mongoose Schema & Model ==========
 const ArticleSchema = new mongoose.Schema({
   title: { type: String, required: true },
   titleEn: { type: String, default: "" },
@@ -40,271 +70,230 @@ const ArticleSchema = new mongoose.Schema({
   views: { type: Number, default: 0 },
   likes: { type: Number, default: 0 },
   createdAt: { type: Date, default: Date.now },
-  updatedAt: { type: Date, default: Date.now }
+  updatedAt: { type: Date, default: Date.now },
 });
 
-const Article = mongoose.model("Article", ArticleSchema);
+let Article: ReturnType<typeof mongoose.model>;
 
-// Cloudflare R2 Configuration
-const s3Client = new S3Client({
-  region: "auto",
-  endpoint: process.env.R2_ENDPOINT || "https://0a28250e63bf217f833feabaf84a25a1.r2.cloudflarestorage.com",
-  credentials: {
-    accessKeyId: process.env.R2_ACCESS_KEY_ID || "4135a1c8edc3abd2e470f7fb23ec2d37",
-    secretAccessKey: process.env.R2_SECRET_ACCESS_KEY || "c5c84994c93562c70c56c4309a17fa0218348ace95b7a9bdde37c27aae35ace3",
-  },
-});
+async function getArticleModel() {
+  if (!Article) {
+    Article = mongoose.model("Article", ArticleSchema);
+  }
+  return Article;
+}
 
-const R2_BUCKET = process.env.R2_BUCKET || "tripcngo-assets";
-// Using the custom domain provided for production
-const R2_PUBLIC_URL = process.env.R2_PUBLIC_URL || "https://static.tripcngo.com"; 
-
-async function uploadToR2(url: string): Promise<string> {
+// ========== 3. 工具函数 ==========
+// 上传图片到 R2
+async function uploadToR2(c: any, url: string): Promise<string> {
   try {
-    const response = await axios.get(url, { responseType: 'arraybuffer' });
-    const buffer = Buffer.from(response.data);
-    const contentType = response.headers['content-type'] as string || 'image/jpeg';
-    const extension = contentType.split('/')[1] || 'jpg';
-    const fileName = `articles/${crypto.randomBytes(16).toString('hex')}.${extension}`;
+    const res = await axios.get(url, { responseType: "arraybuffer" });
+    const buffer = Buffer.from(res.data);
+    const contentType = (res.headers["content-type"] as string) || "image/jpeg";
+    const ext = contentType.split("/")[1] || "jpg";
+    const fileName = `articles/${crypto.randomBytes(16).toString("hex")}.${ext}`;
 
-    await s3Client.send(new PutObjectCommand({
-      Bucket: R2_BUCKET,
-      Key: fileName,
-      Body: buffer,
-      ContentType: contentType,
-    }));
+    const client = getS3Client(c);
+    await client.send(
+      new PutObjectCommand({
+        Bucket: c.env.R2_BUCKET,
+        Key: fileName,
+        Body: buffer,
+        ContentType: contentType,
+      })
+    );
 
-    // If you have a custom domain/public access configured, return that URL
-    // For now returning the full path format which works if public access is enabled on the bucket
-    return `${R2_PUBLIC_URL}/${fileName}`;
-  } catch (error) {
-    console.error("Error uploading to R2:", error);
-    return url; // Fallback to original if failed
+    return `${c.env.R2_PUBLIC_URL}/${fileName}`;
+  } catch (e) {
+    console.error("R2 upload err", e);
+    return url;
   }
 }
 
-async function processArticleContent(content: string): Promise<string> {
-  // Simple regex for Markdown image: ![alt](url)
-  const mdImageRegex = /!\[([^\]]*)\]\((https?:\/\/[^\s)]+)\)/g;
-  let matches;
+// 替换文章内图片
+async function processArticleContent(c: any, content: string): Promise<string> {
   let newContent = content;
 
-  while ((matches = mdImageRegex.exec(content)) !== null) {
-    const originalUrl = matches[2];
-    if (!originalUrl.includes("cloudflarestorage.com") && !originalUrl.includes("tripcngo.com")) {
-      const newUrl = await uploadToR2(originalUrl);
-      newContent = newContent.replace(originalUrl, newUrl);
+  // Markdown 图片
+  const mdReg = /!\[([^\]]*)\]\((https?:\/\/[^\s)]+)\)/g;
+  let m: RegExpExecArray | null;
+  while ((m = mdReg.exec(content)) !== null) {
+    const original = m[2];
+    if (!original.includes("cloudflarestorage.com") && !original.includes("tripcngo.com")) {
+      const newUrl = await uploadToR2(c, original);
+      newContent = newContent.replace(original, newUrl);
     }
   }
 
-  // Also handle <img> tags if they exist (sometimes pasted from HTML)
-  const htmlImageRegex = /<img[^>]+src="([^">]+)"/g;
-  while ((matches = htmlImageRegex.exec(content)) !== null) {
-    const originalUrl = matches[1];
-    if (!originalUrl.includes("cloudflarestorage.com") && !originalUrl.includes("tripcngo.com")) {
-      const newUrl = await uploadToR2(originalUrl);
-      newContent = newContent.replace(originalUrl, newUrl);
+  // HTML img
+  const htmlReg = /<img[^>]+src="([^">]+)"/g;
+  while ((m = htmlReg.exec(content)) !== null) {
+    const original = m[1];
+    if (!original.includes("cloudflarestorage.com") && !original.includes("tripcngo.com")) {
+      const newUrl = await uploadToR2(c, original);
+      newContent = newContent.replace(original, newUrl);
     }
   }
 
   return newContent;
 }
 
-async function startServer() {
-  const app = express();
-  const PORT = 3000;
+// 管理员鉴权中间件（和原逻辑一致）
+const authMiddleware = async (c: any, next: any) => {
+  const auth = c.req.header("authorization");
+  if (!auth) return c.json({ error: "Unauthorized" }, 401);
 
-  app.use(express.json());
+  const base64 = auth.split(" ")[1];
+  const [user, pass] = atob(base64).split(":");
 
-  // Authentication Middleware (Simple for Demo)
-  const authenticate = (req: any, res: any, next: any) => {
-    const authHeader = req.headers.authorization;
-    if (!authHeader) return res.status(401).json({ error: "Unauthorized" });
+  if (user !== c.env.ADMIN_USERNAME || pass !== c.env.ADMIN_PASSWORD) {
+    return c.json({ error: "Unauthorized" }, 401);
+  }
+  await next();
+};
 
-    const [username, password] = Buffer.from(authHeader.split(" ")[1], "base64").toString().split(":");
-    
-    if (username === (process.env.ADMIN_USERNAME || "admin") && 
-        password === (process.env.ADMIN_PASSWORD || "Aa752675")) {
-      next();
-    } else {
-      res.status(401).json({ error: "Unauthorized" });
-    }
-  };
-
-  app.post("/api/generate-name", async (req, res) => {
-    const { name, sex, dob, info } = req.body;
-    try {
-      const response = await axios.post("https://api.deepseek.com/v1/chat/completions", {
+// ========== 4. API 路由（和原 Express 完全对齐） ==========
+// DeepSeek 起名
+app.post("/api/generate-name", async (c) => {
+  const { name, sex, dob, info } = await c.req.json();
+  try {
+    const res = await axios.post(
+      "https://api.deepseek.com/v1/chat/completions",
+      {
         model: "deepseek-chat",
         messages: [
-          { role: "system", content: "You are a professional Chinese name generator. Generate a meaningful Chinese name based on the provided information, return just the name." },
-          { role: "user", content: `Generate a Chinese name for: Name: ${name}, Sex: ${sex}, DOB: ${dob}, Extra Info: ${info}` }
-        ]
-      }, {
-        headers: { "Authorization": `Bearer ${process.env.DEEPSEEK_API_KEY}` }
-      });
-      res.json({ name: response.data.choices[0].message.content.trim() });
-    } catch (error: any) {
-      console.error("DeepSeek Error:", error.response?.data || error.message);
-      res.status(500).json({ error: "Failed to generate name" });
-    }
-  });
+          {
+            role: "system",
+            content: "You are a professional Chinese name generator. Generate a meaningful Chinese name based on the provided information, return just the name.",
+          },
+          { role: "user", content: `Generate a Chinese name for: Name: ${name}, Sex: ${sex}, DOB: ${dob}, Extra Info: ${info}` },
+        ],
+      },
+      {
+        headers: { Authorization: `Bearer ${c.env.DEEPSEEK_API_KEY}` },
+      }
+    );
+    return c.json({ name: res.data.choices[0].message.content.trim() });
+  } catch (e: any) {
+    console.error("DeepSeek err", e);
+    return c.json({ error: "Failed to generate name" }, 500);
+  }
+});
 
-  // API Routes
-  app.post("/api/feedback", async (req, res) => {
-    const { name, email, message } = req.body;
-    
-    try {
-      await transporter.sendMail({
-        from: `"${name}" <${process.env.GMAIL_USER}>`,
-        to: process.env.GMAIL_USER, // Send to yourself
-        subject: `New Feedback from ${name}`,
-        text: `Name: ${name}\nEmail: ${email}\n\nMessage:\n${message}`,
-        html: `<p><strong>Name:</strong> ${name}</p><p><strong>Email:</strong> ${email}</p><p><strong>Message:</strong><br>${message}</p>`
-      });
-      res.status(200).json({ success: true });
-    } catch (error) {
-      console.error("Failed to send feedback email:", error);
-      res.status(500).json({ error: "Failed to send email" });
-    }
-  });
+// 反馈邮件
+app.post("/api/feedback", async (c) => {
+  const { name, email, message } = await c.req.json();
+  try {
+    const transporter = createTransporter(c);
+    await transporter.sendMail({
+      from: `"${name}" <${c.env.GMAIL_USER}>`,
+      to: c.env.GMAIL_USER,
+      subject: `New Feedback from ${name}`,
+      text: `Name: ${name}\nEmail: ${email}\n\nMessage:\n${message}`,
+      html: `<p><strong>Name:</strong> ${name}</p><p><strong>Email:</strong> ${email}</p><p><strong>Message:</strong><br>${message}</p>`,
+    });
+    return c.json({ success: true });
+  } catch (e) {
+    console.error("Feedback mail err", e);
+    return c.json({ error: "Failed to send email" }, 500);
+  }
+});
 
-  app.post("/api/upload", authenticate, async (req, res) => {
-    try {
-      // In a real production app, use multer or express-formidable. 
-      // For simplicity here with base64/buffer:
-      const { image, name, type } = req.body;
-      if (!image) return res.status(400).json({ error: "No image provided" });
+// 图片上传
+app.post("/api/upload", authMiddleware, async (c) => {
+  const { image, name, type } = await c.req.json();
+  if (!image) return c.json({ error: "No image provided" }, 400);
 
-      const buffer = Buffer.from(image, 'base64');
-      const fileName = `uploads/${crypto.randomBytes(16).toString('hex')}_${name || 'pasted'}`;
+  try {
+    const buffer = Buffer.from(image, "base64");
+    const fileName = `uploads/${crypto.randomBytes(16).toString("hex")}_${name || "pasted"}`;
 
-      await s3Client.send(new PutObjectCommand({
-        Bucket: R2_BUCKET,
+    const client = getS3Client(c);
+    await client.send(
+      new PutObjectCommand({
+        Bucket: c.env.R2_BUCKET,
         Key: fileName,
         Body: buffer,
-        ContentType: type || 'image/jpeg',
-      }));
+        ContentType: type || "image/jpeg",
+      })
+    );
 
-      const url = `${R2_PUBLIC_URL}/${fileName}`;
-      res.json({ url });
-    } catch (error) {
-      console.error("Upload failed:", error);
-      res.status(500).json({ error: "Upload failed" });
-    }
-  });
+    const url = `${c.env.R2_PUBLIC_URL}/${fileName}`;
+    return c.json({ url });
+  } catch (e) {
+    console.error("Upload err", e);
+    return c.json({ error: "Upload failed" }, 500);
+  }
+});
 
-  app.get("/api/articles", async (req, res) => {
-    try {
-      const category = req.query.category as string;
-      const filter = category && category !== "All" ? { category } : {};
-      const articles = await Article.find(filter).sort({ createdAt: -1 });
-      res.json(articles);
-    } catch (error) {
-      res.status(500).json({ error: "Failed to fetch articles" });
-    }
-  });
+// 获取文章列表
+app.get("/api/articles", async (c) => {
+  await getMongo(c);
+  const Article = await getArticleModel();
+  const category = c.req.query("category");
+  const filter = category && category !== "All" ? { category } : {};
+  const list = await Article.find(filter).sort({ createdAt: -1 });
+  return c.json(list);
+});
 
-  app.get("/api/articles/:id", async (req, res) => {
-    try {
-      const article = await Article.findById(req.params.id);
-      if (!article) return res.status(404).json({ error: "Article not found" });
-      
-      article.views += 1;
-      await article.save();
-      
-      res.json(article);
-    } catch (error) {
-      res.status(500).json({ error: "Failed to fetch article" });
-    }
-  });
+// 获取单篇文章 + 阅读量+1
+app.get("/api/articles/:id", async (c) => {
+  await getMongo(c);
+  const Article = await getArticleModel();
+  const article = await Article.findById(c.req.param("id"));
+  if (!article) return c.json({ error: "Article not found" }, 404);
 
-  app.post("/api/articles", authenticate, async (req, res) => {
-    try {
-      const articleData = req.body;
-      
-      // Auto-process content for images
-      if (articleData.content) {
-        articleData.content = await processArticleContent(articleData.content);
-      }
-      if (articleData.contentEn) {
-        articleData.contentEn = await processArticleContent(articleData.contentEn);
-      }
-      
-      // Auto-process thumbnail if it's an external URL
-      if (articleData.thumbnail && !articleData.thumbnail.includes("cloudflarestorage.com")) {
-        articleData.thumbnail = await uploadToR2(articleData.thumbnail);
-      }
+  article.views += 1;
+  await article.save();
+  return c.json(article);
+});
 
-      const article = new Article(articleData);
-      await article.save();
-      res.status(201).json(article);
-    } catch (error) {
-      console.error("Failed to create article:", error);
-      res.status(400).json({ error: "Failed to create article" });
-    }
-  });
+// 创建文章
+app.post("/api/articles", authMiddleware, async (c) => {
+  await getMongo(c);
+  const Article = await getArticleModel();
+  const body = await c.req.json();
 
-  app.delete("/api/articles/:id", authenticate, async (req, res) => {
-    try {
-      await Article.findByIdAndDelete(req.params.id);
-      res.json({ success: true });
-    } catch (error) {
-      res.status(500).json({ error: "Failed to delete article" });
-    }
-  });
+  if (body.content) body.content = await processArticleContent(c, body.content);
+  if (body.contentEn) body.contentEn = await processArticleContent(c, body.contentEn);
 
-  app.patch("/api/articles/:id", authenticate, async (req, res) => {
-    try {
-      const articleData = req.body;
-      
-      // Auto-process content for images
-      if (articleData.content) {
-        articleData.content = await processArticleContent(articleData.content);
-      }
-      if (articleData.contentEn) {
-        articleData.contentEn = await processArticleContent(articleData.contentEn);
-      }
-      
-      // Auto-process thumbnail
-      if (articleData.thumbnail && !articleData.thumbnail.includes("cloudflarestorage.com")) {
-        articleData.thumbnail = await uploadToR2(articleData.thumbnail);
-      }
-
-      articleData.updatedAt = new Date();
-
-      const article = await Article.findByIdAndUpdate(req.params.id, articleData, { new: true });
-      if (!article) return res.status(404).json({ error: "Article not found" });
-      
-      res.json(article);
-    } catch (error) {
-      console.error("Failed to update article:", error);
-      res.status(400).json({ error: "Failed to update article" });
-    }
-  });
-
-  // Vite middleware for development
-  if (process.env.NODE_ENV !== "production") {
-    const vite = await createViteServer({
-      server: { 
-        middlewareMode: true,
-        host: '0.0.0.0',
-        port: PORT,
-      },
-      appType: "spa",
-    });
-    app.use(vite.middlewares);
-  } else {
-    const distPath = path.join(process.cwd(), "dist");
-    app.use(express.static(distPath));
-    app.get("*", (req, res) => {
-      res.sendFile(path.join(distPath, "index.html"));
-    });
+  if (body.thumbnail && !body.thumbnail.includes("cloudflarestorage.com")) {
+    body.thumbnail = await uploadToR2(c, body.thumbnail);
   }
 
-  app.listen(PORT, "0.0.0.0", () => {
-    console.log(`Server running on http://localhost:${PORT}`);
-  });
-}
+  const doc = new Article(body);
+  await doc.save();
+  return c.json(doc, 201);
+});
 
-startServer();
+// 删除文章
+app.delete("/api/articles/:id", authMiddleware, async (c) => {
+  await getMongo(c);
+  const Article = await getArticleModel();
+  await Article.findByIdAndDelete(c.req.param("id"));
+  return c.json({ success: true });
+});
+
+// 更新文章
+app.patch("/api/articles/:id", authMiddleware, async (c) => {
+  await getMongo(c);
+  const Article = await getArticleModel();
+  const body = await c.req.json();
+
+  if (body.content) body.content = await processArticleContent(c, body.content);
+  if (body.contentEn) body.contentEn = await processArticleContent(c, body.contentEn);
+
+  if (body.thumbnail && !body.thumbnail.includes("cloudflarestorage.com")) {
+    body.thumbnail = await uploadToR2(c, body.thumbnail);
+  }
+
+  body.updatedAt = new Date();
+  const updated = await Article.findByIdAndUpdate(c.req.param("id"), body, { new: true });
+  if (!updated) return c.json({ error: "Article not found" }, 404);
+  return c.json(updated);
+});
+
+// ========== 5. 托管前端静态资源（关键！解决 Hello World） ==========
+// 所有非 /api/* 的请求，都返回 React 前端
+app.get("*", serveStatic({ root: "./dist", rewriteRequestPath: (p) => p }));
+
+export default app;
