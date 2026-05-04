@@ -69,10 +69,10 @@ export default function Navbar() {
   return (
     <header 
       className={`fixed top-0 w-full z-50 transition-all duration-300 flex flex-col ${
-        isScrolled 
-          ? 'bg-[#1a1a1a] shadow-md text-white' 
-          : 'bg-transparent text-white'
-      }`}
+        location.pathname.includes('/tools/menu') 
+          ? 'bg-black shadow-md' 
+          : (isScrolled ? 'bg-black shadow-md' : 'bg-transparent shadow-none')
+      } text-white`}
     >
       {showLangBanner && (
         <div className="bg-[#179B4D] w-full py-2.5 px-4 flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-6 text-[13px] sm:text-[14px]">
@@ -230,7 +230,7 @@ export default function Navbar() {
                         
                         <div className="grid grid-cols-2 gap-6 p-6">
                             {[
-                                { icon: ScanLine, title: t('tools.menu'), desc: t('tools.menu.desc'), path: '#' },
+                                { icon: ScanLine, title: t('tools.menu'), desc: t('tools.menu.desc'), path: '/tools/menu' },
                                 { icon: Shield, title: t('tools.name'), desc: t('tools.name.desc'), path: '/tools/name' },
                                 { icon: Languages, title: t('tools.pinyin'), desc: t('tools.pinyin.desc'), path: '/tools/pinyin' },
                                 { icon: Type, title: t('tools.counter'), desc: t('tools.counter.desc'), path: '/tools/counter' },

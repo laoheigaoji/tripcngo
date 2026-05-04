@@ -27,6 +27,7 @@ import ZodiacCalculator from './pages/tools/ZodiacCalculator';
 import CharacterCounter from './pages/tools/CharacterCounter';
 import PinyinSegmentation from './pages/tools/PinyinSegmentation';
 import NameGenerator from './pages/tools/NameGenerator';
+import MenuTranslator from './pages/tools/MenuTranslator';
 
 function Layout() {
   return (
@@ -84,6 +85,7 @@ function LangRoute() {
         <Route path="tools/counter" element={<CharacterCounter />} />
         <Route path="tools/pinyin" element={<PinyinSegmentation />} />
         <Route path="tools/name" element={<NameGenerator />} />
+        <Route path="tools/menu" element={<MenuTranslator />} />
         <Route path="cities" element={<Cities />} />
         <Route path="cities/:id" element={<CityDetail />} />
         <Route path="apps" element={<Apps />} />

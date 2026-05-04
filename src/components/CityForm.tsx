@@ -94,12 +94,12 @@ export default function CityForm({ city, onClose, onSave }: CityFormProps) {
       Return a JSON object that matches the following TypeScript structure exactly. 
       Ensure ALL text fields (descriptions, titles, paragraphs, etc.) are provided in BOTH Chinese and English.
       IMPORTANT: For 'heroImage', 'attractions.imageUrl', and 'food.imageUrl', provide high-quality Unsplash image URLs (e.g. https://images.unsplash.com/photo-...).
-      
+
       Structure: {
         name: string,
         enName: string,
         heroImage: string,
-        tags: [{text: string, enText: string, color: "gray"}],
+        tags: [{text: string, enText: string, color: string}],
         paragraphs: string[],
         enParagraphs: string[],
         stats: {wantToVisit: number, recommended: number},
@@ -150,7 +150,7 @@ export default function CityForm({ city, onClose, onSave }: CityFormProps) {
         }
       }
 
-      setFormData(prev => ({ ...prev, ...data }));
+      setFormData(prev => ({ ...prev, ...data, id: prev.id }));
     } catch (err) {
       console.error(err);
       alert('生成失败: ' + (err instanceof Error ? err.message : String(err)));

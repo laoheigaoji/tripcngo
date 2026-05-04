@@ -119,58 +119,65 @@ export default function Admin() {
     setIsBatchGenerating(true);
     setCityBatchStatus(`正在启动: 0/${citiesToGen.length}`);
 
-    for (let i =0; i < citiesToGen.length; i++) {
+    for (let i = 0; i < citiesToGen.length; i++) {
         const cityName = citiesToGen[i];
-        setCityBatchStatus(`正在生成并转存图片: ${cityName} (${i+1}/${citiesToGen.length})`);
+        setCityBatchStatus(`AI 正在智能生成深度内容: ${cityName} (${i+1}/${citiesToGen.length})`);
         
         try {
-            const prompt = `Generate detailed, comprehensive city information for the city: '${cityName}'.
-                Return a JSON object that matches the following structure exactly.
-                Ensure ALL text fields are provided in BOTH Chinese and English.
-                IMPORTANT: For 'heroImage', 'attractions.imageUrl', and 'food.imageUrl', provide high-quality Unsplash image URLs (e.g. https://images.unsplash.com/photo-...). Pick the most iconic landmarks for the city.
+            const prompt = `You are a world-class travel curator. Generates a deep, high-value city guide for '${cityName}' in China.
+                Output requirements:
+                - Comprehensive introduction (paragraphs & enParagraphs), minimum 4 paragraphs each.
+                - 6-8 top-tier attractions with detailed, inspiring descriptions.
+                - 6-8 local culinary specialties with mouth-watering details.
+                - Dual-language (CN/EN) for every text field.
+                - Use iconic Unsplash photos.
+                - Realistic tourism statistics.
 
-                Structure: {
+                Format: {
                   name: string,
                   enName: string,
+                  paragraphs: string[],
+                  enParagraphs: string[],
+                  tags: [{text: string, enText: string, color: string}],
                   info: {area: string, population: string},
+                  stats: {wantToVisit: number, recommended: number},
                   bestTravelTime: {strongText: string, enStrongText: string, paragraphs: string[], enParagraphs: string[]},
                   history: [{year: string, enYear: string, title: string, enTitle: string, desc: string, enDesc: string}],
                   attractions: [{name: string, enName: string, desc: string, enDesc: string, price: string, enPrice: string, season: string, enSeason: string, time: string, enTime: string, imageUrl: string}],
-                  transportation: [{iconName: "Plane", title: string, enTitle: string, desc: string, enDesc: string, price: string, enPrice: string}],
-                  food: [{name: string, enName: string, pinyin: string, price: string, desc: string, enDesc: string, ingredients: string, enIngredients: string, imageIdx: number, imageUrl: string}],
+                  transportation: [{iconName: "Plane"|"Train"|"Bus", title: string, enTitle: string, desc: string, enDesc: string, price: string, enPrice: string}],
+                  food: [{name: string, enName: string, pinyin: string, price: string, desc: string, enDesc: string, ingredients: string, enIngredients: string, imageUrl: string}],
                   heroImage: string
                 }`;
+            
             const res = await ai.models.generateContent({
-                model: 'gemini-3-flash-preview',
+                model: 'gemini-2.0-flash',
                 contents: prompt,
             });
             const data = JSON.parse(cleanJSON(res.text || '{}'));
 
-            // Proxy images to storage
-            if (data.heroImage) {
-               data.heroImage = await proxyImageToStorage(data.heroImage, `city_covers/${Date.now()}-${cityName}-hero.jpg`);
-            }
+            setCityBatchStatus(`正在转存AI生成图片: ${cityName} (${i+1}/${citiesToGen.length})`);
+
+            // Proxy logic
+            if (data.heroImage) data.heroImage = await proxyImageToStorage(data.heroImage, `city_covers/${Date.now()}-${cityName}-hero.jpg`);
             if (data.attractions) {
-              for (const attr of data.attractions) {
-                if (attr.imageUrl) {
-                  attr.imageUrl = await proxyImageToStorage(attr.imageUrl, `attractions/${Date.now()}-${cityName}-${attr.name}.jpg`);
+                for (const a of data.attractions) {
+                    if (a.imageUrl) a.imageUrl = await proxyImageToStorage(a.imageUrl, `attractions/${Date.now()}-${cityName}-${a.name}.jpg`);
                 }
-              }
             }
             if (data.food) {
-              for (const f of data.food) {
-                if (f.imageUrl) {
-                  f.imageUrl = await proxyImageToStorage(f.imageUrl, `food/${Date.now()}-${cityName}-${f.name}.jpg`);
+                for (const f of data.food) {
+                    if (f.imageUrl) f.imageUrl = await proxyImageToStorage(f.imageUrl, `food/${Date.now()}-${cityName}-${f.name}.jpg`);
                 }
-              }
             }
             
-            // Save to Firestore
-            await addDoc(collection(db, 'cities'), { ...data });
+            const newDocRef = doc(collection(db, 'cities'));
+            await setDoc(newDocRef, { ...data, id: newDocRef.id, createdAt: serverTimestamp() });
         } catch (err) {
-            console.error(`Failed to generate ${cityName}:`, err);
+            console.error(`Batch failed for ${cityName}:`, err);
         }
     }
+    setCityBatchStatus('批量生成完成！');
+    fetchCities();
     
     setCityBatchStatus("全部生成并转存完成！");
     setIsBatchGenerating(false);
@@ -551,8 +558,8 @@ export default function Admin() {
       const q = query(collection(db, 'cities'), orderBy('name', 'asc'));
       const snapshot = await getDocs(q);
       const data = snapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data()
+        ...doc.data(),
+        id: doc.id
       })) as CityData[];
       setCities(data);
     } catch (error) {
@@ -609,21 +616,29 @@ export default function Admin() {
     }
   };
 
-  const handleSaveCity = async (city: CityData) => {
+  const handleSaveCity = async (cityData: CityData) => {
     setLoading(true);
     try {
-      if (city.id) {
-        await setDoc(doc(db, 'cities', city.id), { ...city }, { merge: true });
+      // Use editingCity.id as ultimate fallback to prevent duplication
+      const targetId = cityData.id || editingCity?.id;
+      
+      if (targetId) {
+        // Explicitly update existing doc
+        const cityRef = doc(db, 'cities', targetId);
+        await setDoc(cityRef, { ...cityData, id: targetId, updatedAt: serverTimestamp() }, { merge: true });
       } else {
+        // Create new
         const newDocRef = doc(collection(db, 'cities'));
-        await setDoc(newDocRef, { ...city, id: newDocRef.id });
+        await setDoc(newDocRef, { ...cityData, id: newDocRef.id, createdAt: serverTimestamp() });
       }
+      
       setShowCityForm(false);
       setEditingCity(null);
-      fetchCities();
+      await fetchCities();
+      alert('保存成功');
     } catch (e) {
-      console.error(e);
-      alert('保存失败');
+      console.error("Save city error:", e);
+      alert('保存失败: ' + (e instanceof Error ? e.message : String(e)));
     } finally {
       setLoading(false);
     }
