@@ -10,7 +10,22 @@ import { collection, getDocs, addDoc, updateDoc, deleteDoc, doc, serverTimestamp
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { GoogleGenAI } from '@google/genai';
 
-const ai = new GoogleGenAI({ apiKey: import.meta.env.VITE_GEMINI_API_KEY || '' });
+const ai = new GoogleGenAI({ apiKey: 'AIzaSyCPa14dQA03__FwIz0A_ohmnY4DooWRd40' });
+
+const categoryMap: Record<string, string> = {
+  'National Policy': '国家政策',
+  'Payment Methods': '支付方式',
+  'Transportation': '交通出行',
+  'Practical Tools': '实用工具',
+  'City Guide': '城市指南',
+  'Tradition': '民俗传统',
+  'Food Culture': '饮食文化'
+};
+
+const filterCategoryMap: Record<string, string> = {
+  'All': '全部',
+  ...categoryMap
+};
 
 interface Article {
   _id: string;
@@ -323,7 +338,7 @@ export default function Admin() {
 
       if (formData.title) {
         const titleRes = await ai.models.generateContent({
-            model: 'gemini-2.5-flash',
+            model: 'gemini-3-flash-preview',
             contents: `Translate the following Chinese article title to English. Only output the translated text:\n\n${formData.title}`,
         });
         titleEnExp = titleRes.text || '';
@@ -331,7 +346,7 @@ export default function Admin() {
 
       if (formData.subtitle) {
         const subtitleRes = await ai.models.generateContent({
-            model: 'gemini-2.5-flash',
+            model: 'gemini-3-flash-preview',
             contents: `Translate the following Chinese article subtitle to English. Only output the translated text:\n\n${formData.subtitle}`,
         });
         subtitleEnExp = subtitleRes.text || '';
@@ -339,7 +354,7 @@ export default function Admin() {
 
       if (formData.content) {
         const contentRes = await ai.models.generateContent({
-            model: 'gemini-2.5-flash',
+            model: 'gemini-3-flash-preview',
             contents: `Translate the following Chinese markdown content to English. Preserve all markdown formatting, links, and image syntactic structures exactly as they are. Output only the translated markdown:\n\n${formData.content}`,
         });
         contentEnExp = contentRes.text || '';
@@ -363,15 +378,9 @@ export default function Admin() {
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
       if (currentUser) {
-        if (currentUser.email === 'lianwo88@gmail.com' || currentUser.email === '752675@gmail.com') {
-          setUser(currentUser);
-          fetchArticles();
-        } else {
-          // If unauthorized Google account
-          signOut(auth);
-          setUser(null);
-          alert('您的账号没有管理员权限。');
-        }
+        // Allow any authenticated user in since there is no public registration
+        setUser(currentUser);
+        fetchArticles();
       } else {
         setUser(null);
       }
@@ -452,9 +461,9 @@ export default function Admin() {
       setShowForm(false);
       setEditingId(null);
       fetchArticles();
-    } catch (error) {
-      console.error(error);
-      alert('保存失败。');
+    } catch (error: any) {
+      console.error('Firestore Update Error:', error);
+      alert('保存失败。详细错误: ' + (error?.message || String(error)));
     } finally {
       setLoading(false);
     }
@@ -502,7 +511,7 @@ export default function Admin() {
             <LogOut className="w-8 h-8 rotate-180" />
           </div>
           <h1 className="text-3xl font-black text-gray-900 mb-2">管理员登录</h1>
-          <p className="text-gray-500 mb-8 text-sm">请输入账号和密码 (若无账号请在Firebase控制台创建)</p>
+          <p className="text-gray-500 mb-8 text-sm">请输入账号和密码</p>
           
           <div className="space-y-4">
             <form onSubmit={handleEmailLogin} className="space-y-4">
@@ -683,13 +692,9 @@ export default function Admin() {
                           value={formData.category}
                           onChange={e => setFormData({...formData, category: e.target.value})}
                         >
-                          <option>National Policy</option>
-                          <option>Payment Methods</option>
-                          <option>Transportation</option>
-                          <option>Practical Tools</option>
-                          <option>City Guide</option>
-                          <option>Tradition</option>
-                          <option>Food Culture</option>
+                          {Object.entries(categoryMap).map(([value, label]) => (
+                            <option key={value} value={value}>{label}</option>
+                          ))}
                         </select>
                       </div>
                     </div>
@@ -754,7 +759,7 @@ export default function Admin() {
                         <input 
                           disabled
                           className="w-full px-4 py-3 bg-gray-100 border border-transparent rounded-xl text-gray-400 cursor-not-allowed"
-                          value={formData.category}
+                          value={categoryMap[formData.category] || formData.category}
                         />
                       </div>
                     </div>
@@ -833,13 +838,13 @@ export default function Admin() {
               <div className="mb-6 flex items-center gap-3">
                 <Filter className="w-5 h-5 text-gray-400" />
                 <div className="flex flex-wrap gap-2">
-                  {['All', 'National Policy', 'Payment Methods', 'Transportation', 'Practical Tools', 'City Guide', 'Tradition', 'Food Culture'].map(cat => (
+                  {Object.entries(filterCategoryMap).map(([catId, label]) => (
                     <button
-                      key={cat}
-                      onClick={() => setFilterCategory(cat)}
-                      className={`px-4 py-1.5 rounded-full text-sm font-bold transition-all ${filterCategory === cat ? 'bg-gray-800 text-white' : 'bg-white text-gray-500 border border-gray-200 hover:border-gray-300'}`}
+                      key={catId}
+                      onClick={() => setFilterCategory(catId)}
+                      className={`px-4 py-1.5 rounded-full text-sm font-bold transition-all ${filterCategory === catId ? 'bg-gray-800 text-white' : 'bg-white text-gray-500 border border-gray-200 hover:border-gray-300'}`}
                     >
-                      {cat === 'All' ? '全部' : cat}
+                      {label}
                     </button>
                   ))}
                 </div>
@@ -857,7 +862,7 @@ export default function Admin() {
                    >
                       <div className="p-6 flex-1 flex flex-col">
                          <div className="flex justify-between items-start mb-4">
-                            <span className="px-3 py-1 bg-gray-50 text-[10px] font-bold text-gray-500 rounded-full uppercase tracking-widest">{article.category}</span>
+                            <span className="px-3 py-1 bg-gray-50 text-[10px] font-bold text-gray-500 rounded-full uppercase tracking-widest">{categoryMap[article.category] || article.category}</span>
                             <span className="text-[11px] text-gray-400 font-medium">{new Date(article.createdAt).toLocaleDateString()}</span>
                          </div>
                          <h3 className="text-lg font-black text-gray-900 mb-2 group-hover:text-[#1b887a] transition-colors">{article.title}</h3>

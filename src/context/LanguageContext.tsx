@@ -625,12 +625,12 @@ const translations: Record<Language, Record<string, string>> = {
 
 export const LanguageProvider = ({ children }: { children: ReactNode }) => {
   const [language, setLanguage] = useState<Language>(() => {
-    const saved = localStorage.getItem('language');
-    return (saved as Language) || 'zh';
+    const saved = localStorage.getItem('tripcngo_lang');
+    return (saved as Language) || 'en';
   });
 
   useEffect(() => {
-    localStorage.setItem('language', language);
+    localStorage.setItem('tripcngo_lang', language);
     document.documentElement.lang = language;
   }, [language]);
 

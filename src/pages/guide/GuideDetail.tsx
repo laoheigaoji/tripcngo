@@ -12,7 +12,7 @@ import {
   ThumbsUp
 } from 'lucide-react';
 import Markdown from 'react-markdown';
-import { doc, getDoc, updateDoc, increment } from 'firebase/firestore';
+import { doc, getDoc, updateDoc, increment, collection, getDocs, query, limit, where } from 'firebase/firestore';
 import { db } from '../../lib/firebase';
 
 interface Article {
@@ -35,6 +35,9 @@ export default function GuideDetail() {
   const { id } = useParams();
   const { language, t } = useLanguage();
   const [article, setArticle] = useState<Article | null>(null);
+  const [recommendedArticles, setRecommendedArticles] = useState<Article[]>([]);
+  const [prevArticle, setPrevArticle] = useState<Article | null>(null);
+  const [nextArticle, setNextArticle] = useState<Article | null>(null);
   const [loading, setLoading] = useState(true);
 
   const displayTitle = (article && language === 'en' && article.titleEn) ? article.titleEn : (article?.title || '');
@@ -61,6 +64,29 @@ export default function GuideDetail() {
           
           setArticle(loadedArticle);
           window.scrollTo(0, 0);
+
+          try {
+            const allDocs = await getDocs(collection(db, 'articles'));
+            const allArticles = allDocs.docs.map(d => {
+              const dData = d.data();
+              return { 
+                _id: d.id, 
+                ...dData,
+                createdAt: dData.createdAt?.toDate?.()?.toISOString() || dData.createdAt || new Date().toISOString()
+              } as Article;
+            }).sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+            
+            const currentIndex = allArticles.findIndex(a => a._id === id);
+            if (currentIndex !== -1) {
+              setPrevArticle(currentIndex > 0 ? allArticles[currentIndex - 1] : null);
+              setNextArticle(currentIndex < allArticles.length - 1 ? allArticles[currentIndex + 1] : null);
+            }
+            
+            const others = allArticles.filter(a => a._id !== id);
+            setRecommendedArticles(others.sort(() => 0.5 - Math.random()).slice(0, 3));
+          } catch (e) {
+            console.error('Failed to fetch other articles', e);
+          }
 
           try {
             await updateDoc(docRef, {
@@ -164,7 +190,7 @@ export default function GuideDetail() {
       <section className="max-w-[1240px] mx-auto px-6 py-12 flex flex-col lg:flex-row gap-16">
          <div className="flex-1 min-w-0">
             {/* Article Body */}
-            <div className="markdown-body prose prose-lg max-w-none prose-headings:text-gray-900 prose-headings:font-black prose-headings:mt-12 prose-headings:mb-6 prose-p:text-gray-700 prose-p:leading-relaxed prose-li:text-gray-700 prose-strong:text-gray-900 prose-img:rounded-2xl prose-img:shadow-lg">
+            <div className="markdown-body">
                <Markdown>{displayContent}</Markdown>
             </div>
 
@@ -183,28 +209,35 @@ export default function GuideDetail() {
                </button>
             </div>
 
-            {/* Navigation Buttons */}
-            <div className="mt-20 grid grid-cols-1 md:grid-cols-2 gap-6 border-t border-gray-100 pt-10">
-               <div className="flex items-center gap-4 group cursor-pointer p-4 rounded-xl hover:bg-gray-50 transition-all border border-transparent hover:border-gray-100">
-                  <div className="w-24 h-16 rounded-lg bg-gray-100 overflow-hidden shrink-0">
-                     <img src="https://images.unsplash.com/photo-1547981609-4b6bfe67ca0b?auto=format&fit=crop&q=80&w=200" alt="Prev" className="w-full h-full object-cover" />
-                  </div>
-                  <div>
-                    <span className="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">{t('guide.prevPost')}</span>
-                    <h4 className="text-sm font-bold text-gray-800 group-hover:text-[#1b887a] line-clamp-2 leading-snug">{language === 'zh' ? '如何选择一个适合自己的中文名字？' : 'How to choose a Chinese name that fits you?'}</h4>
-                  </div>
-               </div>
-               <div className="flex items-center justify-end gap-4 group cursor-pointer p-4 rounded-xl hover:bg-gray-50 transition-all border border-transparent hover:border-gray-100 text-right">
-                  <div>
-                    <span className="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">{t('guide.nextPost')}</span>
-                    <h4 className="text-sm font-bold text-gray-800 group-hover:text-[#1b887a] line-clamp-2 leading-snug">{language === 'zh' ? '有趣的中国：探秘你离开那见过的各种离奇的事情' : 'Intriguing China: Secret things you\'ve seen since you left'}</h4>
-                  </div>
-                  <div className="w-24 h-16 rounded-lg bg-gray-100 overflow-hidden shrink-0">
-                     <img src="https://images.unsplash.com/photo-1549221530-47ea067066bc?auto=format&fit=crop&q=80&w=200" alt="Next" className="w-full h-full object-cover" />
-                  </div>
-               </div>
-            </div>
-         </div>
+            {/* Prev/Next Section */}
+            {(prevArticle || nextArticle) && (
+              <div className="mt-16 pt-8 border-t border-gray-100 grid grid-cols-1 md:grid-cols-2 gap-4">
+                {prevArticle ? (
+                  <Link to={`/articles/${prevArticle._id}`} className="p-4 rounded-xl border border-gray-100 hover:border-[#1b887a] hover:bg-gray-50 transition-all flex items-center gap-4 text-left">
+                    {prevArticle.thumbnail && <img src={prevArticle.thumbnail} alt="" className="w-16 h-16 rounded-lg object-cover" />}
+                    <div className="flex flex-col">
+                      <span className="text-[10px] uppercase font-bold text-gray-400 mb-1">{language === 'zh' ? '上一篇' : 'Previous'}</span>
+                      <h4 className="font-bold text-gray-900 line-clamp-2">
+                        {(language === 'en' && prevArticle.titleEn) ? prevArticle.titleEn : prevArticle.title}
+                      </h4>
+                    </div>
+                  </Link>
+                ) : <div />}
+                {nextArticle ? (
+                  <Link to={`/articles/${nextArticle._id}`} className="p-4 rounded-xl border border-gray-100 hover:border-[#1b887a] hover:bg-gray-50 transition-all flex items-center gap-4 text-right justify-end">
+                    <div className="flex flex-col text-right">
+                      <span className="text-[10px] uppercase font-bold text-gray-400 mb-1">{language === 'zh' ? '下一篇' : 'Next'}</span>
+                      <h4 className="font-bold text-gray-900 line-clamp-2">
+                        {(language === 'en' && nextArticle.titleEn) ? nextArticle.titleEn : nextArticle.title}
+                      </h4>
+                    </div>
+                    {nextArticle.thumbnail && <img src={nextArticle.thumbnail} alt="" className="w-16 h-16 rounded-lg object-cover" />}
+                  </Link>
+                ) : <div />}
+              </div>
+            )}
+
+          </div>
 
          {/* Right Sidebar */}
          <div className="w-full lg:w-[320px] shrink-0">
@@ -215,24 +248,25 @@ export default function GuideDetail() {
                      {t('guide.recommend')}
                   </h3>
                   <div className="space-y-6">
-                     {[
-                       { title: language === 'zh' ? '中文名字完全指南' : 'The Ultimate Guide to Chinese Names', img: 'https://images.unsplash.com/photo-1547981609-4b6bfe67ca0b?auto=format&fit=crop&q=80&w=400' },
-                       { title: language === 'zh' ? '中国早餐完全指南' : 'The Ultimate Guide to Chinese Breakfast', img: 'https://images.unsplash.com/photo-1549221530-47ea067066bc?auto=format&fit=crop&q=80&w=400' },
-                       { title: language === 'zh' ? '外国人最爱的100个城市' : '100 Cities Foreigners Love Most', img: 'https://images.unsplash.com/photo-1508804185872-d7badad00f7d?auto=format&fit=crop&q=80&w=400' }
-                     ].map((item, i) => (
-                       <Link key={i} to="/articles" className="block group">
+                     {recommendedArticles.map((item, i) => (
+                       <Link key={item._id} to={`/articles/${item._id}`} className="block group">
                           <div className="relative aspect-[16/10] rounded-xl overflow-hidden mb-3 bg-gray-100 shadow-sm border border-gray-100">
                            <img 
-                            src={item.img} 
+                            src={item.thumbnail || 'https://images.unsplash.com/photo-1547981609-4b6bfe67ca0b?auto=format&fit=crop&q=80&w=400'} 
                             alt={item.title}
                             className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
                            />
                            <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent flex items-end p-5">
-                              <h4 className="text-white font-bold text-sm leading-tight text-center w-full">{item.title}</h4>
+                              <h4 className="text-white font-bold text-sm leading-tight text-center w-full">
+                                 {(language === 'en' && item.titleEn) ? item.titleEn : item.title}
+                              </h4>
                            </div>
                           </div>
                        </Link>
                      ))}
+                     {recommendedArticles.length === 0 && (
+                       <p className="text-sm text-gray-400">{t('guide.noArticles')}</p>
+                     )}
                   </div>
                </section>
 

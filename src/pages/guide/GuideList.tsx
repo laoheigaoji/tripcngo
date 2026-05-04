@@ -35,6 +35,8 @@ export default function GuideList() {
   const [activeCategory, setActiveCategory] = useState('All');
   const [articles, setArticles] = useState<Article[]>([]);
   const [loading, setLoading] = useState(true);
+  const [currentPage, setCurrentPage] = useState(1);
+  const articlesPerPage = 6;
 
   useEffect(() => {
     const fetchArticles = async () => {
@@ -58,6 +60,7 @@ export default function GuideList() {
           } as Article;
         });
         setArticles(data);
+        setCurrentPage(1); // Reset to first page on category change
       } catch (error) {
         console.error("Error fetching articles:", error);
       } finally {
@@ -66,6 +69,9 @@ export default function GuideList() {
     };
     fetchArticles();
   }, [activeCategory]);
+
+  const totalPages = Math.ceil(articles.length / articlesPerPage);
+  const currentArticles = articles.slice((currentPage - 1) * articlesPerPage, currentPage * articlesPerPage);
 
   return (
     <div className="w-full bg-[#f7f7f7]">
@@ -150,8 +156,8 @@ export default function GuideList() {
                   <div key={i} className="bg-white h-[200px] rounded-2xl animate-pulse" />
                 ))}
               </div>
-            ) : articles.length > 0 ? (
-              articles.map((article) => (
+            ) : currentArticles.length > 0 ? (
+              currentArticles.map((article) => (
                 <Link 
                   key={article._id} 
                   to={`/articles/${article._id}`}
@@ -177,7 +183,7 @@ export default function GuideList() {
                       <div>
                         <div className="flex items-center gap-2 mb-2">
                            <span className="px-2 py-0.5 bg-[#1b887a]/10 text-[#1b887a] text-[10px] font-bold rounded uppercase tracking-wider">
-                              {language === 'zh' ? article.category : article.category}
+                              {CATEGORIES.find(c => c.id === article.category)?.key ? t(CATEGORIES.find(c => c.id === article.category)!.key) : article.category}
                            </span>
                         </div>
                         <h2 className="text-2xl font-black text-gray-900 group-hover:text-[#1b887a] transition-colors mb-3 leading-tight">
@@ -210,21 +216,39 @@ export default function GuideList() {
             )}
 
             {/* Pagination Placeholder */}
-            <div className="pt-10 flex justify-center gap-2">
-               {[1, 2, 3, 4, 5, 6].map(p => (
+            {totalPages > 1 && (
+              <div className="pt-10 flex justify-center gap-2">
+                 {Array.from({ length: totalPages }).map((_, i) => {
+                   const p = i + 1;
+                   return (
+                     <button 
+                      key={p} 
+                      onClick={() => {
+                        setCurrentPage(p);
+                        window.scrollTo({ top: 300, behavior: 'smooth' });
+                      }}
+                      className={`w-10 h-10 rounded-lg flex items-center justify-center font-bold text-sm transition-all ${
+                        p === currentPage ? 'bg-[#1b887a] text-white shadow-md' : 'bg-white text-gray-600 hover:bg-gray-100'
+                      }`}
+                     >
+                       {p}
+                     </button>
+                   );
+                 })}
                  <button 
-                  key={p} 
-                  className={`w-10 h-10 rounded-lg flex items-center justify-center font-bold text-sm transition-all ${
-                    p === 1 ? 'bg-[#1b887a] text-white shadow-md' : 'bg-white text-gray-600 hover:bg-gray-100'
-                  }`}
-                 >
-                   {p}
+                  onClick={() => {
+                    if (currentPage < totalPages) {
+                      setCurrentPage(prev => prev + 1);
+                      window.scrollTo({ top: 300, behavior: 'smooth' });
+                    }
+                  }}
+                  disabled={currentPage === totalPages}
+                  className="w-10 h-10 rounded-lg bg-white text-gray-600 flex items-center justify-center hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                    <ChevronRight className="w-4 h-4" />
                  </button>
-               ))}
-               <button className="w-10 h-10 rounded-lg bg-white text-gray-600 flex items-center justify-center hover:bg-gray-100">
-                  <ChevronRight className="w-4 h-4" />
-               </button>
-            </div>
+              </div>
+            )}
           </div>
         </div>
       </section>

@@ -17,7 +17,7 @@ service cloud.firestore {
     function isSignedIn() { return request.auth != null; }
     
     function isAdmin() { 
-      return isSignedIn() && (request.auth.token.email == 'lianwo88@gmail.com' || request.auth.token.email == '752675@gmail.com'); 
+      return isSignedIn(); 
     }
 
     // Validation for Articles
@@ -27,23 +27,19 @@ service cloud.firestore {
     // Note: To support increment, the views and likes need to exist initially or be added. Wait, the app adds views and likes using increment.
     
     function isValidArticle(data) {
-      let hasRequired = data.keys().hasAll(['title', 'category', 'createdAt']) &&
-                        data.title is string && data.title.size() <= 200 && data.title.size() > 0 &&
-                        data.category is string && data.category.size() <= 100 &&
-                        data.createdAt is timestamp;
-      
-      return hasRequired;
+      return data.keys().hasAll(['title', 'category']) &&
+             data.title is string && data.title.size() <= 500 && data.title.size() > 0 &&
+             data.category is string && data.category.size() <= 100;
     }
 
     match /articles/{articleId} {
       allow read: if true;
-      allow create: if isAdmin() && isValidId(articleId) && isValidArticle(incoming()) && incoming().createdAt == request.time;
+      
+      allow create: if isAdmin() && isValidId(articleId) && isValidArticle(incoming());
       
       allow update: if isValidId(articleId) && (
-        (isAdmin() && isValidArticle(incoming()) && incoming().createdAt == existing().createdAt) ||
-        // Action: Increment Views or Likes (allowed for anyone)
+        (isAdmin() && isValidArticle(incoming())) ||
         (incoming().diff(existing()).affectedKeys().hasOnly(['views', 'likes'])) ||
-        // Sometimes Views only or likes only
         (incoming().diff(existing()).affectedKeys().hasOnly(['views'])) ||
         (incoming().diff(existing()).affectedKeys().hasOnly(['likes']))
       );

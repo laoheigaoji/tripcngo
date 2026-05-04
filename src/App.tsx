@@ -1,6 +1,6 @@
-import React from 'react';
-import { BrowserRouter, Routes, Route, Outlet } from 'react-router-dom';
-import { LanguageProvider } from './context/LanguageContext';
+import React, { useEffect } from 'react';
+import { BrowserRouter, Routes, Route, Outlet, Navigate, useLocation, useParams } from 'react-router-dom';
+import { LanguageProvider, useLanguage } from './context/LanguageContext';
 import Navbar from './components/Navbar';
 import Footer from './components/Footer';
 import Home from './pages/Home';
@@ -39,36 +39,74 @@ function Layout() {
   );
 }
 
+function RootRedirect() {
+  const { language } = useLanguage();
+  const location = useLocation();
+  const langPrefix = language === 'zh' ? 'cn' : 'en';
+  
+  // Prevent redirect loop if mounted on root
+  const targetPath = location.pathname === '/' ? `/${langPrefix}` : `/${langPrefix}${location.pathname}`;
+  return <Navigate to={targetPath + location.search} replace />;
+}
+
+function LangRoute() {
+  const { langParam } = useParams();
+  const { language, setLanguage } = useLanguage();
+
+  useEffect(() => {
+    if (langParam === 'cn' && language !== 'zh') {
+      setLanguage('zh');
+    } else if (langParam === 'en' && language !== 'en') {
+      setLanguage('en');
+    }
+  }, [langParam, language, setLanguage]);
+
+  return (
+    <Routes>
+      <Route element={<Layout />}>
+        <Route index element={<Home />} />
+        <Route path="visa" element={<Visa />} />
+        <Route path="visa/types" element={<VisaTypes />} />
+        <Route path="visa/photo" element={<VisaPhoto />} />
+        <Route path="visa/fees" element={<VisaFees />} />
+        <Route path="visa/arrival-card" element={<VisaArrivalCard />} />
+        <Route path="visa/downloads" element={<VisaDownloads />} />
+        <Route path="visa/form" element={<VisaForm />} />
+        <Route path="guide" element={<Guide />} />
+        <Route path="articles" element={<GuideList />} />
+        <Route path="articles/:id" element={<GuideDetail />} />
+        <Route path="about" element={<AboutUs />} />
+        <Route path="privacy" element={<PrivacyPolicy />} />
+        <Route path="terms" element={<TermsOfService />} />
+        <Route path="feedback" element={<Feedback />} />
+        <Route path="tools/zodiac" element={<ZodiacCalculator />} />
+        <Route path="tools/counter" element={<CharacterCounter />} />
+        <Route path="tools/pinyin" element={<PinyinSegmentation />} />
+        <Route path="tools/name" element={<NameGenerator />} />
+        <Route path="cities" element={<Cities />} />
+        <Route path="cities/:id" element={<CityDetail />} />
+        <Route path="apps" element={<Apps />} />
+      </Route>
+    </Routes>
+  );
+}
+
+function LangRouteWrapper() {
+  const { langParam } = useParams();
+  if (langParam !== 'cn' && langParam !== 'en') {
+      return <RootRedirect />;
+  }
+  return <LangRoute />;
+}
+
 export default function App() {
   return (
     <LanguageProvider>
       <BrowserRouter>
         <Routes>
-          <Route path="/" element={<Layout />}>
-            <Route index element={<Home />} />
-            <Route path="visa" element={<Visa />} />
-            <Route path="visa/types" element={<VisaTypes />} />
-            <Route path="visa/photo" element={<VisaPhoto />} />
-            <Route path="visa/fees" element={<VisaFees />} />
-            <Route path="visa/arrival-card" element={<VisaArrivalCard />} />
-            <Route path="visa/downloads" element={<VisaDownloads />} />
-            <Route path="visa/form" element={<VisaForm />} />
-            <Route path="guide" element={<Guide />} />
-            <Route path="articles" element={<GuideList />} />
-            <Route path="articles/:id" element={<GuideDetail />} />
-            <Route path="about" element={<AboutUs />} />
-            <Route path="privacy" element={<PrivacyPolicy />} />
-            <Route path="terms" element={<TermsOfService />} />
-            <Route path="feedback" element={<Feedback />} />
-            <Route path="tools/zodiac" element={<ZodiacCalculator />} />
-            <Route path="tools/counter" element={<CharacterCounter />} />
-            <Route path="tools/pinyin" element={<PinyinSegmentation />} />
-            <Route path="tools/name" element={<NameGenerator />} />
-            <Route path="cities" element={<Cities />} />
-            <Route path="cities/:id" element={<CityDetail />} />
-            <Route path="apps" element={<Apps />} />
-          </Route>
           <Route path="/admin" element={<Admin />} />
+          <Route path="/:langParam/*" element={<LangRouteWrapper />} />
+          <Route path="*" element={<RootRedirect />} />
         </Routes>
       </BrowserRouter>
     </LanguageProvider>

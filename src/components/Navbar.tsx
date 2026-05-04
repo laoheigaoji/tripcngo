@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { Globe, ChevronDown, Menu, X, CheckSquare, Compass, PlayCircle, BookOpen, Shield, ScanLine, Type, Calculator, Languages, Check } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { useLanguage } from '../context/LanguageContext';
@@ -10,7 +10,9 @@ export default function Navbar() {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isLangDropdownOpen, setIsLangDropdownOpen] = useState(false);
+  const [showLangBanner, setShowLangBanner] = useState(false);
   const location = useLocation();
+  const navigate = useNavigate();
 
   useEffect(() => {
     const handleScroll = () => {
@@ -19,6 +21,37 @@ export default function Navbar() {
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
+
+  useEffect(() => {
+    const browserLang = navigator.language.toLowerCase();
+    const isBrowserZh = browserLang.startsWith('zh');
+    const dismissed = localStorage.getItem('hideLangBanner');
+
+    if (isBrowserZh && language === 'en' && !dismissed) {
+      setShowLangBanner(true);
+    } else {
+      setShowLangBanner(false);
+    }
+  }, [language]);
+
+  const handleSwitchToZh = () => {
+    localStorage.setItem('hideLangBanner', 'true');
+    setShowLangBanner(false);
+    let newPath = location.pathname;
+    const pathParts = newPath.split('/');
+    if (pathParts[1] === 'cn' || pathParts[1] === 'en') {
+      pathParts[1] = 'cn';
+      newPath = pathParts.join('/');
+    } else {
+      newPath = `/cn${newPath === '/' ? '' : newPath}`;
+    }
+    navigate(newPath + location.search);
+  };
+
+  const handleKeepEnglish = () => {
+    localStorage.setItem('hideLangBanner', 'true');
+    setShowLangBanner(false);
+  };
 
   const navLinks = [
     { name: t('nav.home'), path: '/' },
@@ -35,13 +68,35 @@ export default function Navbar() {
 
   return (
     <header 
-      className={`fixed top-0 w-full z-50 transition-all duration-300 ${
+      className={`fixed top-0 w-full z-50 transition-all duration-300 flex flex-col ${
         isScrolled 
-          ? 'bg-[#1a1a1a] shadow-md py-4 text-white' 
-          : 'bg-transparent py-5 text-white'
+          ? 'bg-[#1a1a1a] shadow-md text-white' 
+          : 'bg-transparent text-white'
       }`}
     >
-      <div className="max-w-[1400px] mx-auto px-6 flex justify-between items-center">
+      {showLangBanner && (
+        <div className="bg-[#179B4D] w-full py-2.5 px-4 flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-6 text-[13px] sm:text-[14px]">
+          <div className="flex items-center gap-2 text-white">
+            <Globe className="w-4 h-4 sm:w-5 sm:h-5" />
+            <span>Your browser language is detected as <b>简体中文</b>. Would you like to switch?</span>
+          </div>
+          <div className="flex items-center gap-3">
+            <button 
+              onClick={handleSwitchToZh}
+              className="bg-[#FFF0F5] text-[#179B4D] px-4 py-1.5 rounded hover:bg-white font-medium transition-colors"
+            >
+              Switch to 简体中文
+            </button>
+            <button 
+              onClick={handleKeepEnglish}
+              className="bg-transparent border border-[#9ed9b9] text-white px-4 py-1.5 rounded hover:bg-white/10 transition-colors"
+            >
+              Keep English
+            </button>
+          </div>
+        </div>
+      )}
+      <div className={`w-full max-w-[1400px] mx-auto px-6 flex justify-between items-center transition-all duration-300 ${isScrolled ? 'py-4' : 'py-5'}`}>
         {/* Logo */}
         <Link to="/" className="flex items-center gap-3">
           <img src="https://api.iconify.design/game-icons:mountains.svg?color=white" alt="Logo" className="w-10 h-10" />
@@ -218,8 +273,16 @@ export default function Navbar() {
                   key={lang.code}
                   className="w-full flex items-center justify-between px-4 py-2.5 text-sm hover:bg-gray-50 transition-colors text-left"
                   onClick={() => {
-                    setLanguage(lang.code as 'zh' | 'en');
-                    setIsLangDropdownOpen(false);
+                    const newLangPrefix = lang.code === 'zh' ? 'cn' : 'en';
+                    let newPath = location.pathname;
+                    const pathParts = newPath.split('/');
+                    if (pathParts[1] === 'cn' || pathParts[1] === 'en') {
+                      pathParts[1] = newLangPrefix;
+                      newPath = pathParts.join('/');
+                    } else {
+                      newPath = `/${newLangPrefix}${newPath === '/' ? '' : newPath}`;
+                    }
+                    navigate(newPath + location.search);
                   }}
                 >
                   <div className="flex items-center gap-3">
@@ -244,7 +307,18 @@ export default function Navbar() {
         <div className="md:hidden flex items-center gap-2">
           <button 
             className="p-2 rounded-full bg-white/10 border border-white/20 flex items-center justify-center mr-1"
-            onClick={() => setLanguage(language === 'zh' ? 'en' : 'zh')}
+            onClick={() => {
+              const newLangPrefix = language === 'zh' ? 'en' : 'cn';
+              let newPath = location.pathname;
+              const pathParts = newPath.split('/');
+              if (pathParts[1] === 'cn' || pathParts[1] === 'en') {
+                pathParts[1] = newLangPrefix;
+                newPath = pathParts.join('/');
+              } else {
+                newPath = `/${newLangPrefix}${newPath === '/' ? '' : newPath}`;
+              }
+              navigate(newPath + location.search);
+            }}
             title={language === 'zh' ? 'Switch to English' : '切换为中文'}
           >
             <Globe className="w-5 h-5" />
@@ -305,8 +379,16 @@ export default function Navbar() {
                     key={lang.code}
                     className={`px-4 py-2 rounded-full border flex items-center gap-2 ${language === lang.code ? 'bg-green-600 border-green-600' : 'bg-transparent border-white/20'}`}
                     onClick={() => {
-                      setLanguage(lang.code as 'zh' | 'en');
-                      setIsMobileMenuOpen(false);
+                      const newLangPrefix = lang.code === 'zh' ? 'cn' : 'en';
+                      let newPath = location.pathname;
+                      const pathParts = newPath.split('/');
+                      if (pathParts[1] === 'cn' || pathParts[1] === 'en') {
+                        pathParts[1] = newLangPrefix;
+                        newPath = pathParts.join('/');
+                      } else {
+                        newPath = `/${newLangPrefix}${newPath === '/' ? '' : newPath}`;
+                      }
+                      navigate(newPath + location.search);
                     }}
                    >
                      <Globe className="w-4 h-4" />
