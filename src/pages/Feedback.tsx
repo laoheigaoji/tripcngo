@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import { motion } from 'motion/react';
 import { useLanguage } from '../context/LanguageContext';
+import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
+import { db } from '../lib/firebase';
 
 export default function Feedback() {
   const { language, t } = useLanguage();
@@ -16,12 +18,15 @@ export default function Feedback() {
     setStatus('loading');
     
     try {
-      // simulated API call since backend is removed
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      await addDoc(collection(db, 'feedbacks'), {
+        ...formData,
+        createdAt: serverTimestamp()
+      });
       setStatus('success');
       setFormData({ name: '', email: '', message: '' });
       setTimeout(() => setStatus('idle'), 5000);
     } catch (error) {
+      console.error(error);
       setStatus('error');
       setTimeout(() => setStatus('idle'), 5000);
     }
@@ -127,6 +132,15 @@ export default function Feedback() {
                   className="p-4 bg-emerald-50 text-emerald-700 rounded-lg border border-emerald-100 font-medium"
                 >
                   {t('feedback.success')}
+                </motion.div>
+              )}
+              {status === 'error' && (
+                <motion.div 
+                  initial={{ opacity: 0, scale: 0.9 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  className="p-4 bg-red-50 text-red-700 rounded-lg border border-red-100 font-medium"
+                >
+                  Failed to send feedback.
                 </motion.div>
               )}
             </form>

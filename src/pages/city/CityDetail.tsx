@@ -5,6 +5,8 @@ import { citiesData } from '../../data/citiesData';
 import { useLanguage } from '../../context/LanguageContext';
 import SEO from '../../components/SEO';
 
+import WeatherWidget from '../../components/WeatherWidget';
+
 const iconMap: Record<string, React.ElementType> = {
   Plane, TrainFront, BusFront, Car, Bike, Train, Ship
 };
@@ -78,57 +80,7 @@ export default function CityDetail() {
 
             {/* Weather / Info Card */}
             <div className="col-span-1 border border-white/10 bg-slate-900/60 backdrop-blur-md rounded-2xl p-6 text-white shadow-2xl">
-              <div className="flex justify-between items-start mb-6">
-                <div>
-                  <h3 className="text-white/70 font-medium mb-1">{getTranslatedValue(city.name, city.enName)} {t('city.weather.timeTitle')}</h3>
-                  <div className="text-4xl font-bold font-mono tracking-tight">20:00:00</div>
-                  <div className="text-white/60 text-sm mt-1">2026-05-02 {isEn ? 'Sat' : '周六'}</div>
-                </div>
-              </div>
-
-              <div className="border-t border-white/10 pt-5 mb-6">
-                <div className="flex justify-between items-center mb-4">
-                  <div>
-                    <div className="text-white/70 text-sm mb-1">{isEn ? 'Today' : '今日'} • 5/2</div>
-                    <div className="text-3xl font-bold">20~28°</div>
-                    <div className="text-white/60 text-xs mt-1">{isEn ? 'Cloudy' : '多云'}</div>
-                  </div>
-                  <Cloud className="w-12 h-12 text-gray-300" />
-                </div>
-
-                <div className="flex justify-between items-center mt-6 pt-4 border-t border-white/5 opacity-80 text-center">
-                  <div>
-                    <div className="text-xs text-white/50 mb-1">5/3</div>
-                    <div className="text-xs mb-2">{isEn ? 'Sun' : '周日'}</div>
-                    <Cloud className="w-5 h-5 mx-auto text-gray-400 mb-1" />
-                    <div className="text-[10px]">22~32°</div>
-                  </div>
-                  <div>
-                    <div className="text-xs text-white/50 mb-1">5/4</div>
-                    <div className="text-xs mb-2">{isEn ? 'Mon' : '周一'}</div>
-                    <CloudRain className="w-5 h-5 mx-auto text-blue-300 mb-1" />
-                    <div className="text-[10px]">22~25°</div>
-                  </div>
-                  <div>
-                    <div className="text-xs text-white/50 mb-1">5/5</div>
-                    <div className="text-xs mb-2">{isEn ? 'Tue' : '周二'}</div>
-                    <Sun className="w-5 h-5 mx-auto text-amber-300 mb-1" />
-                    <div className="text-[10px]">23~28°</div>
-                  </div>
-                  <div>
-                    <div className="text-xs text-white/50 mb-1">5/6</div>
-                    <div className="text-xs mb-2">{isEn ? 'Wed' : '周三'}</div>
-                    <Cloud className="w-5 h-5 mx-auto text-gray-300 mb-1" />
-                    <div className="text-[10px]">24~30°</div>
-                  </div>
-                  <div>
-                    <div className="text-xs text-white/50 mb-1">5/7</div>
-                    <div className="text-xs mb-2">{isEn ? 'Thu' : '周四'}</div>
-                    <Sun className="w-5 h-5 mx-auto text-amber-300 mb-1" />
-                    <div className="text-[10px]">25~32°</div>
-                  </div>
-                </div>
-              </div>
+              <WeatherWidget cityName={city.name} enCityName={city.enName} isEn={isEn} />
 
               <div className="grid grid-cols-2 gap-4 border-t border-white/10 pt-5">
                 <div className="text-center">

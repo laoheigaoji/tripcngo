@@ -10,6 +10,7 @@ interface SEOProps {
   url?: string;
   type?: 'website' | 'article';
   schemaData?: object;
+  isHome?: boolean;
 }
 
 const SEO: React.FC<SEOProps> = ({ 
@@ -19,16 +20,17 @@ const SEO: React.FC<SEOProps> = ({
   image = 'https://tripcngo.com/og-image.jpg', // Replace with real asset URL
   url = 'https://tripcngo.com', 
   type = 'website',
-  schemaData
+  schemaData,
+  isHome = false
 }) => {
   const { language } = useLanguage();
   
-  const siteTitle = language === 'zh' ? 'tripcngo.com - 旅行中国出发' : 'tripcngo.com - Travel China, Let’s Go';
+  const siteTitle = language === 'zh' ? 'tripcngo.com - 你的终极中国旅游指南，旅行中国出发' : 'tripcngo.com - Your ultimate China travel guide, travel China departure';
   const defaultDescription = language === 'zh' 
     ? '您的中国旅行终极指南。提供最新的免签政策、签证指引、交通攻略和目的地深度报告。' 
     : 'Your ultimate guide to traveling in China. Latest visa-free policies, visa guides, transportation tips, and destination reports.';
   
-  const fullTitle = title ? `${title} | ${siteTitle}` : siteTitle;
+  const fullTitle = isHome ? siteTitle : (title ? `${title} - tripcngo.com` : siteTitle);
   const metaDescription = description || defaultDescription;
   
   return (

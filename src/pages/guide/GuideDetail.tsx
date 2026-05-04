@@ -12,6 +12,8 @@ import {
   ThumbsUp
 } from 'lucide-react';
 import Markdown from 'react-markdown';
+import { doc, getDoc, updateDoc, increment } from 'firebase/firestore';
+import { db } from '../../lib/firebase';
 
 interface Article {
   _id: string;
@@ -21,11 +23,11 @@ interface Article {
   subtitleEn?: string;
   content: string;
   contentEn?: string;
-  thumbnail: string;
+  thumbnail?: string;
   category: string;
-  author: string;
-  views: number;
-  likes: number;
+  author?: string;
+  views?: number;
+  likes?: number;
   createdAt: string;
 }
 
@@ -43,10 +45,31 @@ export default function GuideDetail() {
     const fetchArticle = async () => {
       setLoading(true);
       try {
-        const response = await fetch(`/api/articles/${id}`);
-        const data = await response.json();
-        setArticle(data);
-        window.scrollTo(0, 0);
+        if (!id) return;
+        const docRef = doc(db, 'articles', id);
+        const docSnap = await getDoc(docRef);
+        
+        if (docSnap.exists()) {
+          const data = docSnap.data();
+          const loadedArticle = {
+            _id: docSnap.id,
+            ...data,
+            views: (data.views || 0) + 1,
+            likes: data.likes || 0,
+            createdAt: data.createdAt?.toDate().toISOString() || new Date().toISOString()
+          } as Article;
+          
+          setArticle(loadedArticle);
+          window.scrollTo(0, 0);
+
+          try {
+            await updateDoc(docRef, {
+              views: increment(1)
+            });
+          } catch (e) {
+            console.error('Failed to increment views', e);
+          }
+        }
       } catch (error) {
         console.error("Error fetching article:", error);
       } finally {
@@ -55,6 +78,22 @@ export default function GuideDetail() {
     };
     if (id) fetchArticle();
   }, [id]);
+
+  const handleLike = async () => {
+    if (!article || !id) return;
+    
+    // Optimistic UI update
+    setArticle(prev => prev ? {...prev, likes: (prev.likes || 0) + 1} : null);
+    
+    try {
+      const docRef = doc(db, 'articles', id);
+      await updateDoc(docRef, {
+        likes: increment(1)
+      });
+    } catch (e) {
+      console.error('Failed to update likes', e);
+    }
+  };
 
   if (loading) return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50">
@@ -103,7 +142,7 @@ export default function GuideDetail() {
           <div className="flex flex-wrap gap-y-4 gap-x-8 items-center text-white/70 text-[13px] font-medium border-t border-white/10 pt-8">
             <div className="flex items-center gap-2">
               <User className="w-4 h-4 opacity-50" />
-              <span>{t('guide.author')}: <span className="text-white font-bold">{article.author}</span></span>
+              <span>{t('guide.author')}: <span className="text-white font-bold">{article.author || 'TripCNGO'}</span></span>
             </div>
             <div className="flex items-center gap-2">
               <Calendar className="w-4 h-4 opacity-50" />
@@ -115,7 +154,7 @@ export default function GuideDetail() {
             </div>
             <div className="flex items-center gap-2">
               <Eye className="w-4 h-4 opacity-50" />
-              <span>{article.views} {t('guide.views')}</span>
+              <span>{article.views || 0} {t('guide.views')}</span>
             </div>
           </div>
         </div>
@@ -132,14 +171,14 @@ export default function GuideDetail() {
             {/* Useful Section */}
             <div className="mt-20 pt-12 border-t border-gray-100 flex flex-col items-center">
                <button 
-                  onClick={() => setArticle(prev => prev ? {...prev, likes: prev.likes + 1} : null)}
+                  onClick={handleLike}
                   className="group flex flex-col items-center gap-2"
                 >
                   <div className="w-14 h-14 rounded-full border border-gray-200 flex items-center justify-center group-hover:border-[#1b887a] group-hover:bg-[#1b887a]/5 transition-all text-gray-300 group-hover:text-[#1b887a]">
-                    <ThumbsUp className={`w-6 h-6 ${article.likes > 0 ? 'fill-[#1b887a] text-[#1b887a]' : ''}`} />
+                    <ThumbsUp className={`w-6 h-6 ${article.likes && article.likes > 0 ? 'fill-[#1b887a] text-[#1b887a]' : ''}`} />
                   </div>
                   <span className="text-xs font-bold text-gray-400 group-hover:text-[#1b887a] transition-colors">
-                    {article.likes} {t('guide.helpful')}
+                    {article.likes || 0} {t('guide.helpful')}
                   </span>
                </button>
             </div>

@@ -4,6 +4,8 @@ import { Link } from 'react-router-dom';
 import { useLanguage } from '../../context/LanguageContext';
 import { ChevronRight, Heart, Eye } from 'lucide-react';
 import SEO from '../../components/SEO';
+import { collection, getDocs, query, orderBy, where } from 'firebase/firestore';
+import { db } from '../../lib/firebase';
 
 interface Article {
   _id: string;
@@ -11,10 +13,10 @@ interface Article {
   titleEn?: string;
   subtitle: string;
   subtitleEn?: string;
-  thumbnail: string;
+  thumbnail?: string;
   category: string;
-  views: number;
-  likes: number;
+  views?: number;
+  likes?: number;
 }
 
 const CATEGORIES = [
@@ -38,8 +40,23 @@ export default function GuideList() {
     const fetchArticles = async () => {
       setLoading(true);
       try {
-        const response = await fetch(`/api/articles?category=${activeCategory}`);
-        const data = await response.json();
+        let q;
+        if (activeCategory === 'All') {
+          q = query(collection(db, 'articles'), orderBy('createdAt', 'desc'));
+        } else {
+          q = query(collection(db, 'articles'), where('category', '==', activeCategory), orderBy('createdAt', 'desc'));
+        }
+        
+        const snapshot = await getDocs(q);
+        const data = snapshot.docs.map(doc => {
+          const docData = doc.data();
+          return {
+            ...docData,
+            _id: doc.id,
+            views: docData.views || 0,
+            likes: docData.likes || 0
+          } as Article;
+        });
         setArticles(data);
       } catch (error) {
         console.error("Error fetching articles:", error);
@@ -174,12 +191,12 @@ export default function GuideList() {
                       <div className="flex items-center justify-between pt-4 border-t border-gray-50">
                         <div className="flex items-center gap-6">
                           <div className="text-gray-400 text-xs font-medium flex items-center gap-1">
-                            {article.views} {t('guide.views')}
+                            {article.views || 0} {t('guide.views') || 'Views'}
                           </div>
                         </div>
                         <div className="flex items-center gap-1.5 text-gray-400 group-hover:text-red-400 transition-colors font-bold text-xs">
-                           <Heart className={`w-3.5 h-3.5 ${article.likes > 0 ? 'fill-red-400 text-red-400' : ''}`} />
-                           <span>{article.likes} {t('guide.helpful')}</span>
+                           <Heart className={`w-3.5 h-3.5 ${article.likes && article.likes > 0 ? 'fill-red-400 text-red-400' : ''}`} />
+                           <span>{article.likes || 0} {t('guide.helpful') || 'Helpful'}</span>
                         </div>
                       </div>
                     </div>

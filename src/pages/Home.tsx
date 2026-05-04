@@ -218,7 +218,7 @@ export default function Home() {
   return (
     <div className="w-full bg-[#f7f7f7]">
       <SEO 
-        title={language === 'zh' ? '首页' : 'Home'}
+        isHome={true}
         description={language === 'zh' 
           ? 'tripcngo.com 是您的中国旅行终极指南。探索最新的144小时过境免签政策、寻找热门城市攻略及实用的中国旅行工具。' 
           : 'tripcngo.com is your ultimate guide to traveling in China. Explore the latest 144-hour transit visa-free policies, top city guides, and practical travel tools.'}

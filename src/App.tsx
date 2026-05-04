@@ -60,7 +60,6 @@ export default function App() {
             <Route path="privacy" element={<PrivacyPolicy />} />
             <Route path="terms" element={<TermsOfService />} />
             <Route path="feedback" element={<Feedback />} />
-            <Route path="admin" element={<Admin />} />
             <Route path="tools/zodiac" element={<ZodiacCalculator />} />
             <Route path="tools/counter" element={<CharacterCounter />} />
             <Route path="tools/pinyin" element={<PinyinSegmentation />} />
@@ -69,6 +68,7 @@ export default function App() {
             <Route path="cities/:id" element={<CityDetail />} />
             <Route path="apps" element={<Apps />} />
           </Route>
+          <Route path="/admin" element={<Admin />} />
         </Routes>
       </BrowserRouter>
     </LanguageProvider>

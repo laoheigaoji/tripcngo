@@ -1,3 +1,4 @@
+/// <reference types="vite/client" />
 import React, { useState } from 'react';
 import { GoogleGenAI } from '@google/genai';
 import { ChevronDown, ChevronUp, BookOpen, Search, Languages } from 'lucide-react';
