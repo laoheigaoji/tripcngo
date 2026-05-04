@@ -150,6 +150,7 @@ export default function Home() {
   const [guides, setGuides] = useState<any[]>([]);
   const [cities, setCities] = useState<any[]>([]);
   const navigate = useNavigate();
+  const langPrefix = language === 'zh' ? 'cn' : 'en';
 
   useEffect(() => {
     const fetchGuides = async () => {
@@ -192,7 +193,7 @@ export default function Home() {
       (c.enName && c.enName.toLowerCase().includes(searchTerm.trim().toLowerCase()))
     );
     if (city) {
-      navigate(`/cities/${city.id}`);
+      navigate(`/${langPrefix}/cities/${city.id}`);
     }
   };
 
@@ -253,7 +254,7 @@ export default function Home() {
                 {t('hero.dest')}
               </button>
               <button 
-                onClick={() => navigate('/tools/name')}
+                onClick={() => navigate(`/${langPrefix}/tools/name`)}
                 className="px-6 py-2.5 rounded-full text-[15px] font-bold text-white hover:bg-white/10 transition-colors"
               >
                 {t('hero.aiName')}
@@ -294,7 +295,7 @@ export default function Home() {
                     {filteredCities.map((city) => (
                       <button
                         key={city.id}
-                        onClick={() => navigate(`/cities/${city.id}`)}
+                        onClick={() => navigate(`/${langPrefix}/cities/${city.id}`)}
                         className="w-full flex items-center gap-4 p-3 hover:bg-gray-50 rounded-xl transition-colors text-left group"
                       >
                         <div className="w-12 h-12 rounded-lg overflow-hidden flex-shrink-0 bg-gray-100">
@@ -360,7 +361,7 @@ export default function Home() {
         <div className="max-w-[1400px] mx-auto px-6">
           <div className="flex flex-col items-center justify-center mb-8 text-center">
             <h2 className="text-3xl font-bold text-gray-900 mb-3">{t('home.cities.title')}</h2>
-            <button className="text-[#1b887a] text-sm font-medium hover:underline" onClick={() => navigate('/cities')}>
+            <button className="text-[#1b887a] text-sm font-medium hover:underline" onClick={() => navigate(`/${langPrefix}/cities`)}>
                {t('home.cities.more')}
             </button>
           </div>
@@ -369,7 +370,7 @@ export default function Home() {
               <div 
                 key={city.id} 
                 className="relative group rounded-xl overflow-hidden cursor-pointer bg-white border border-gray-100 hover:shadow-lg transition-all duration-300"
-                onClick={() => navigate(`/cities/${city.id}`)}
+                onClick={() => navigate(`/${langPrefix}/cities/${city.id}`)}
               >
                 <div className="relative h-[240px] md:h-[260px]">
                   <img src={city.listCover || city.heroImage || city.img} alt={language === 'zh' ? city.name : city.enName} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
@@ -395,13 +396,13 @@ export default function Home() {
       <section className="py-20 max-w-[1400px] mx-auto px-6">
         <div className="flex justify-between items-end mb-10">
           <h2 className="text-3xl font-bold text-gray-900">{t('home.guides.title')}</h2>
-          <button className="text-[#1b887a] text-sm font-medium hover:underline" onClick={() => navigate('/guide')}>
+          <button className="text-[#1b887a] text-sm font-medium hover:underline" onClick={() => navigate(`/${langPrefix}/guide`)}>
              {t('home.guides.more')}
           </button>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-y-10 gap-x-8">
           {guides.map((guide, i) => (
-             <div key={i} className="flex flex-col sm:flex-row gap-5 bg-transparent cursor-pointer group" onClick={() => navigate(`/articles/${guide.id}`)}>
+             <div key={i} className="flex flex-col sm:flex-row gap-5 bg-transparent cursor-pointer group" onClick={() => navigate(`/${langPrefix}/articles/${guide.id}`)}>
                <div className="w-full sm:w-[200px] h-[140px] overflow-hidden rounded-md flex-shrink-0 shadow-sm border border-gray-200">
                   <img src={guide.img} alt={language === 'zh' ? guide.title : guide.enTitle} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
                </div>

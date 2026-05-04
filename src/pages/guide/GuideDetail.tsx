@@ -39,6 +39,7 @@ export default function GuideDetail() {
   const [prevArticle, setPrevArticle] = useState<Article | null>(null);
   const [nextArticle, setNextArticle] = useState<Article | null>(null);
   const [loading, setLoading] = useState(true);
+  const langPrefix = language === 'zh' ? 'cn' : 'en';
 
   const displayTitle = (article && language === 'en' && article.titleEn) ? article.titleEn : (article?.title || '');
   const displaySubtitle = (article && language === 'en' && article.subtitleEn) ? article.subtitleEn : (article?.subtitle || '');
@@ -130,7 +131,7 @@ export default function GuideDetail() {
   if (!article) return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-gray-50 p-6">
        <h1 className="text-2xl font-black text-gray-900 mb-4">{t('guide.articleNotFound')}</h1>
-       <Link to="/articles" className="px-6 py-3 bg-[#1b887a] text-white rounded-lg font-bold">{t('guide.backToList')}</Link>
+       <Link to={`/${langPrefix}/articles`} className="px-6 py-3 bg-[#1b887a] text-white rounded-lg font-bold">{t('guide.backToList')}</Link>
     </div>
   );
 
@@ -148,11 +149,11 @@ export default function GuideDetail() {
         <div className="max-w-[1240px] mx-auto px-6">
           {/* Breadcrumbs */}
           <nav className="flex items-center gap-2 text-white/60 text-[13px] mb-8 overflow-x-auto whitespace-nowrap scrollbar-hide">
-             <Link to="/" className="hover:text-white transition-colors flex items-center gap-1">
+             <Link to={`/${langPrefix}`} className="hover:text-white transition-colors flex items-center gap-1">
                <ChevronRight className="w-4 h-4" /> {t('nav.home')}
              </Link>
              <ChevronRight className="w-3 h-3 opacity-40 shrink-0" />
-             <Link to="/articles" className="hover:text-white transition-colors">{t('discover.guides')}</Link>
+             <Link to={`/${langPrefix}/articles`} className="hover:text-white transition-colors">{t('discover.guides')}</Link>
              <ChevronRight className="w-3 h-3 opacity-40 shrink-0" />
              <span className="text-white/40 truncate">{displayTitle}</span>
           </nav>
@@ -213,7 +214,7 @@ export default function GuideDetail() {
             {(prevArticle || nextArticle) && (
               <div className="mt-16 pt-8 border-t border-gray-100 grid grid-cols-1 md:grid-cols-2 gap-4">
                 {prevArticle ? (
-                  <Link to={`/articles/${prevArticle._id}`} className="p-4 rounded-xl border border-gray-100 hover:border-[#1b887a] hover:bg-gray-50 transition-all flex items-center gap-4 text-left">
+                  <Link to={`/${langPrefix}/articles/${prevArticle._id}`} className="p-4 rounded-xl border border-gray-100 hover:border-[#1b887a] hover:bg-gray-50 transition-all flex items-center gap-4 text-left">
                     {prevArticle.thumbnail && <img src={prevArticle.thumbnail} alt="" className="w-16 h-16 rounded-lg object-cover" />}
                     <div className="flex flex-col">
                       <span className="text-[10px] uppercase font-bold text-gray-400 mb-1">{language === 'zh' ? '上一篇' : 'Previous'}</span>
@@ -224,7 +225,7 @@ export default function GuideDetail() {
                   </Link>
                 ) : <div />}
                 {nextArticle ? (
-                  <Link to={`/articles/${nextArticle._id}`} className="p-4 rounded-xl border border-gray-100 hover:border-[#1b887a] hover:bg-gray-50 transition-all flex items-center gap-4 text-right justify-end">
+                  <Link to={`/${langPrefix}/articles/${nextArticle._id}`} className="p-4 rounded-xl border border-gray-100 hover:border-[#1b887a] hover:bg-gray-50 transition-all flex items-center gap-4 text-right justify-end">
                     <div className="flex flex-col text-right">
                       <span className="text-[10px] uppercase font-bold text-gray-400 mb-1">{language === 'zh' ? '下一篇' : 'Next'}</span>
                       <h4 className="font-bold text-gray-900 line-clamp-2">
@@ -249,7 +250,7 @@ export default function GuideDetail() {
                   </h3>
                   <div className="space-y-6">
                      {recommendedArticles.map((item, i) => (
-                       <Link key={item._id} to={`/articles/${item._id}`} className="block group">
+                       <Link key={item._id} to={`/${langPrefix}/articles/${item._id}`} className="block group">
                           <div className="relative aspect-[16/10] rounded-xl overflow-hidden mb-3 bg-gray-100 shadow-sm border border-gray-100">
                            <img 
                             src={item.thumbnail || 'https://images.unsplash.com/photo-1547981609-4b6bfe67ca0b?auto=format&fit=crop&q=80&w=400'} 
@@ -277,13 +278,13 @@ export default function GuideDetail() {
                    </h3>
                    <div className="space-y-4">
                       {[
-                        { name: t('city.changsha'), en: 'Changsha', count: 64, img: 'https://images.unsplash.com/photo-1547981609-4b6bfe67ca0b?auto=format&fit=crop&q=80&w=100' },
-                        { name: t('city.fuzhou'), en: 'Fuzhou', count: 61, img: 'https://images.unsplash.com/photo-1549221530-47ea067066bc?auto=format&fit=crop&q=80&w=100' },
-                        { name: t('city.beijing'), en: 'Beijing', count: 9, img: 'https://images.unsplash.com/photo-1508804185872-d7badad00f7d?auto=format&fit=crop&q=80&w=100' },
-                        { name: t('city.guangzhou'), en: 'Guangzhou', count: 5, img: 'https://images.unsplash.com/photo-1547981609-4b6bfe67ca0b?auto=format&fit=crop&q=80&w=100' },
-                        { name: t('city.shanghai'), en: 'Shanghai', count: 3, img: 'https://images.unsplash.com/photo-1549221530-47ea067066bc?auto=format&fit=crop&q=80&w=100' }
+                        { name: t('city.changsha'), en: 'Changsha', id: 'changsha', count: 64, img: 'https://images.unsplash.com/photo-1547981609-4b6bfe67ca0b?auto=format&fit=crop&q=80&w=100' },
+                        { name: t('city.fuzhou'), en: 'Fuzhou', id: 'fuzhou', count: 61, img: 'https://images.unsplash.com/photo-1549221530-47ea067066bc?auto=format&fit=crop&q=80&w=100' },
+                        { name: t('city.beijing'), en: 'Beijing', id: 'beijing', count: 9, img: 'https://images.unsplash.com/photo-1508804185872-d7badad00f7d?auto=format&fit=crop&q=80&w=100' },
+                        { name: t('city.guangzhou'), en: 'Guangzhou', id: 'guangzhou', count: 5, img: 'https://images.unsplash.com/photo-1547981609-4b6bfe67ca0b?auto=format&fit=crop&q=80&w=100' },
+                        { name: t('city.shanghai'), en: 'Shanghai', id: 'shanghai', count: 3, img: 'https://images.unsplash.com/photo-1549221530-47ea067066bc?auto=format&fit=crop&q=80&w=100' }
                       ].map((city, i) => (
-                        <div key={i} className="flex items-center justify-between group cursor-pointer p-2 hover:bg-gray-50 rounded-xl transition-all">
+                        <Link key={i} to={`/${langPrefix}/cities/${city.id}`} className="flex items-center justify-between group cursor-pointer p-2 hover:bg-gray-50 rounded-xl transition-all">
                           <div className="flex items-center gap-3">
                              <div className="w-11 h-11 rounded-lg overflow-hidden bg-gray-100 grayscale-[0.5] group-hover:grayscale-0 transition-all border border-gray-100">
                                 <img src={city.img} alt={city.name} className="w-full h-full object-cover" />
@@ -294,7 +295,7 @@ export default function GuideDetail() {
                              </div>
                           </div>
                           <span className="text-[10px] font-bold text-gray-300 bg-gray-50 px-2 py-1 rounded-full">{city.count} {t('city.stats.recommended')}</span>
-                        </div>
+                        </Link>
                       ))}
                    </div>
                </section>

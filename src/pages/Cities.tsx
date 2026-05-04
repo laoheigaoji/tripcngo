@@ -32,6 +32,8 @@ export default function Cities() {
   const totalPages = Math.ceil(allCities.length / ITEMS_PER_PAGE);
   const currentCities = allCities.slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE);
 
+  const langPrefix = language === 'zh' ? 'cn' : 'en';
+
   return (
     <div className="w-full bg-[#f9f9f9] pb-20">
       <SEO 
@@ -71,7 +73,7 @@ export default function Cities() {
       <div className="max-w-[1240px] mx-auto px-6">
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
           {currentCities.map((city) => (
-             <Link to={`/cities/${city.id}`} key={city.id} className="relative group rounded-md overflow-hidden bg-white border border-gray-100 shadow-sm transition-all duration-300 block">
+             <Link to={`/${langPrefix}/cities/${city.id}`} key={city.id} className="relative group rounded-md overflow-hidden bg-white border border-gray-100 shadow-sm transition-all duration-300 block">
                 <div className="relative h-[240px] md:h-[260px] overflow-hidden cursor-pointer">
                   <img src={city.listCover || city.heroImage || city.img} alt={city.name} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" />
                   <div className="absolute inset-0 bg-black/10 group-hover:bg-black/0 transition-colors duration-500" />

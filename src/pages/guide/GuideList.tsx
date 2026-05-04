@@ -37,6 +37,7 @@ export default function GuideList() {
   const [loading, setLoading] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
   const articlesPerPage = 6;
+  const langPrefix = language === 'zh' ? 'cn' : 'en';
 
   useEffect(() => {
     const fetchArticles = async () => {
@@ -160,7 +161,7 @@ export default function GuideList() {
               currentArticles.map((article) => (
                 <Link 
                   key={article._id} 
-                  to={`/articles/${article._id}`}
+                  to={`/${langPrefix}/articles/${article._id}`}
                   className="block group"
                 >
                   <motion.div 

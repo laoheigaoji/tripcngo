@@ -110,28 +110,29 @@ export default function CityDetail() {
         </div>
 
         <div className="max-w-7xl mx-auto px-6 relative z-10">
+          <div className="mb-10 pb-10 border-b border-white/10 flex flex-wrap items-center gap-6">
+            <h1 className="text-4xl md:text-6xl font-extrabold tracking-tight text-white flex items-baseline gap-4">
+              {isEn ? city.enName : city.name} 
+              {!isEn && <span className="text-white/40 font-medium text-2xl md:text-4xl">{city.enName}</span>}
+            </h1>
+            <div className="flex flex-wrap items-center gap-3">
+              {city.tags.map((tag, idx) => (
+                <span key={idx} className="px-5 py-2 bg-[#e6f4ea] text-[#1b887a] rounded-full text-[10px] font-black shadow-sm border border-[#1b887a]/20 tracking-widest uppercase">
+                  {getTranslatedValue(tag.text, tag.enText)}
+                </span>
+              ))}
+            </div>
+          </div>
+
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-12 items-start">
             <div className="col-span-1 lg:col-span-2 text-white">
-              <div className="mb-8">
-                <h1 className="text-4xl md:text-5xl font-bold tracking-tight mb-4">
-                  {isEn ? city.enName : city.name} {!isEn && <span className="text-white/60 font-medium text-2xl md:text-3xl ml-2">{city.enName}</span>}
-                </h1>
-                <div className="flex flex-wrap items-center gap-3">
-                  {city.tags.map((tag, idx) => (
-                    <span key={idx} className="px-5 py-2 bg-[#e6f4ea] text-[#1b887a] rounded-full text-xs font-black shadow-sm border border-[#1b887a]/10 tracking-widest uppercase">
-                      {getTranslatedValue(tag.text, tag.enText)}
-                    </span>
-                  ))}
-                </div>
-              </div>
-              
-              <div className="space-y-6 text-white/90 text-base md:text-lg leading-relaxed max-w-4xl">
+              <div className="space-y-6 text-white/90 text-base md:text-xl leading-relaxed max-w-4xl">
                 {(isEn && city.enParagraphs ? city.enParagraphs : city.paragraphs).map((p, idx) => (
                   <p key={idx}>{p}</p>
                 ))}
               </div>
 
-              <div className="flex flex-wrap items-center gap-4 mt-10">
+              <div className="flex flex-wrap items-center gap-4 mt-12">
                 <button 
                   onClick={() => handleStatsUpdate('wantToVisit')}
                   disabled={voted.wantToVisit}

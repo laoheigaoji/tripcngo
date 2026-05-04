@@ -13,6 +13,7 @@ export default function Navbar() {
   const [showLangBanner, setShowLangBanner] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
+  const langPrefix = language === 'zh' ? 'cn' : 'en';
 
   useEffect(() => {
     const handleScroll = () => {
@@ -54,11 +55,11 @@ export default function Navbar() {
   };
 
   const navLinks = [
-    { name: t('nav.home'), path: '/' },
-    { name: t('nav.visa'), path: '/visa', hasDropdown: true },
-    { name: t('nav.discover'), path: '/cities', hasDropdown: true },
-    { name: t('nav.tools'), path: 'apps', hasDropdown: true },
-    { name: t('nav.catalog'), path: '/apps' }
+    { name: t('nav.home'), path: `/${langPrefix}` },
+    { name: t('nav.visa'), path: `/${langPrefix}/visa`, hasDropdown: true },
+    { name: t('nav.discover'), path: `/${langPrefix}/cities`, hasDropdown: true },
+    { name: t('nav.tools'), path: `/${langPrefix}/apps`, hasDropdown: true },
+    { name: t('nav.catalog'), path: `/${langPrefix}/apps` }
   ];
 
   const languages = [
@@ -98,7 +99,7 @@ export default function Navbar() {
       )}
       <div className={`w-full max-w-[1400px] mx-auto px-6 flex justify-between items-center transition-all duration-300 ${isScrolled ? 'py-3' : 'py-6'}`}>
         {/* Logo */}
-        <Link to="/" className="flex items-center gap-3">
+        <Link to={`/${langPrefix}`} className="flex items-center gap-3">
           <img src="https://api.iconify.design/game-icons:mountains.svg?color=white" alt="Logo" className="w-10 h-10" />
           <div className="flex flex-col">
             <span className="text-xl font-bold tracking-tight leading-tight">tripcngo.com</span>
@@ -151,7 +152,7 @@ export default function Navbar() {
                           </p>
                         </div>
                         <div className="text-right mt-4">
-                          <Link to="/visa" className="text-[13px] hover:text-white/80 transition-colors inline-flex items-center">
+                          <Link to={`/${langPrefix}/visa`} className="text-[13px] hover:text-white/80 transition-colors inline-flex items-center">
                             {t('visa.mega.view')} <span className="ml-1">→</span>
                           </Link>
                         </div>
@@ -159,12 +160,12 @@ export default function Navbar() {
                       
                       {/* Right Column: Links */}
                       <div className="flex-1 pl-10 py-2 flex flex-col justify-between">
-                        <Link to="/visa/types" className="text-[14px] font-medium text-gray-800 hover:text-[#1b887a] block">{t('visa.types')}</Link>
-                        <Link to="/visa/photo" className="text-[14px] font-medium text-gray-800 hover:text-[#1b887a] block">{t('visa.photo')}</Link>
-                        <Link to="/visa/fees" className="text-[14px] font-medium text-gray-800 hover:text-[#1b887a] block">{t('visa.fee')}</Link>
-                        <Link to="/visa/form" className="text-[14px] font-medium text-gray-800 hover:text-[#1b887a] block">{t('visa.form')}</Link>
-                        <Link to="/visa/arrival-card" className="text-[14px] font-medium text-gray-800 hover:text-[#1b887a] block">{t('visa.card')}</Link>
-                        <Link to="/visa/downloads" className="text-[14px] font-medium text-gray-800 hover:text-[#1b887a] block">{t('visa.menu.download')}</Link>
+                        <Link to={`/${langPrefix}/visa/types`} className="text-[14px] font-medium text-gray-800 hover:text-[#1b887a] block">{t('visa.types')}</Link>
+                        <Link to={`/${langPrefix}/visa/photo`} className="text-[14px] font-medium text-gray-800 hover:text-[#1b887a] block">{t('visa.photo')}</Link>
+                        <Link to={`/${langPrefix}/visa/fees`} className="text-[14px] font-medium text-gray-800 hover:text-[#1b887a] block">{t('visa.fee')}</Link>
+                        <Link to={`/${langPrefix}/visa/form`} className="text-[14px] font-medium text-gray-800 hover:text-[#1b887a] block">{t('visa.form')}</Link>
+                        <Link to={`/${langPrefix}/visa/arrival-card`} className="text-[14px] font-medium text-gray-800 hover:text-[#1b887a] block">{t('visa.card')}</Link>
+                        <Link to={`/${langPrefix}/visa/downloads`} className="text-[14px] font-medium text-gray-800 hover:text-[#1b887a] block">{t('visa.menu.download')}</Link>
                       </div>
                     </div>
                   </div>
@@ -183,32 +184,32 @@ export default function Navbar() {
                       <div className="w-1/2 pr-6 border-r border-gray-100">
                         <div className="flex justify-between items-center mb-4">
                           <h3 className="text-green-600 font-bold text-[15px]">{t('discover.hotCities')}</h3>
-                          <Link to="/cities" className="text-green-600 text-[13px] hover:underline">{t('discover.moreCities')} &gt;&gt;</Link>
+                          <Link to={`/${langPrefix}/cities`} className="text-green-600 text-[13px] hover:underline">{t('discover.moreCities')} &gt;&gt;</Link>
                         </div>
                         <div className="grid grid-cols-2 gap-y-3 gap-x-2 text-[13px]">
-                          <Link to="/cities/beijing" className="hover:text-green-600 truncate">{t('city.beijing')}(Beijing)</Link>
-                          <Link to="/cities/shanghai" className="hover:text-green-600 truncate">{t('city.shanghai')}(Shanghai)</Link>
-                          <Link to="/cities/guangzhou" className="hover:text-green-600 truncate">{t('city.guangzhou')}(Guangzhou)</Link>
-                          <Link to="/cities/shenzhen" className="hover:text-green-600 truncate">{t('city.shenzhen')}(Shenzhen)</Link>
-                          <Link to="/cities/hangzhou" className="hover:text-green-600 truncate">{t('city.hangzhou')}(Hangzhou)</Link>
-                          <Link to="/cities/chongqing" className="hover:text-green-600 truncate">{t('city.chongqing')}(Chongqing)</Link>
-                          <Link to="/cities/chengdu" className="hover:text-green-600 truncate">{t('city.chengdu')}(Chengdu)</Link>
-                          <Link to="/cities/xian" className="hover:text-green-600 truncate">{t('city.xian')}(Xi'an)</Link>
-                          <Link to="/cities/changsha" className="hover:text-green-600 truncate">{t('city.changsha')}(Changsha)</Link>
-                          <Link to="/cities/xiamen" className="hover:text-green-600 truncate">{t('city.xiamen')}(Xiamen)</Link>
+                          <Link to={`/${langPrefix}/cities/beijing`} className="hover:text-green-600 truncate">{t('city.beijing')}(Beijing)</Link>
+                          <Link to={`/${langPrefix}/cities/shanghai`} className="hover:text-green-600 truncate">{t('city.shanghai')}(Shanghai)</Link>
+                          <Link to={`/${langPrefix}/cities/LZ1r5Fsq3bOUHUeKVgIv`} className="hover:text-green-600 truncate">{t('city.guangzhou')}(Guangzhou)</Link>
+                          <Link to={`/${langPrefix}/cities/oNIvYqn2fcHSUN6mpv7G`} className="hover:text-green-600 truncate">{t('city.shenzhen')}(Shenzhen)</Link>
+                          <Link to={`/${langPrefix}/cities/XxxHqxEftFPTAfw09w37`} className="hover:text-green-600 truncate">{t('city.hangzhou')}(Hangzhou)</Link>
+                          <Link to={`/${langPrefix}/cities/eVvE8j6wkETbi3jgn2Kc`} className="hover:text-green-600 truncate">{t('city.chongqing')}(Chongqing)</Link>
+                          <Link to={`/${langPrefix}/cities/lOvgtPfMDTaEi3jIre9D`} className="hover:text-green-600 truncate">{t('city.chengdu')}(Chengdu)</Link>
+                          <Link to={`/${langPrefix}/cities/AM4LKEQcsclFhG1LuSKn`} className="hover:text-green-600 truncate">{t('city.xian')}(Xi'an)</Link>
+                          <Link to={`/${langPrefix}/cities/YF8WzVigZrymgqJJLanF`} className="hover:text-green-600 truncate">{t('city.changsha')}(Changsha)</Link>
+                          <Link to={`/${langPrefix}/cities/KI6GE4ovZK6fmWTqUx5q`} className="hover:text-green-600 truncate">{t('city.xiamen')}(Xiamen)</Link>
                         </div>
                       </div>
                       
                       {/* Right Column: Guides */}
                       <div className="w-1/2 pl-6 space-y-6">
-                        <Link to="/articles" className="flex items-start gap-3 group">
+                        <Link to={`/${langPrefix}/articles`} className="flex items-start gap-3 group">
                           <BookOpen className="w-5 h-5 text-green-600 mt-0.5 flex-shrink-0" />
                           <div>
                             <div className="font-bold text-[14px] text-gray-900 group-hover:text-green-600 transition-colors">{t('discover.guides')}</div>
                             <div className="text-[12px] text-gray-500 mt-1 leading-relaxed">{t('discover.guides.desc')}</div>
                           </div>
                         </Link>
-                        <Link to="/guide" className="flex items-start gap-3 group">
+                        <Link to={`/${langPrefix}/guide`} className="flex items-start gap-3 group">
                           <Compass className="w-5 h-5 text-green-600 mt-0.5 flex-shrink-0" />
                           <div>
                             <div className="font-bold text-[14px] text-gray-900 group-hover:text-green-600 transition-colors">{t('discover.pocket')}</div>
@@ -230,11 +231,11 @@ export default function Navbar() {
                         
                         <div className="grid grid-cols-2 gap-6 p-6">
                             {[
-                                { icon: ScanLine, title: t('tools.menu'), desc: t('tools.menu.desc'), path: '/tools/menu' },
-                                { icon: Shield, title: t('tools.name'), desc: t('tools.name.desc'), path: '/tools/name' },
-                                { icon: Languages, title: t('tools.pinyin'), desc: t('tools.pinyin.desc'), path: '/tools/pinyin' },
-                                { icon: Type, title: t('tools.counter'), desc: t('tools.counter.desc'), path: '/tools/counter' },
-                                { icon: Calculator, title: t('tools.zodiac'), desc: t('tools.zodiac.desc'), path: '/tools/zodiac' }
+                                { icon: ScanLine, title: t('tools.menu'), desc: t('tools.menu.desc'), path: `/${langPrefix}/tools/menu` },
+                                { icon: Shield, title: t('tools.name'), desc: t('tools.name.desc'), path: `/${langPrefix}/tools/name` },
+                                { icon: Languages, title: t('tools.pinyin'), desc: t('tools.pinyin.desc'), path: `/${langPrefix}/tools/pinyin` },
+                                { icon: Type, title: t('tools.counter'), desc: t('tools.counter.desc'), path: `/${langPrefix}/tools/counter` },
+                                { icon: Calculator, title: t('tools.zodiac'), desc: t('tools.zodiac.desc'), path: `/${langPrefix}/tools/zodiac` }
                             ].map((tool, idx) => (
                                 <Link key={idx} to={tool.path} className="flex gap-3 group" onClick={() => {}}>
                                     <tool.icon className="w-6 h-6 text-green-600 flex-shrink-0 mt-0.5" />
