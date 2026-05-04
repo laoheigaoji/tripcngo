@@ -41,7 +41,7 @@ export default function NameGenerator() {
     try {
       const prompt = `You are a professional Chinese name generator. Generate a meaningful Chinese name based on: Name: ${formData.name}, Sex: ${formData.sex}, DOB: ${formData.dob}, Extra Info: ${formData.info}. Return just the Chinese name, nothing else.`;
       const response = await ai.models.generateContent({
-        model: "gemini-1.5-flash",
+        model: "gemini-3-flash-preview",
         contents: prompt
       });
       setGeneratedName(response.text?.trim() || '');

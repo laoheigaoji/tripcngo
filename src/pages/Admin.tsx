@@ -141,7 +141,7 @@ export default function Admin() {
                   heroImage: string
                 }`;
             const res = await ai.models.generateContent({
-                model: 'gemini-2.0-flash',
+                model: 'gemini-3-flash-preview',
                 contents: prompt,
             });
             const data = JSON.parse(cleanJSON(res.text || '{}'));
@@ -453,7 +453,7 @@ export default function Admin() {
 
       if (formData.title) {
         const titleRes = await ai.models.generateContent({
-            model: 'gemini-2.0-flash',
+            model: 'gemini-3-flash-preview',
             contents: `Translate the following Chinese article title to English. Only output the translated text:\n\n${formData.title}`,
         });
         titleEnExp = titleRes.text || '';
@@ -461,7 +461,7 @@ export default function Admin() {
 
       if (formData.subtitle) {
         const subtitleRes = await ai.models.generateContent({
-            model: 'gemini-2.0-flash',
+            model: 'gemini-3-flash-preview',
             contents: `Translate the following Chinese article subtitle to English. Only output the translated text:\n\n${formData.subtitle}`,
         });
         subtitleEnExp = subtitleRes.text || '';
@@ -469,7 +469,7 @@ export default function Admin() {
 
       if (formData.content) {
         const contentRes = await ai.models.generateContent({
-            model: 'gemini-2.0-flash',
+            model: 'gemini-3-flash-preview',
             contents: `Translate the following Chinese markdown content to English. Preserve all markdown formatting, links, and image syntactic structures exactly as they are. Output only the translated markdown:\n\n${formData.content}`,
         });
         contentEnExp = contentRes.text || '';

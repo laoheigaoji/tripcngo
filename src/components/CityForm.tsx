@@ -113,7 +113,7 @@ export default function CityForm({ city, onClose, onSave }: CityFormProps) {
       Respond ONLY with the raw JSON object.`;
       
       const res = await ai.models.generateContent({
-        model: 'gemini-2.0-flash',
+        model: 'gemini-3-flash-preview',
         contents: prompt,
       });
       const responseText = res.text || '{}';
