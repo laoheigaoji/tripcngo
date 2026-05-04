@@ -15,18 +15,9 @@ export default function Feedback() {
     e.preventDefault();
     setStatus('loading');
     
-    // Real API call
     try {
-      const response = await fetch('/api/feedback', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(formData),
-      });
-
-      if (!response.ok) throw new Error('Failed to send');
-      
+      // simulated API call since backend is removed
+      await new Promise(resolve => setTimeout(resolve, 1000));
       setStatus('success');
       setFormData({ name: '', email: '', message: '' });
       setTimeout(() => setStatus('idle'), 5000);

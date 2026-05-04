@@ -1,7 +1,9 @@
 import React, { useState } from 'react';
-import axios from 'axios';
+import { GoogleGenAI } from '@google/genai';
 import { ChevronDown, ChevronUp, BookOpen, Search, Languages } from 'lucide-react';
 import { useLanguage } from '../../context/LanguageContext';
+
+const ai = new GoogleGenAI({ apiKey: import.meta.env.VITE_GEMINI_API_KEY || '' });
 
 const faqs = [
   { q: "tools.name.faq1.q", a: "tools.name.faq1.a" },
@@ -35,9 +37,14 @@ export default function NameGenerator() {
     e.preventDefault();
     setLoading(true);
     try {
-      const res = await axios.post('/api/generate-name', formData);
-      setGeneratedName(res.data.name);
+      const prompt = `You are a professional Chinese name generator. Generate a meaningful Chinese name based on: Name: ${formData.name}, Sex: ${formData.sex}, DOB: ${formData.dob}, Extra Info: ${formData.info}. Return just the Chinese name, nothing else.`;
+      const response = await ai.models.generateContent({
+        model: "gemini-2.5-flash",
+        contents: prompt
+      });
+      setGeneratedName(response.text?.trim() || '');
     } catch (error) {
+      console.error(error);
       alert(language === 'zh' ? '生成失败' : 'Failed to generate');
     } finally {
       setLoading(false);
