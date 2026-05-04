@@ -13,7 +13,11 @@ import { CityData } from '../types/city';
 import { citiesData } from '../data/citiesData';
 import CityForm from '../components/CityForm';
 
-const ai = new GoogleGenAI({ apiKey: 'AIzaSyCPa14dQA03__FwIz0A_ohmnY4DooWRd40' });
+const geminiKey = process.env.GEMINI_API_KEY;
+if (!geminiKey) {
+  console.error("GEMINI_API_KEY is not defined in environment variables. Please check your AI Studio settings.");
+}
+const ai = new GoogleGenAI({ apiKey: geminiKey || "" });
 
 const categoryMap: Record<string, string> = {
   'National Policy': '国家政策',

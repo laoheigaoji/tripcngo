@@ -4,7 +4,8 @@ import { GoogleGenAI } from '@google/genai';
 import { ChevronDown, ChevronUp, BookOpen, Search, Languages } from 'lucide-react';
 import { useLanguage } from '../../context/LanguageContext';
 
-const ai = new GoogleGenAI({ apiKey: import.meta.env.VITE_GEMINI_API_KEY || '' });
+const geminiKey = process.env.GEMINI_API_KEY || import.meta.env.VITE_GEMINI_API_KEY || "";
+const ai = new GoogleGenAI({ apiKey: geminiKey });
 
 const faqs = [
   { q: "tools.name.faq1.q", a: "tools.name.faq1.a" },
@@ -40,7 +41,7 @@ export default function NameGenerator() {
     try {
       const prompt = `You are a professional Chinese name generator. Generate a meaningful Chinese name based on: Name: ${formData.name}, Sex: ${formData.sex}, DOB: ${formData.dob}, Extra Info: ${formData.info}. Return just the Chinese name, nothing else.`;
       const response = await ai.models.generateContent({
-        model: "gemini-2.5-flash",
+        model: "gemini-1.5-flash",
         contents: prompt
       });
       setGeneratedName(response.text?.trim() || '');

@@ -67,6 +67,78 @@ const FAQS = [
     enQ: "How to choose between visa-free and transit visa-free?",
     a: "如属新加坡等互免国公民，建议直接使用30天免签（更灵活）；若仅过境则选240小时免签（无需签证费）。",
     enA: "If you are a citizen of visa-free countries like Singapore, it is recommended to use the 30-day visa-free entry (more flexible); if only transiting, choose the 240-hour transit visa-free (no visa fee required)."
+  },
+  { 
+    q: "超期停留会怎样？", 
+    enQ: "What if I overstay?",
+    a: "每日处罚款500元，最高可处10日拘留并限期离境，且5年内不得申请过境免签。",
+    enA: "A fine of 500 RMB per day will be imposed, with a maximum of 10 days of detention and a deadline for departure. You will also be barred from applying for transit visa-free entry for 5 years."
+  },
+  { 
+    q: "如何查询实时政策？", 
+    enQ: "How to check real-time policies?",
+    a: "微信搜索\"国家移民管理局\"小程序，或拨打12367热线（支持英/日/韩等8语种服务）。",
+    enA: "Search for the 'National Immigration Administration' mini-program on WeChat, or call the 12367 hotline (supporting 8 languages including English, Japanese, and Korean)."
+  },
+  { 
+    q: "哪些行为会被视为非法就业？", 
+    enQ: "What is considered illegal employment?",
+    a: "包括商业拍摄、网络直播获利、临时授课等，即使未签订劳动合同也可能被认定违法。",
+    enA: "This includes commercial filming, profiting from live streaming, and temporary teaching. These can be considered illegal even without a formal labor contract."
+  },
+  { 
+    q: "北京首都机场办理流程有何特殊安排？", 
+    enQ: "Special process at Beijing Capital Airport?",
+    a: "T3航站楼设立\"过境免签快速通道\"，配备英/日/韩三语服务专员，办理时间缩短至15分钟内。需注意每日22:00-6:00时段需前往24小时应急窗口办理。",
+    enA: "Terminal 3 has a 'Transit Visa-Free Fast Track' with trilingual staff (English/Japanese/Korean), reducing processing time to within 15 minutes. Note that from 22:00 to 06:00 daily, you must go to the 24-hour emergency window."
+  },
+  { 
+    q: "上海浦东机场转机如何衔接？", 
+    enQ: "How to transfer at Shanghai Pudong Airport?",
+    a: "提供\"空铁联运\"服务，持高铁票可在卫星厅直接办理过境手续。例如：巴黎→上海→杭州东站的高铁联程票，可在隔离区内完成所有手续。",
+    enA: "An 'Air-Rail Link' service is provided. With a high-speed rail ticket, you can complete transit procedures directly at the satellite terminal. For example, a through ticket from Paris to Shanghai to Hangzhou East can be processed within the sterile area."
+  },
+  { 
+    q: "摄影爱好者有哪些限制？", 
+    enQ: "Restrictions for photography enthusiasts?",
+    a: "商业拍摄需申请工作签证，但个人旅游拍摄允许。禁飞区（如军事设施周边500米）严禁无人机航拍，违者最高罚款2万元。",
+    enA: "Commercial filming requires a work visa, but personal travel photography is allowed. Drones are strictly prohibited in no-fly zones (e.g., within 500m of military facilities), with fines up to 20,000 RMB."
+  },
+  { 
+    q: "联程票改签如何处理？", 
+    enQ: "How to handle ticket changes?",
+    a: "允许免费改签1次，需在停留期第7天前完成。例如原定D10香港航班改签至D11，需在D7前持新机票到入境口岸边检站备案。",
+    enA: "One free ticket change is allowed and must be completed before the 7th day of your stay. For example, if you change a Day 10 flight to Day 11, you must register the new ticket with the border inspection at your port of entry by Day 7."
+  },
+  { 
+    q: "跨境高铁票是否认可？", 
+    enQ: "Are cross-border rail tickets recognized?",
+    a: "中老铁路（昆明→万象）、中越铁路（南宁→河内）等国际班次车票均被认可，需提供纸质票与电子客票号双验证。",
+    enA: "International rail tickets like the China-Laos Railway (Kunming-Vientiane) or China-Vietnam Railway (Nanning-Hanoi) are recognized, requiring both a paper ticket and an e-ticket number for verification."
+  },
+  { 
+    q: "如何通过微信办理预审？", 
+    enQ: "How to apply for pre-examination via WeChat?",
+    a: "在\"移民局\"小程序提交护照首页+电子机票，AI系统10分钟生成《过境预审码》，可减少口岸办理时间50%。",
+    enA: "Submit your passport bio-page and e-ticket in the 'Immigration' mini-program. An AI system generates a 'Transit Pre-examination Code' in 10 minutes, which can reduce port processing time by 50%."
+  },
+  { 
+    q: "哪些行为可能引发误会？", 
+    enQ: "Behaviors that might cause misunderstandings?",
+    a: "避免在政府机关门前比\"V\"手势拍照、未经许可拍摄少数民族服饰者。宗教场所需注意着装要求（如寺庙不穿短裤入内）。",
+    enA: "Avoid taking photos with 'V' signs in front of government offices or filming people in ethnic costumes without permission. Follow dress codes at religious sites (e.g., no shorts in temples)."
+  },
+  { 
+    q: "突发疾病如何就医？", 
+    enQ: "How to seek medical care for sudden illness?",
+    a: "持护照可在二级以上医院挂急诊，推荐北京协和/上海瑞金等53家涉外医院。保留医疗票据可申请停留延期。",
+    enA: "You can go to the emergency department of any Tier 2 or higher hospital with your passport. 53 foreign-related hospitals like Peking Union or Shanghai Ruijin are recommended. Keep medical receipts to apply for a stay extension."
+  },
+  { 
+    q: "突发疾病如何延期？", 
+    enQ: "How to extend stay due to illness?",
+    a: "需提供医院诊断证明，在停留期满前3个工作日向所在地市级公安局出入境管理处申请，最长可延期30天。",
+    enA: "You must provide a hospital diagnosis certificate and apply at the local municipal Public Security Bureau's exit-entry administration office 3 working days before your stay expires. Extensions up to 30 days are possible."
   }
 ];
 

@@ -5,7 +5,8 @@ import { GoogleGenAI } from '@google/genai';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { storage } from '../lib/firebase';
 
-const ai = new GoogleGenAI({ apiKey: 'AIzaSyCPa14dQA03__FwIz0A_ohmnY4DooWRd40' });
+const geminiKey = process.env.GEMINI_API_KEY;
+const ai = new GoogleGenAI({ apiKey: geminiKey || "" });
 
 interface CityFormProps {
   city?: CityData | null;
@@ -89,6 +90,7 @@ export default function CityForm({ city, onClose, onSave }: CityFormProps) {
     setIsGenerating(true);
     try {
       const prompt = `Generate detailed, comprehensive city information for the city: '${formData.name}'. 
+      IMPORTANT: The intro 'paragraphs' and 'bestTravelTime.paragraphs' should be VERY detailed, aiming for around 550 characters/words per section to provide a rich guide.
       Return a JSON object that matches the following TypeScript structure exactly. 
       Ensure ALL text fields (descriptions, titles, paragraphs, etc.) are provided in BOTH Chinese and English.
       IMPORTANT: For 'heroImage', 'attractions.imageUrl', and 'food.imageUrl', provide high-quality Unsplash image URLs (e.g. https://images.unsplash.com/photo-...).
@@ -97,7 +99,7 @@ export default function CityForm({ city, onClose, onSave }: CityFormProps) {
         name: string,
         enName: string,
         heroImage: string,
-        tags: [{text: string, enText: string, color: \"gray\"}],
+        tags: [{text: string, enText: string, color: "gray"}],
         paragraphs: string[],
         enParagraphs: string[],
         stats: {wantToVisit: number, recommended: number},
@@ -105,7 +107,7 @@ export default function CityForm({ city, onClose, onSave }: CityFormProps) {
         bestTravelTime: {strongText: string, enStrongText: string, paragraphs: string[], enParagraphs: string[]},
         history: [{year: string, enYear: string, title: string, enTitle: string, desc: string, enDesc: string}],
         attractions: [{name: string, enName: string, desc: string, enDesc: string, price: string, enPrice: string, season: string, enSeason: string, time: string, enTime: string, imageUrl: string}],
-        transportation: [{iconName: \"Plane\", title: string, enTitle: string, desc: string, enDesc: string, price: string, enPrice: string}],
+        transportation: [{iconName: "Plane", title: string, enTitle: string, desc: string, enDesc: string, price: string, enPrice: string}],
         food: [{name: string, enName: string, pinyin: string, price: string, desc: string, enDesc: string, ingredients: string, enIngredients: string, imageIdx: number, imageUrl: string}]
       }
       Respond ONLY with the raw JSON object.`;
@@ -114,8 +116,7 @@ export default function CityForm({ city, onClose, onSave }: CityFormProps) {
         model: 'gemini-2.0-flash',
         contents: prompt,
       });
-      
-      let responseText = res.text || '{}';
+      const responseText = res.text || '{}';
       
       // Clean up response: remove markdown formatting and try to extract JSON object
       const cleanJSON = (text: string) => {
@@ -195,29 +196,50 @@ export default function CityForm({ city, onClose, onSave }: CityFormProps) {
       case 'attractions':
         return (
            <div className="space-y-4">
-             <h3 className="font-bold">景点 ({formData.attractions.length})</h3>
+             <div className="flex justify-between items-center">
+               <h3 className="font-bold">景点 ({formData.attractions.length})</h3>
+               <button 
+                 type="button"
+                 onClick={() => {
+                   const newAttr = { name: '', enName: '', desc: '', enDesc: '', price: '免费', enPrice: 'Free', season: '全年', enSeason: 'All Year', time: '1-2小时', enTime: '1-2 Hours', imageUrl: '' };
+                   updateFormData('attractions', [...formData.attractions, newAttr]);
+                 }}
+                 className="text-sm bg-gray-100 px-3 py-1 rounded-lg hover:bg-gray-200 transition-colors"
+               >
+                 + 添加景点
+               </button>
+             </div>
              {formData.attractions.map((attr, idx) => (
-                <div key={idx} className="p-4 border rounded space-y-2">
-                   <input value={attr.name} onChange={e => {
-                     const newAttractions = [...formData.attractions];
-                     newAttractions[idx].name = e.target.value;
-                     updateFormData('attractions', newAttractions);
-                   }} placeholder="景点名称 (CN)" className="w-full p-2 border rounded" />
-                   <input value={attr.enName} onChange={e => {
-                     const newAttractions = [...formData.attractions];
-                     newAttractions[idx].enName = e.target.value;
-                     updateFormData('attractions', newAttractions);
-                   }} placeholder="景点名称 (EN)" className="w-full p-2 border rounded" />
+                <div key={idx} className="p-4 border rounded space-y-2 relative group-item">
+                   <button 
+                     type="button"
+                     onClick={() => updateFormData('attractions', formData.attractions.filter((_, i) => i !== idx))}
+                     className="absolute top-2 right-2 text-gray-400 hover:text-red-500"
+                   >
+                     <X className="w-4 h-4" />
+                   </button>
+                   <div className="grid grid-cols-2 gap-2">
+                     <input value={attr.name} onChange={e => {
+                       const newAttractions = [...formData.attractions];
+                       newAttractions[idx].name = e.target.value;
+                       updateFormData('attractions', newAttractions);
+                     }} placeholder="景点名称 (CN)" className="w-full p-2 border rounded" />
+                     <input value={attr.enName} onChange={e => {
+                       const newAttractions = [...formData.attractions];
+                       newAttractions[idx].enName = e.target.value;
+                       updateFormData('attractions', newAttractions);
+                     }} placeholder="景点名称 (EN)" className="w-full p-2 border rounded" />
+                   </div>
                    <textarea value={attr.desc} onChange={e => {
                      const newAttractions = [...formData.attractions];
                      newAttractions[idx].desc = e.target.value;
                      updateFormData('attractions', newAttractions);
-                   }} placeholder="景点描述 (CN)" className="w-full p-2 border rounded" />
+                   }} placeholder="景点描述 (CN)" className="w-full p-2 border rounded h-20" />
                    <textarea value={attr.enDesc} onChange={e => {
                      const newAttractions = [...formData.attractions];
                      newAttractions[idx].enDesc = e.target.value;
                      updateFormData('attractions', newAttractions);
-                   }} placeholder="景点描述 (EN)" className="w-full p-2 border rounded" />
+                   }} placeholder="景点描述 (EN)" className="w-full p-2 border rounded h-20" />
                    <div className="flex gap-2">
                        <input value={attr.imageUrl || ''} onChange={e => {
                          const newAttractions = [...formData.attractions];
@@ -246,24 +268,62 @@ export default function CityForm({ city, onClose, onSave }: CityFormProps) {
       case 'history':
          return (
            <div className="space-y-4">
-             <h3 className="font-bold">历史 ({formData.history.length})</h3>
+             <div className="flex justify-between items-center">
+               <h3 className="font-bold">历史 ({formData.history.length})</h3>
+               <button 
+                 type="button"
+                 onClick={() => {
+                   const newHistory = { year: '', enYear: '', title: '', enTitle: '', desc: '', enDesc: '' };
+                   updateFormData('history', [...formData.history, newHistory]);
+                 }}
+                 className="text-sm bg-gray-100 px-3 py-1 rounded-lg hover:bg-gray-200 transition-colors"
+               >
+                 + 添加历史节点
+               </button>
+             </div>
              {formData.history.map((h, idx) => (
-                <div key={idx} className="p-4 border rounded space-y-2">
-                   <input value={h.year} onChange={e => {
-                     const newHistory = [...formData.history];
-                     newHistory[idx].year = e.target.value;
-                     updateFormData('history', newHistory);
-                   }} placeholder="年份" className="w-full p-2 border rounded" />
-                   <input value={h.title} onChange={e => {
-                     const newHistory = [...formData.history];
-                     newHistory[idx].title = e.target.value;
-                     updateFormData('history', newHistory);
-                   }} placeholder="标题" className="w-full p-2 border rounded" />
+                <div key={idx} className="p-4 border rounded space-y-2 relative">
+                   <button 
+                     type="button"
+                     onClick={() => updateFormData('history', formData.history.filter((_, i) => i !== idx))}
+                     className="absolute top-2 right-2 text-gray-400 hover:text-red-500"
+                   >
+                     <X className="w-4 h-4" />
+                   </button>
+                   <div className="grid grid-cols-2 gap-2">
+                     <input value={h.year} onChange={e => {
+                       const newHistory = [...formData.history];
+                       newHistory[idx].year = e.target.value;
+                       updateFormData('history', newHistory);
+                     }} placeholder="年份 (如 1949)" className="w-full p-2 border rounded" />
+                     <input value={h.enYear} onChange={e => {
+                       const newHistory = [...formData.history];
+                       newHistory[idx].enYear = e.target.value;
+                       updateFormData('history', newHistory);
+                     }} placeholder="Year (e.g. 1949)" className="w-full p-2 border rounded" />
+                   </div>
+                   <div className="grid grid-cols-2 gap-2">
+                     <input value={h.title} onChange={e => {
+                       const newHistory = [...formData.history];
+                       newHistory[idx].title = e.target.value;
+                       updateFormData('history', newHistory);
+                     }} placeholder="标题 (CN)" className="w-full p-2 border rounded" />
+                     <input value={h.enTitle} onChange={e => {
+                       const newHistory = [...formData.history];
+                       newHistory[idx].enTitle = e.target.value;
+                       updateFormData('history', newHistory);
+                     }} placeholder="Title (EN)" className="w-full p-2 border rounded" />
+                   </div>
                    <textarea value={h.desc} onChange={e => {
                      const newHistory = [...formData.history];
                      newHistory[idx].desc = e.target.value;
                      updateFormData('history', newHistory);
-                   }} placeholder="描述" className="w-full p-2 border rounded" />
+                   }} placeholder="历史描述 (CN)" className="w-full p-2 border rounded h-20" />
+                   <textarea value={h.enDesc} onChange={e => {
+                     const newHistory = [...formData.history];
+                     newHistory[idx].enDesc = e.target.value;
+                     updateFormData('history', newHistory);
+                   }} placeholder="History Description (EN)" className="w-full p-2 border rounded h-20" />
                 </div>
              ))}
            </div>
@@ -271,19 +331,55 @@ export default function CityForm({ city, onClose, onSave }: CityFormProps) {
       case 'food':
          return (
             <div className="space-y-4">
-              <h3 className="font-bold">美食 ({formData.food.length})</h3>
+              <div className="flex justify-between items-center">
+                <h3 className="font-bold">美食 ({formData.food.length})</h3>
+                <button 
+                  type="button"
+                  onClick={() => {
+                    const newFood = { name: '', enName: '', pinyin: '', price: '', desc: '', enDesc: '', ingredients: '', enIngredients: '', imageIdx: 0, imageUrl: '' };
+                    updateFormData('food', [...formData.food, newFood]);
+                  }}
+                  className="text-sm bg-gray-100 px-3 py-1 rounded-lg hover:bg-gray-200 transition-colors"
+                >
+                  + 添加美食
+                </button>
+              </div>
               {formData.food.map((f, idx) => (
-                 <div key={idx} className="p-4 border rounded space-y-2">
-                    <input value={f.name} onChange={e => {
-                      const newFood = [...formData.food];
-                      newFood[idx].name = e.target.value;
-                      updateFormData('food', newFood);
-                    }} placeholder="美食名称" className="w-full p-2 border rounded" />
+                 <div key={idx} className="p-4 border rounded space-y-2 relative">
+                    <button 
+                      type="button"
+                      onClick={() => updateFormData('food', formData.food.filter((_, i) => i !== idx))}
+                      className="absolute top-2 right-2 text-gray-400 hover:text-red-500"
+                    >
+                      <X className="w-4 h-4" />
+                    </button>
+                    <div className="grid grid-cols-3 gap-2">
+                      <input value={f.name} onChange={e => {
+                        const newFood = [...formData.food];
+                        newFood[idx].name = e.target.value;
+                        updateFormData('food', newFood);
+                      }} placeholder="美食名称" className="w-full p-2 border rounded" />
+                      <input value={f.enName} onChange={e => {
+                        const newFood = [...formData.food];
+                        newFood[idx].enName = e.target.value;
+                        updateFormData('food', newFood);
+                      }} placeholder="English Name" className="w-full p-2 border rounded" />
+                      <input value={f.pinyin} onChange={e => {
+                        const newFood = [...formData.food];
+                        newFood[idx].pinyin = e.target.value;
+                        updateFormData('food', newFood);
+                      }} placeholder="Pinyin" className="w-full p-2 border rounded" />
+                    </div>
                     <textarea value={f.desc} onChange={e => {
                       const newFood = [...formData.food];
                       newFood[idx].desc = e.target.value;
                       updateFormData('food', newFood);
-                    }} placeholder="详细描述" className="w-full p-2 border rounded" />
+                    }} placeholder="美食介绍 (CN)" className="w-full p-2 border rounded h-20" />
+                    <textarea value={f.enDesc} onChange={e => {
+                      const newFood = [...formData.food];
+                      newFood[idx].enDesc = e.target.value;
+                      updateFormData('food', newFood);
+                    }} placeholder="Description (EN)" className="w-full p-2 border rounded h-20" />
                     <div className="flex gap-2">
                       <input value={f.imageUrl || ''} onChange={e => {
                         const newFood = [...formData.food];
