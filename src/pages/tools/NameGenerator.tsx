@@ -1,32 +1,8 @@
 /// <reference types="vite/client" />
 import React, { useState } from 'react';
-import { GoogleGenAI } from '@google/genai';
+import { askDeepSeek } from '../../lib/deepseek';
 import { ChevronDown, ChevronUp, BookOpen, Search, Languages } from 'lucide-react';
 import { useLanguage } from '../../context/LanguageContext';
-
-const geminiKey = process.env.GEMINI_API_KEY || import.meta.env.VITE_GEMINI_API_KEY || "";
-const ai = new GoogleGenAI({ apiKey: geminiKey });
-
-const faqs = [
-  { q: "tools.name.faq1.q", a: "tools.name.faq1.a" },
-  { q: "tools.name.faq2.q", a: "tools.name.faq2.a" },
-  { q: "tools.name.faq3.q", a: "tools.name.faq3.a" },
-  { q: "tools.name.faq4.q", a: "tools.name.faq4.a" },
-  { q: "tools.name.faq5.q", a: "tools.name.faq5.a" }
-];
-
-// Add manual translations for specific items that might be missing or keyed incorrectly
-const getTranslation = (t: (key: string) => string, key: string, language: string) => {
-  const translations: Record<string, Record<string, string>> = {
-    zh: {
-      'visa.menu.download': '材料下载'
-    },
-    en: {
-      'visa.menu.download': 'Downloads'
-    }
-  };
-  return translations[language][key] || t(key);
-};
 
 export default function NameGenerator() {
   const { t, language } = useLanguage();
@@ -40,11 +16,8 @@ export default function NameGenerator() {
     setLoading(true);
     try {
       const prompt = `You are a professional Chinese name generator. Generate a meaningful Chinese name based on: Name: ${formData.name}, Sex: ${formData.sex}, DOB: ${formData.dob}, Extra Info: ${formData.info}. Return just the Chinese name, nothing else.`;
-      const response = await ai.models.generateContent({
-        model: "gemini-3-flash-preview",
-        contents: prompt
-      });
-      setGeneratedName(response.text?.trim() || '');
+      const response = await askDeepSeek(prompt);
+      setGeneratedName(response?.trim() || '');
     } catch (error) {
       console.error(error);
       alert(language === 'zh' ? '生成失败' : 'Failed to generate');

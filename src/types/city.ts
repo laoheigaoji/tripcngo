@@ -3,6 +3,7 @@ export interface CityData {
   name: string;
   enName: string;
   heroImage: string;
+  listCover?: string;
   tags: { text: string; enText?: string; color: string }[];
   paragraphs: string[];
   enParagraphs?: string[];

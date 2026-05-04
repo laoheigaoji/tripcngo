@@ -73,11 +73,7 @@ export default function Cities() {
           {currentCities.map((city) => (
              <Link to={`/cities/${city.id}`} key={city.id} className="relative group rounded-md overflow-hidden bg-white border border-gray-100 shadow-sm transition-all duration-300 block">
                 <div className="relative h-[240px] md:h-[260px] overflow-hidden cursor-pointer">
-                  {/* Text Overlay */}
-                  <div className="absolute inset-0 flex flex-col items-center justify-center z-10 p-6 pointer-events-none">
-                    <span className="text-white text-5xl md:text-6xl font-[STXingkai,cursive] tracking-widest drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)] opacity-90 mix-blend-overlay">{language === 'zh' ? city.name : city.enName || city.id.charAt(0).toUpperCase() + city.id.slice(1)}</span>
-                  </div>
-                  <img src={city.heroImage || city.img} alt={city.name} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" />
+                  <img src={city.listCover || city.heroImage || city.img} alt={city.name} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" />
                   <div className="absolute inset-0 bg-black/10 group-hover:bg-black/0 transition-colors duration-500" />
                 </div>
                 <div className="p-4 flex items-center justify-between bg-white border-t border-gray-100">
@@ -85,8 +81,8 @@ export default function Cities() {
                     <span className="text-[15px] font-bold text-gray-900">{language === 'zh' ? city.name : city.enName || city.id.charAt(0).toUpperCase() + city.id.slice(1)}</span>
                   </div>
                   <div className="flex gap-2 text-gray-500">
-                    <span className="flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium bg-gray-50 rounded-full border border-gray-100 whitespace-nowrap"><Heart className="w-3.5 h-3.5 text-red-500 fill-red-500" /> {(city.stats && city.stats.wantToVisit) || city.likes || 0} {t('city.stats.wantToVisit')}</span>
-                    <span className="flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium bg-gray-50 rounded-full border border-gray-100 whitespace-nowrap"><ThumbsUp className="w-3.5 h-3.5 text-green-500 fill-green-500" /> {(city.stats && city.stats.recommended) || city.helpful || 0} {t('city.stats.recommended')}</span>
+                    <span className="flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium bg-gray-50 rounded-full border border-gray-100 whitespace-nowrap"><Heart className="w-3.5 h-3.5 text-red-500 fill-red-500" /> {(city.stats && city.stats.wantToVisit) || 0} {t('city.stats.wantToVisit')}</span>
+                    <span className="flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium bg-gray-50 rounded-full border border-gray-100 whitespace-nowrap"><ThumbsUp className="w-3.5 h-3.5 text-green-500 fill-green-500" /> {(city.stats && city.stats.recommended) || 0} {t('city.stats.recommended')}</span>
                   </div>
                 </div>
               </Link>

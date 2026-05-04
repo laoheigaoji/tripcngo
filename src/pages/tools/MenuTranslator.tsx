@@ -3,10 +3,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import { Upload, Camera, ImageIcon, Languages, Wallet, MessageSquare, ChevronDown, Check, Star, ScanLine, X, Loader2 } from 'lucide-react';
 import { useLanguage } from '../../context/LanguageContext';
 import { GoogleGenAI } from '@google/genai';
-
-// DeepSeek API Config
-const DEEPSEEK_KEY = "sk-59621d871ea2481ebb5cef488b8137be";
-const DEEPSEEK_URL = "https://api.deepseek.com/chat/completions";
+import { askDeepSeek } from '../../lib/deepseek';
 
 const MenuTranslator = () => {
     const { language, t } = useLanguage();
@@ -81,19 +78,13 @@ const MenuTranslator = () => {
                 const cleanedText = responseText.replace(/```json/g, '').replace(/```/g, '').trim();
                 let menuItems = JSON.parse(cleanedText);
 
-                // Step 2: AI Refinement
-                const refinementPrompt = `As a top Chinese culinary critic, refine these menu items for a world-class food app.
+                // Step 2: AI Refinement with DeepSeek
+                const refinementPrompt = `As a top Chinese culinary critic, refine these menu items for a world-class food app. Improve descriptions and ensure consistency.
                 Input JSON: ${JSON.stringify(menuItems)}
                 Return ONLY the refined JSON array with the SAME keys.`;
 
-                const refinementResult = await ai.models.generateContent({
-                    model: "gemini-3-flash-preview",
-                    contents: refinementPrompt
-                });
-
-                const refinedText = refinementResult.text || responseText;
-                const cleanedRefined = refinedText.replace(/```json/g, '').replace(/```/g, '').trim();
-                menuItems = JSON.parse(cleanedRefined);
+                const refinedText = await askDeepSeek(refinementPrompt, true);
+                menuItems = JSON.parse(refinedText);
 
                 // Add random relevant food images and handle price conversions
                 const EXCHANGE_RATE = 0.14; // 1 CNY ≈ 0.14 USD

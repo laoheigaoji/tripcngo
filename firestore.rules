@@ -10,14 +10,18 @@ service cloud.firestore {
 
     // Primitive Helpers
     function isValidId(id) { 
-      return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$'); 
+      return id is string && id.size() > 0 && id.size() <= 256; 
     }
     function incoming() { return request.resource.data; }
     function existing() { return resource.data; }
     function isSignedIn() { return request.auth != null; }
     
     function isAdmin() { 
-      return isSignedIn(); 
+      // Check if user is logged in AND has the specific admin email
+      return isSignedIn() && 
+             "email" in request.auth.token && 
+             (request.auth.token.email.lower() == "lianwo88@gmail.com" || 
+              request.auth.token.email.lower() == "1546912750@qq.com");
     }
 
     // Validation for Cities
@@ -33,7 +37,12 @@ service cloud.firestore {
 
     match /cities/{cityId} {
       allow read: if true;
-      allow create, update, delete: if (isAdmin() || isCurrentUserAdmin()) && isValidId(cityId);
+      allow create: if isAdmin() && isValidId(cityId) && isValidCity(incoming());
+      allow update: if isValidId(cityId) && (
+        (isAdmin() && isValidCity(incoming())) ||
+        (isSignedIn() && incoming().diff(existing()).affectedKeys().hasOnly(['stats']))
+      );
+      allow delete: if isAdmin() && isValidId(cityId);
     }
 
     // Validation for Articles

@@ -8,16 +8,10 @@ import { auth, db, storage } from '../lib/firebase';
 import { signInWithEmailAndPassword, signInWithPopup, GoogleAuthProvider, signOut, onAuthStateChanged, User } from 'firebase/auth';
 import { collection, getDocs, addDoc, updateDoc, deleteDoc, doc, serverTimestamp, query, orderBy, setDoc } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
-import { GoogleGenAI } from '@google/genai';
+import { generateCityData, askDeepSeek } from '../lib/deepseek';
 import { CityData } from '../types/city';
 import { citiesData } from '../data/citiesData';
 import CityForm from '../components/CityForm';
-
-const geminiKey = process.env.GEMINI_API_KEY;
-if (!geminiKey) {
-  console.error("GEMINI_API_KEY is not defined in environment variables. Please check your AI Studio settings.");
-}
-const ai = new GoogleGenAI({ apiKey: geminiKey || "" });
 
 const categoryMap: Record<string, string> = {
   'National Policy': '国家政策',
@@ -126,11 +120,25 @@ export default function Admin() {
         try {
             const prompt = `You are a world-class travel curator. Generates a deep, high-value city guide for '${cityName}' in China.
                 Output requirements:
-                - Comprehensive introduction (paragraphs & enParagraphs), minimum 4 paragraphs each.
-                - 6-8 top-tier attractions with detailed, inspiring descriptions.
-                - 6-8 local culinary specialties with mouth-watering details.
-                - Dual-language (CN/EN) for every text field.
-                - Use iconic Unsplash photos.
+                - Comprehensive introduction (paragraphs & enParagraphs), MUST be exactly 4 distinct paragraphs:
+                    1. Geographical location and climate (approx 100 words).
+                    2. Historical significance and unique city charm (approx 100 words).
+                    3. Cultural atmosphere, food specialties, and local lifestyle (approx 100 words).
+                    4. Modern development, international standing, and future vision (approx 100 words).
+                - Best Travel Time (bestTravelTime.paragraphs & enParagraphs), MUST be exactly 3 distinct paragraphs:
+                    1. Detailed description of the best months and why they are recommended.
+                    2. Comprehensive guide for visiting in Spring (specific weather, recommended parks/scenes).
+                    3. Comprehensive guide for visiting in Autumn (weather conditions, key activities/festivals).
+                - Comprehensiveness Requirements:
+                    - Attractions: Provide 10-12 major attractions, covering historical, cultural, and modern sites.
+                    - Food: Provide 10-12 local specialties, including main dishes, street foods, and traditional desserts.
+                    - Transportation: Provide a highly detailed guide for Plane, Train, and Bus/Local Metro.
+                    - History: Provide 5-6 key historical milestones.
+                - Every field must have its corresponding 'en' field filled.
+                - CRITICAL: Primary fields (without 'en' prefix, e.g., 'paragraphs') MUST contain ONLY Chinese content.
+                - 'en' prefixed fields (e.g., 'enParagraphs') MUST contain ONLY English content.
+                - DO NOT mix both languages in a single field.
+                - DO NOT provide any image URLs. Leave heroImage, listCover, and all imageUrl fields as empty strings.
                 - Realistic tourism statistics.
 
                 Format: {
@@ -143,33 +151,14 @@ export default function Admin() {
                   stats: {wantToVisit: number, recommended: number},
                   bestTravelTime: {strongText: string, enStrongText: string, paragraphs: string[], enParagraphs: string[]},
                   history: [{year: string, enYear: string, title: string, enTitle: string, desc: string, enDesc: string}],
-                  attractions: [{name: string, enName: string, desc: string, enDesc: string, price: string, enPrice: string, season: string, enSeason: string, time: string, enTime: string, imageUrl: string}],
+                  attractions: [{name: string, enName: string, desc: string, enDesc: string, price: string, enPrice: string, season: string, enSeason: string, time: string, enTime: string}],
                   transportation: [{iconName: "Plane"|"Train"|"Bus", title: string, enTitle: string, desc: string, enDesc: string, price: string, enPrice: string}],
-                  food: [{name: string, enName: string, pinyin: string, price: string, desc: string, enDesc: string, ingredients: string, enIngredients: string, imageUrl: string}],
-                  heroImage: string
+                  food: [{name: string, enName: string, pinyin: string, price: string, desc: string, enDesc: string, ingredients: string, enIngredients: string}]
                 }`;
             
-            const res = await ai.models.generateContent({
-                model: 'gemini-2.0-flash',
-                contents: prompt,
-            });
-            const data = JSON.parse(cleanJSON(res.text || '{}'));
+            const responseText = await generateCityData(prompt);
+            const data = JSON.parse(cleanJSON(responseText || '{}'));
 
-            setCityBatchStatus(`正在转存AI生成图片: ${cityName} (${i+1}/${citiesToGen.length})`);
-
-            // Proxy logic
-            if (data.heroImage) data.heroImage = await proxyImageToStorage(data.heroImage, `city_covers/${Date.now()}-${cityName}-hero.jpg`);
-            if (data.attractions) {
-                for (const a of data.attractions) {
-                    if (a.imageUrl) a.imageUrl = await proxyImageToStorage(a.imageUrl, `attractions/${Date.now()}-${cityName}-${a.name}.jpg`);
-                }
-            }
-            if (data.food) {
-                for (const f of data.food) {
-                    if (f.imageUrl) f.imageUrl = await proxyImageToStorage(f.imageUrl, `food/${Date.now()}-${cityName}-${f.name}.jpg`);
-                }
-            }
-            
             const newDocRef = doc(collection(db, 'cities'));
             await setDoc(newDocRef, { ...data, id: newDocRef.id, createdAt: serverTimestamp() });
         } catch (err) {
@@ -459,27 +448,15 @@ export default function Admin() {
       let contentEnExp = '';
 
       if (formData.title) {
-        const titleRes = await ai.models.generateContent({
-            model: 'gemini-3-flash-preview',
-            contents: `Translate the following Chinese article title to English. Only output the translated text:\n\n${formData.title}`,
-        });
-        titleEnExp = titleRes.text || '';
+        titleEnExp = await askDeepSeek(`Translate the following Chinese article title to English. Only output the translated text:\n\n${formData.title}`);
       }
 
       if (formData.subtitle) {
-        const subtitleRes = await ai.models.generateContent({
-            model: 'gemini-3-flash-preview',
-            contents: `Translate the following Chinese article subtitle to English. Only output the translated text:\n\n${formData.subtitle}`,
-        });
-        subtitleEnExp = subtitleRes.text || '';
+        subtitleEnExp = await askDeepSeek(`Translate the following Chinese article subtitle to English. Only output the translated text:\n\n${formData.subtitle}`);
       }
 
       if (formData.content) {
-        const contentRes = await ai.models.generateContent({
-            model: 'gemini-3-flash-preview',
-            contents: `Translate the following Chinese markdown content to English. Preserve all markdown formatting, links, and image syntactic structures exactly as they are. Output only the translated markdown:\n\n${formData.content}`,
-        });
-        contentEnExp = contentRes.text || '';
+        contentEnExp = await askDeepSeek(`Translate the following Chinese markdown content to English. Preserve all markdown formatting, links, and image syntactic structures exactly as they are. Output only the translated markdown:\n\n${formData.content}`);
       }
 
       setFormData(prev => ({
@@ -599,8 +576,9 @@ export default function Admin() {
       setEditingId(null);
       fetchArticles();
     } catch (error: any) {
-      console.error('Firestore Update Error:', error);
-      alert('保存失败。详细错误: ' + (error?.message || String(error)));
+      console.error('Firestore Article Error:', error);
+      const detailedError = handleFirestoreError(error, editingId ? 'update' : 'create', editingId ? `articles/${editingId}` : 'articles');
+      alert('保存失败: ' + detailedError.message);
     } finally {
       setLoading(false);
     }
@@ -613,21 +591,37 @@ export default function Admin() {
       fetchArticles();
     } catch (error) {
       console.error(error);
+      const detailedError = handleFirestoreError(error, 'delete', `articles/${id}`);
+      alert('删除失败: ' + detailedError.message);
     }
+  };
+
+  const handleFirestoreError = (error: unknown, operationType: string, path: string | null) => {
+    const errInfo = {
+      error: error instanceof Error ? error.message : String(error),
+      authInfo: {
+        userId: auth.currentUser?.uid,
+        email: auth.currentUser?.email,
+        emailVerified: auth.currentUser?.emailVerified,
+        isAnonymous: auth.currentUser?.isAnonymous,
+      },
+      operationType,
+      path
+    };
+    console.error('Firestore Error Detail:', JSON.stringify(errInfo));
+    return new Error(JSON.stringify(errInfo));
   };
 
   const handleSaveCity = async (cityData: CityData) => {
     setLoading(true);
+    const targetId = cityData.id || editingCity?.id;
+    const path = targetId ? `cities/${targetId}` : 'cities';
+    
     try {
-      // Use editingCity.id as ultimate fallback to prevent duplication
-      const targetId = cityData.id || editingCity?.id;
-      
       if (targetId) {
-        // Explicitly update existing doc
         const cityRef = doc(db, 'cities', targetId);
         await setDoc(cityRef, { ...cityData, id: targetId, updatedAt: serverTimestamp() }, { merge: true });
       } else {
-        // Create new
         const newDocRef = doc(collection(db, 'cities'));
         await setDoc(newDocRef, { ...cityData, id: newDocRef.id, createdAt: serverTimestamp() });
       }
@@ -638,20 +632,37 @@ export default function Admin() {
       alert('保存成功');
     } catch (e) {
       console.error("Save city error:", e);
-      alert('保存失败: ' + (e instanceof Error ? e.message : String(e)));
+      const detailedError = handleFirestoreError(e, targetId ? 'update' : 'create', path);
+      alert('保存失败: ' + detailedError.message);
     } finally {
       setLoading(false);
     }
   };
 
-  const deleteCity = async (id: string) => {
-    if (!window.confirm('确定删除此城市？')) return;
+  const deleteCity = async (id: string, name: string) => {
+    if (!window.confirm(`确定删除城市 "${name}" 吗？此操作不可撤销。`)) return;
+    
+    setLoading(true);
     try {
-      await deleteDoc(doc(db, 'cities', id));
-      fetchCities();
+      console.log("Attempting to delete city with id:", id);
+      const cityRef = doc(db, 'cities', id);
+      await deleteDoc(cityRef);
+      console.log("City deleted successfully");
+      await fetchCities();
+      alert('删除成功');
     } catch (e) {
-      console.error(e);
-      alert('删除失败');
+      console.error("Delete city error:", e);
+      let errorMsg = '删除失败';
+      if (e instanceof Error) {
+        if (e.message.includes('permission-denied')) {
+          errorMsg = '权限不足：请确认您已使用管理员账号登录。';
+        } else {
+          errorMsg += `: ${e.message}`;
+        }
+      }
+      alert(errorMsg);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -773,7 +784,10 @@ export default function Admin() {
       {/* Sidebar */}
       <aside className="w-64 bg-white border-r border-gray-200 flex flex-col fixed h-full z-10 hidden md:flex shadow-sm">
         <div className="p-6 border-b border-gray-100 flex items-center justify-between">
-          <h1 className="text-xl font-black text-gray-900 tracking-tight">Tripcngo</h1>
+          <div className="flex flex-col">
+            <h1 className="text-xl font-black text-gray-900 tracking-tight">Tripcngo</h1>
+            <span className="text-[10px] text-gray-400 truncate max-w-[140px]">{user?.email}</span>
+          </div>
           <span className="text-[10px] font-bold bg-[#1b887a]/10 text-[#1b887a] px-2 py-1 rounded-full">ADMIN</span>
         </div>
         <nav className="flex-1 p-4 space-y-2">
@@ -1145,13 +1159,14 @@ export default function Admin() {
                      <button onClick={migrateCities} className="px-4 py-2 bg-yellow-500 text-white rounded-lg font-bold text-sm whitespace-nowrap">迁移旧数据</button>
                   </div>
                   {cities.filter(c => c.name.includes(citySearchTerm) || (c.enName && c.enName.toLowerCase().includes(citySearchTerm.toLowerCase()))).map((city) => (
-                     <div key={city.id} className="bg-white p-6 rounded-3xl shadow-sm border border-gray-200 flex flex-col justify-between">
+                     <div key={city.id} className="bg-white p-6 rounded-3xl shadow-sm border border-gray-200 flex flex-col justify-between hover:shadow-md transition-shadow">
                         <div>
-                          <h3 className="font-bold text-lg">{city.name} ({city.enName})</h3>
+                          <h3 className="font-bold text-lg">{city.name}</h3>
+                          <p className="text-gray-400 text-sm mt-1">{city.enName}</p>
                         </div>
                         <div className="flex gap-2 mt-4">
-                           <button onClick={() => { setEditingCity(city); setShowCityForm(true); }} className="px-4 py-2 bg-gray-100 rounded-xl font-bold text-sm">编辑</button>
-                           <button onClick={() => deleteCity(city.id)} className="px-4 py-2 text-white bg-red-500 rounded-xl font-bold text-sm">删除</button>
+                           <button onClick={() => { setEditingCity(city); setShowCityForm(true); }} className="flex-1 py-2 bg-gray-100 hover:bg-gray-200 rounded-xl font-bold text-sm transition-colors">编辑</button>
+                           <button onClick={() => deleteCity(city.id, city.name)} disabled={loading} className="flex-x-1 px-4 py-2 text-white bg-red-500 hover:bg-red-600 disabled:bg-red-300 rounded-xl font-bold text-sm transition-colors">删除</button>
                         </div>
                      </div>
                   ))}

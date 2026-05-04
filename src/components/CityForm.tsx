@@ -1,12 +1,9 @@
 import React, { useState, useRef } from 'react';
 import { CityData } from '../types/city';
 import { X, Loader2, Sparkles, Save, ChevronDown, ChevronUp, Image as ImageIcon } from 'lucide-react';
-import { GoogleGenAI } from '@google/genai';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { storage } from '../lib/firebase';
-
-const geminiKey = process.env.GEMINI_API_KEY;
-const ai = new GoogleGenAI({ apiKey: geminiKey || "" });
+import { generateCityData } from '../lib/deepseek';
 
 interface CityFormProps {
   city?: CityData | null;
@@ -20,6 +17,7 @@ export default function CityForm({ city, onClose, onSave }: CityFormProps) {
     name: '',
     enName: '',
     heroImage: '',
+    listCover: '',
     tags: [],
     paragraphs: [],
     enParagraphs: [],
@@ -34,6 +32,7 @@ export default function CityForm({ city, onClose, onSave }: CityFormProps) {
   const [isGenerating, setIsGenerating] = useState(false);
   const [activeTab, setActiveTab] = useState('basic');
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const listCoverInputRef = useRef<HTMLInputElement>(null);
   const [uploading, setUploading] = useState(false);
 
   const handleFileUpload = async (file: File, folder: string) => {
@@ -57,6 +56,13 @@ export default function CityForm({ city, onClose, onSave }: CityFormProps) {
     if (!file) return;
     const url = await handleFileUpload(file, 'city_covers');
     if (url) updateFormData('heroImage', url);
+  };
+
+  const handleListCoverUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const url = await handleFileUpload(file, 'city_list_covers');
+    if (url) updateFormData('listCover', url);
   };
 
   const proxyImageToStorage = async (url: string, path: string) => {
@@ -90,15 +96,37 @@ export default function CityForm({ city, onClose, onSave }: CityFormProps) {
     setIsGenerating(true);
     try {
       const prompt = `Generate detailed, comprehensive city information for the city: '${formData.name}'. 
-      IMPORTANT: The intro 'paragraphs' and 'bestTravelTime.paragraphs' should be VERY detailed, aiming for around 550 characters/words per section to provide a rich guide.
+      IMPORTANT: The intro 'paragraphs' and 'bestTravelTime.paragraphs' MUST be divided into multiple distinct paragraphs to provide a rich guide.
+      
+      Introduction Formatting (paragraphs & enParagraphs):
+      - MUST provide 4 distinct paragraphs.
+      - Paragraph 1: Geographical location and climate (approx 100 words).
+      - Paragraph 2: Historical significance and unique city charm (approx 100 words).
+      - Paragraph 3: Cultural atmosphere, food specialties, and local lifestyle (approx 100 words).
+      - Paragraph 4: Modern development, international standing, and future vision (approx 100 words).
+
+      Best Travel Time Formatting (bestTravelTime.paragraphs & enParagraphs):
+      - MUST provide 3 distinct paragraphs.
+      - Paragraph 1: Detailed description of the best months and why they are recommended.
+      - Paragraph 2: Comprehensive guide for visiting in Spring (specific weather, recommended parks/scenes).
+      - Paragraph 3: Comprehensive guide for visiting in Autumn (weather conditions, key activities/festivals).
+
+      Comprehensiveness Requirements:
+      - Attractions: Provide 10-12 major attractions, covering historical, cultural, and modern sites.
+      - Food: Provide 10-12 local specialties, including main dishes, street foods, and traditional desserts.
+      - Transportation: Provide a highly detailed guide for Plane, Train, and Bus/Local Metro.
+      - History: Provide 5-6 key historical milestones.
+
       Return a JSON object that matches the following TypeScript structure exactly. 
-      Ensure ALL text fields (descriptions, titles, paragraphs, etc.) are provided in BOTH Chinese and English.
-      IMPORTANT: For 'heroImage', 'attractions.imageUrl', and 'food.imageUrl', provide high-quality Unsplash image URLs (e.g. https://images.unsplash.com/photo-...).
+      Ensure every field has its corresponding 'en' field filled correctly. 
+      CRITICAL: Primary fields (without 'en' prefix, e.g., 'paragraphs') MUST contain ONLY Chinese content. 
+      'en' prefixed fields (e.g., 'enParagraphs') MUST contain ONLY English content. 
+      DO NOT mix both languages in a single field.
+      DO NOT provide any image URLs. Leave them as empty strings.
 
       Structure: {
         name: string,
         enName: string,
-        heroImage: string,
         tags: [{text: string, enText: string, color: string}],
         paragraphs: string[],
         enParagraphs: string[],
@@ -106,17 +134,13 @@ export default function CityForm({ city, onClose, onSave }: CityFormProps) {
         info: {area: string, population: string},
         bestTravelTime: {strongText: string, enStrongText: string, paragraphs: string[], enParagraphs: string[]},
         history: [{year: string, enYear: string, title: string, enTitle: string, desc: string, enDesc: string}],
-        attractions: [{name: string, enName: string, desc: string, enDesc: string, price: string, enPrice: string, season: string, enSeason: string, time: string, enTime: string, imageUrl: string}],
-        transportation: [{iconName: "Plane", title: string, enTitle: string, desc: string, enDesc: string, price: string, enPrice: string}],
-        food: [{name: string, enName: string, pinyin: string, price: string, desc: string, enDesc: string, ingredients: string, enIngredients: string, imageIdx: number, imageUrl: string}]
+        attractions: [{name: string, enName: string, desc: string, enDesc: string, price: string, enPrice: string, season: string, enSeason: string, time: string, enTime: string}],
+        transportation: [{iconName: "Plane" | "Train" | "Bus", title: string, enTitle: string, desc: string, enDesc: string, price: string, enPrice: string}],
+        food: [{name: string, enName: string, pinyin: string, price: string, desc: string, enDesc: string, ingredients: string, enIngredients: string, imageIdx: number}]
       }
       Respond ONLY with the raw JSON object.`;
       
-      const res = await ai.models.generateContent({
-        model: 'gemini-3-flash-preview',
-        contents: prompt,
-      });
-      const responseText = res.text || '{}';
+      const responseText = await generateCityData(prompt);
       
       // Clean up response: remove markdown formatting and try to extract JSON object
       const cleanJSON = (text: string) => {
@@ -131,25 +155,6 @@ export default function CityForm({ city, onClose, onSave }: CityFormProps) {
 
       const data = JSON.parse(cleanJSON(responseText));
       
-      // Proxy images to storage
-      if (data.heroImage) {
-        data.heroImage = await proxyImageToStorage(data.heroImage, `city_covers/${Date.now()}-${formData.name}-hero.jpg`);
-      }
-      if (data.attractions) {
-        for (const attr of data.attractions) {
-          if (attr.imageUrl) {
-            attr.imageUrl = await proxyImageToStorage(attr.imageUrl, `attractions/${Date.now()}-${formData.name}-${attr.name}.jpg`);
-          }
-        }
-      }
-      if (data.food) {
-        for (const f of data.food) {
-          if (f.imageUrl) {
-            f.imageUrl = await proxyImageToStorage(f.imageUrl, `food/${Date.now()}-${formData.name}-${f.name}.jpg`);
-          }
-        }
-      }
-
       setFormData(prev => ({ ...prev, ...data, id: prev.id }));
     } catch (err) {
       console.error(err);
@@ -171,11 +176,18 @@ export default function CityForm({ city, onClose, onSave }: CityFormProps) {
             <input value={formData.name} onChange={e => updateFormData('name', e.target.value)} placeholder="中文名称" className="w-full p-2 border rounded" />
             <input value={formData.enName} onChange={e => updateFormData('enName', e.target.value)} placeholder="英文名称" className="w-full p-2 border rounded" />
             <div className="flex gap-2">
-               <input value={formData.heroImage} onChange={e => updateFormData('heroImage', e.target.value)} placeholder="主图链接" className="w-full p-2 border rounded" />
+               <input value={formData.heroImage} onChange={e => updateFormData('heroImage', e.target.value)} placeholder="详情页主图 (Detail Hero)" className="w-full p-2 border rounded" />
                <button type="button" onClick={() => fileInputRef.current?.click()} className="p-2 border rounded bg-gray-100">
                  {uploading ? <Loader2 className="animate-spin" /> : <ImageIcon />}
                </button>
                <input type="file" ref={fileInputRef} onChange={handleHeroImageUpload} className="hidden" accept="image/*" />
+            </div>
+            <div className="flex gap-2">
+               <input value={formData.listCover || ''} onChange={e => updateFormData('listCover', e.target.value)} placeholder="列表页封面 (List Cover)" className="w-full p-2 border rounded" />
+               <button type="button" onClick={() => listCoverInputRef.current?.click()} className="p-2 border rounded bg-gray-100">
+                 {uploading ? <Loader2 className="animate-spin" /> : <ImageIcon />}
+               </button>
+               <input type="file" ref={listCoverInputRef} onChange={handleListCoverUpload} className="hidden" accept="image/*" />
             </div>
           </div>
         );
@@ -190,7 +202,9 @@ export default function CityForm({ city, onClose, onSave }: CityFormProps) {
         return (
           <div className="space-y-4">
              <input value={formData.bestTravelTime.strongText} onChange={e => setFormData({...formData, bestTravelTime: {...formData.bestTravelTime, strongText: e.target.value}})} placeholder="最佳旅行时间重点" className="w-full p-2 border rounded" />
-            <textarea value={formData.bestTravelTime.paragraphs.join('\n')} onChange={e => setFormData({...formData, bestTravelTime: {...formData.bestTravelTime, paragraphs: e.target.value.split('\n')}})} placeholder="最佳时间说明 (每行段落)" className="w-full p-2 border rounded h-24" />
+             <input value={formData.bestTravelTime.enStrongText || ''} onChange={e => setFormData({...formData, bestTravelTime: {...formData.bestTravelTime, enStrongText: e.target.value}})} placeholder="Best Travel Time Focus (EN)" className="w-full p-2 border rounded" />
+             <textarea value={formData.bestTravelTime.paragraphs.join('\n')} onChange={e => setFormData({...formData, bestTravelTime: {...formData.bestTravelTime, paragraphs: e.target.value.split('\n')}})} placeholder="最佳时间说明 (每行段落)" className="w-full p-2 border rounded h-24" />
+             <textarea value={formData.bestTravelTime.enParagraphs?.join('\n')} onChange={e => setFormData({...formData, bestTravelTime: {...formData.bestTravelTime, enParagraphs: e.target.value.split('\n')}})} placeholder="Best Time Description (EN, one paragraph per line)" className="w-full p-2 border rounded h-24" />
           </div>
         );
       case 'attractions':

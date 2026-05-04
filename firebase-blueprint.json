@@ -26,7 +26,8 @@
         "id": { "type": "string" },
         "name": { "type": "string" },
         "enName": { "type": "string" },
-        "heroImage": { "type": "string" }
+        "heroImage": { "type": "string" },
+        "listCover": { "type": "string" }
       },
       "required": ["id", "name", "enName"]
     },

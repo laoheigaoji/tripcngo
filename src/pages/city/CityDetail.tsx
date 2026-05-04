@@ -3,7 +3,7 @@ import { useParams, Navigate } from 'react-router-dom';
 import { Clock, Navigation, Map, CloudRain, Sun, Cloud, Calendar, Building2, Users, MapPin, Tag, ArrowRight, Star, Plane, TrainFront, BusFront, Car, Bike, Train, Ship } from 'lucide-react';
 import { useLanguage } from '../../context/LanguageContext';
 import SEO from '../../components/SEO';
-import { doc, getDoc } from 'firebase/firestore';
+import { doc, getDoc, updateDoc, increment } from 'firebase/firestore';
 import { db } from '../../lib/firebase';
 import WeatherWidget from '../../components/WeatherWidget';
 
@@ -17,6 +17,19 @@ export default function CityDetail() {
   const isEn = language === 'en';
   const [city, setCity] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const [voted, setVoted] = useState<Record<string, boolean>>({});
+
+  useEffect(() => {
+    // Check local storage for previous votes
+    if (id) {
+      const wantToVisit = localStorage.getItem(`voted_want_${id}`);
+      const recommended = localStorage.getItem(`voted_rec_${id}`);
+      setVoted({
+        wantToVisit: !!wantToVisit,
+        recommended: !!recommended
+      });
+    }
+  }, [id]);
 
   useEffect(() => {
     const fetchCity = async () => {
@@ -46,6 +59,37 @@ export default function CityDetail() {
     return zh;
   };
 
+  const handleStatsUpdate = async (field: 'wantToVisit' | 'recommended') => {
+    if (!id || !city) return;
+    
+    const storageKey = field === 'wantToVisit' ? `voted_want_${id}` : `voted_rec_${id}`;
+    if (localStorage.getItem(storageKey)) return;
+
+    try {
+      // Optimistic update
+      setCity((prev: any) => ({
+        ...prev,
+        stats: {
+          ...prev.stats,
+          [field]: (prev.stats[field] || 0) + 1
+        }
+      }));
+      setVoted(prev => ({ ...prev, [field]: true }));
+      localStorage.setItem(storageKey, 'true');
+
+      const docRef = doc(db, 'cities', id);
+      await updateDoc(docRef, {
+        [`stats.${field}`]: increment(1)
+      });
+    } catch (err) {
+      console.error(`Error updating ${field}:`, err);
+      // Revert if failed
+      setVoted(prev => ({ ...prev, [field]: false }));
+      localStorage.removeItem(storageKey);
+      // We'd ideally re-fetch or revert state here
+    }
+  };
+
   return (
     <div className="bg-gray-50 min-h-screen">
       <SEO 
@@ -68,31 +112,51 @@ export default function CityDetail() {
         <div className="max-w-7xl mx-auto px-6 relative z-10">
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-12 items-start">
             <div className="col-span-1 lg:col-span-2 text-white">
-              <div className="flex flex-wrap items-center gap-4 mb-4">
-                <h1 className="text-4xl md:text-5xl font-bold tracking-tight">
+              <div className="mb-8">
+                <h1 className="text-4xl md:text-5xl font-bold tracking-tight mb-4">
                   {isEn ? city.enName : city.name} {!isEn && <span className="text-white/60 font-medium text-2xl md:text-3xl ml-2">{city.enName}</span>}
                 </h1>
-                <div className="flex flex-wrap items-center gap-2 mt-2 md:mt-0">
+                <div className="flex flex-wrap items-center gap-3">
                   {city.tags.map((tag, idx) => (
-                    <span key={idx} className={`px-3 py-1 bg-${tag.color}-500/20 text-${tag.color}-300 border border-${tag.color}-500/30 rounded-full text-sm font-medium backdrop-blur-sm`}>
+                    <span key={idx} className="px-5 py-2 bg-[#e6f4ea] text-[#1b887a] rounded-full text-xs font-black shadow-sm border border-[#1b887a]/10 tracking-widest uppercase">
                       {getTranslatedValue(tag.text, tag.enText)}
                     </span>
                   ))}
                 </div>
               </div>
               
-              <div className="space-y-4 text-white/80 text-sm md:text-base leading-relaxed max-w-4xl">
+              <div className="space-y-6 text-white/90 text-base md:text-lg leading-relaxed max-w-4xl">
                 {(isEn && city.enParagraphs ? city.enParagraphs : city.paragraphs).map((p, idx) => (
                   <p key={idx}>{p}</p>
                 ))}
               </div>
 
-              <div className="flex items-center gap-3 mt-8">
-                <button className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-md text-sm font-medium transition-colors flex items-center gap-2">
-                  <span>{t('city.stats.wantToVisit')}</span> <span className="bg-emerald-700/50 px-2 py-0.5 rounded text-xs">{city.stats.wantToVisit}</span>
+              <div className="flex flex-wrap items-center gap-4 mt-10">
+                <button 
+                  onClick={() => handleStatsUpdate('wantToVisit')}
+                  disabled={voted.wantToVisit}
+                  className={`px-6 py-3 rounded-2xl text-sm font-black transition-all flex items-center gap-3 shadow-lg ${
+                    voted.wantToVisit 
+                    ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 cursor-default' 
+                    : 'bg-emerald-500 text-white hover:bg-emerald-400 hover:scale-105 active:scale-95'
+                  }`}
+                >
+                  <Star className={`w-4 h-4 ${voted.wantToVisit ? 'fill-current' : ''}`} />
+                  <span>{voted.wantToVisit ? (isEn ? 'Added to Wishlist' : '已在想去清单') : t('city.stats.wantToVisit')}</span> 
+                  <span className="bg-black/20 px-2 py-0.5 rounded-lg text-xs">{city.stats.wantToVisit}</span>
                 </button>
-                <button className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-md text-sm font-medium transition-colors flex items-center gap-2">
-                  <span>{t('city.stats.recommended')}</span> <span className="bg-blue-700/50 px-2 py-0.5 rounded text-xs">{city.stats.recommended}</span>
+                <button 
+                  onClick={() => handleStatsUpdate('recommended')}
+                  disabled={voted.recommended}
+                  className={`px-6 py-3 rounded-2xl text-sm font-black transition-all flex items-center gap-3 shadow-lg ${
+                    voted.recommended 
+                    ? 'bg-blue-500/20 text-blue-400 border border-blue-500/30 cursor-default' 
+                    : 'bg-blue-500 text-white hover:bg-blue-400 hover:scale-105 active:scale-95'
+                  }`}
+                >
+                  <Tag className={`w-4 h-4 ${voted.recommended ? 'fill-current' : ''}`} />
+                  <span>{voted.recommended ? (isEn ? 'Recommended' : '已推荐给他人') : t('city.stats.recommended')}</span> 
+                  <span className="bg-black/20 px-2 py-0.5 rounded-lg text-xs">{city.stats.recommended}</span>
                 </button>
               </div>
             </div>
@@ -314,7 +378,7 @@ export default function CityDetail() {
             {city.food.map((food, idx) => (
               <div key={idx} className="bg-white rounded-xl p-5 shadow-sm border border-gray-100 flex gap-5 hover:shadow-md transition-shadow">
                 <div className="w-32 h-32 flex-shrink-0">
-                  <img src={`https://images.unsplash.com/photo-1544025162-811c75c82de1?w=400&q=80&auto=format&fit=crop&random=${food.imageIdx}`} alt={food.name} className="w-full h-full object-cover rounded-lg" />
+                  <img src={food.imageUrl || `https://images.unsplash.com/photo-1544025162-811c75c82de1?w=400&q=80&auto=format&fit=crop&random=${food.imageIdx}`} alt={food.name} className="w-full h-full object-cover rounded-lg" />
                 </div>
                 <div className="flex-grow flex flex-col justify-center">
                   <div className="flex justify-between items-start mb-1">

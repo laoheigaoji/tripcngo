@@ -299,7 +299,7 @@ export default function Home() {
                       >
                         <div className="w-12 h-12 rounded-lg overflow-hidden flex-shrink-0 bg-gray-100">
                           <img 
-                            src={city.heroImage || 'https://images.unsplash.com/photo-1540202403-b712e0e026ee?w=100&q=80&auto=format&fit=crop'} 
+                            src={city.listCover || city.heroImage || 'https://images.unsplash.com/photo-1540202403-b712e0e026ee?w=100&q=80&auto=format&fit=crop'} 
                             alt={city.name}
                             className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
                           />
@@ -372,7 +372,7 @@ export default function Home() {
                 onClick={() => navigate(`/cities/${city.id}`)}
               >
                 <div className="relative h-[240px] md:h-[260px]">
-                  <img src={city.heroImage || city.img} alt={language === 'zh' ? city.name : city.enName} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                  <img src={city.listCover || city.heroImage || city.img} alt={language === 'zh' ? city.name : city.enName} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
                   <div className="absolute inset-0 bg-black/10 group-hover:bg-transparent transition-colors" />
                 </div>
                 <div className="p-4 flex items-center justify-between bg-white border-t border-gray-100">
@@ -381,8 +381,8 @@ export default function Home() {
                     <span className="ml-2 text-xs text-gray-500 font-medium uppercase tracking-wider">{city.enName}</span>
                   </div>
                   <div className="flex gap-3 text-gray-500">
-                    <span className="flex items-center gap-1 text-xs font-medium"><Heart className="w-3.5 h-3.5 text-red-500 fill-red-500" /> {city.likes || 0}</span>
-                    <span className="flex items-center gap-1 text-xs font-medium"><ThumbsUp className="w-3.5 h-3.5 text-[#1b887a] fill-[#1b887a]" /> {city.helpful || 0}</span>
+                    <span className="flex items-center gap-1 text-xs font-medium"><Heart className="w-3.5 h-3.5 text-red-500 fill-red-500" /> {city.stats?.wantToVisit || 0}</span>
+                    <span className="flex items-center gap-1 text-xs font-medium"><ThumbsUp className="w-3.5 h-3.5 text-[#1b887a] fill-[#1b887a]" /> {city.stats?.recommended || 0}</span>
                   </div>
                 </div>
               </div>
