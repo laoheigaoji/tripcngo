@@ -332,58 +332,26 @@ export default function Admin() {
           for (const task of imageTasks) {
             try {
               let blob: Blob;
+              
               if (task.actualSrc.startsWith('data:')) {
                 const res = await fetch(task.actualSrc);
                 blob = await res.blob();
               } else {
-                try {
-                  console.log("Attempting direct fetch for:", task.actualSrc);
-                  const res = await fetch(task.actualSrc, {
-                    headers: { 
-                      'Referer': 'https://wanderchina.guide/',
-                      'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
-                    }
-                  });
-                  if (!res.ok) throw new Error(`Network error: ${res.status} ${res.statusText}`);
-                  blob = await res.blob();
-                } catch (fetchErr) {
-                  console.warn("Direct fetch failed for:", task.actualSrc, fetchErr);
-                  try {
-                    const proxyUrl = `https://wsrv.nl/?url=${encodeURIComponent(task.actualSrc)}`;
-                    console.log("Attempting wsrv.nl proxy for:", task.actualSrc);
-                    const proxyRes = await fetch(proxyUrl);
-                    if (!proxyRes.ok) throw new Error(`Proxy 1 failed: ${proxyRes.status} ${proxyRes.statusText}`);
-                    blob = await proxyRes.blob();
-                  } catch (proxy1Err) {
-                    console.warn("Proxy 1 failed for:", task.actualSrc, proxy1Err);
-                    try {
-                      const proxyUrl2 = `https://corsproxy.io/?${encodeURIComponent(task.actualSrc)}`;
-                      console.log("Attempting corsproxy.io for:", task.actualSrc);
-                      const proxyRes2 = await fetch(proxyUrl2);
-                      if (!proxyRes2.ok) throw new Error(`Proxy 2 failed: ${proxyRes2.status} ${proxyRes2.statusText}`);
-                      blob = await proxyRes2.blob();
-                    } catch (proxy2Err) {
-                      console.warn("Proxy 2 failed for:", task.actualSrc, proxy2Err);
-                      const proxyUrl3 = `https://api.allorigins.win/raw?url=${encodeURIComponent(task.actualSrc)}`;
-                      console.log("Attempting allorigins.win for:", task.actualSrc);
-                      const proxyRes3 = await fetch(proxyUrl3);
-                      if (!proxyRes3.ok) throw new Error(`Proxy 3 failed: ${proxyRes3.status} ${proxyRes3.statusText}`);
-                      blob = await proxyRes3.blob();
-                    }
-                  }
-                }
+                const res = await fetch(task.actualSrc);
+                if (!res.ok) throw new Error(`Network error: ${res.status} ${res.statusText}`);
+                blob = await res.blob();
               }
 
-              const fileName = `paste-html-${Date.now()}-${Math.random().toString(36).substring(7)}.png`;
+              const fileName = `${Date.now()}-${Math.random().toString(36).substring(7)}.png`;
               const path = `articles/${fileName}`;
+              
               const { error } = await supabase.storage.from('images').upload(path, blob);
               if (error) throw error;
+              
               const url = supabase.storage.from('images').getPublicUrl(path).data.publicUrl;
               
               setFormData(prev => {
                 const currentText = prev[field] as string;
-                // turndown uses the alt attribute if available, or just the url.
-                // We're replacing the placeholder URL with the actual URL.
                 return {
                   ...prev,
                   [field]: currentText.replace(`https://placehold.co/600x400/1b887a/FFFFFF?text=Uploading...`, url).replace(task.uuid, '图片')
@@ -438,7 +406,7 @@ export default function Admin() {
         if (!file) continue;
 
         setLoading(true);
-        const path = `thumbnails/${Date.now()}-${file.name || 'image.png'}`;
+        const path = `thumbnails/${Date.now()}-${Math.random().toString(36).substring(7)}.png`;
         
         try {
           const { error } = await supabase.storage.from('images').upload(path, file);
