@@ -40,7 +40,8 @@ export default function Cities() {
         description={language === 'zh' 
           ? '探索中国最受欢迎的城市。了解北京、上海、广州等40多个城市的深度旅游攻略、餐饮推荐和实用技巧。' 
           : 'Explore the most popular cities in China. In-depth travel guides, food recommendations, and practical tips for over 40 cities including Beijing, Shanghai, and Guangzhou.'}
-        keywords={language === 'zh' ? '中国城市指南, 北京旅游, 上海旅游, 广州旅游, 中国热门目的地' : 'China city guides, Beijing travel, Shanghai travel, Guangzhou travel, popular China destinations'}
+        keywords={language === 'zh' ? '中国城市指南, 北京旅游, 上海旅游, 广州旅游, 中国热门目的地, 过境免签城市' : 'China city guides, Beijing travel, Shanghai travel, Guangzhou travel, popular China destinations, transit visa-free cities'}
+        url={`https://tripcngo.com/${language === 'zh' ? 'cn' : 'en'}/cities`}
       />
       <section className="relative h-[400px] flex items-center pt-16 bg-gray-900 overflow-hidden">
         <div className="absolute inset-0 bg-[url('https://static.tripcngo.com/ing/Fbanner_bg_2.jpg')] bg-cover bg-center" />
@@ -74,7 +75,12 @@ export default function Cities() {
           {currentCities.map((city) => (
              <Link to={`/${langPrefix}/cities/${city.id}`} key={city.id} className="relative group rounded-md overflow-hidden bg-white border border-gray-100 shadow-sm transition-all duration-300 block">
                 <div className="relative h-[240px] md:h-[260px] overflow-hidden cursor-pointer">
-                  <img src={city.listCover || city.heroImage || city.img} alt={city.name} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" />
+                  <img 
+                    src={city.listCover || city.heroImage || city.img} 
+                    alt={language === 'zh' ? `${city.name}旅游攻略` : `Travel guide for ${city.enName || city.id}`} 
+                    className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" 
+                    loading="lazy"
+                  />
                   <div className="absolute inset-0 bg-black/10 group-hover:bg-black/0 transition-colors duration-500" />
                 </div>
                 <div className="p-4 flex items-center justify-between bg-white border-t border-gray-100">

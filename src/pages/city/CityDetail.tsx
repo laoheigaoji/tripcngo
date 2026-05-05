@@ -122,9 +122,29 @@ export default function CityDetail() {
     <div className="bg-gray-50 min-h-screen">
       <SEO 
         title={isEn ? city.enName : city.name}
-        description={getTranslatedValue(city.paragraphs[0], city.enParagraphs && city.enParagraphs[0])}
-        keywords={`${isEn ? city.enName : city.name}, 中国旅游城市, ${isEn ? 'Travel' : '旅游'}`}
+        description={getTranslatedValue(city.paragraphs?.[0], city.enParagraphs?.[0])}
+        keywords={`${isEn ? city.enName : city.name}, ${isEn ? 'China Travel' : '中国旅游'}, ${isEn ? 'Top Attractions' : '热门景点'}, ${city.province}`}
         image={city.heroImage}
+        url={`https://tripcngo.com/${language === 'zh' ? 'cn' : 'en'}/cities/${id}`}
+        schemaData={{
+          "@context": "https://schema.org",
+          "@type": "TouristDestination",
+          "name": isEn ? city.enName : city.name,
+          "description": getTranslatedValue(city.paragraphs?.[0], city.enParagraphs?.[0]),
+          "image": city.heroImage,
+          "address": {
+            "@type": "PostalAddress",
+            "addressLocality": isEn ? city.enName : city.name,
+            "addressRegion": city.province,
+            "addressCountry": "CN"
+          },
+          "touristType": "City",
+          "geo": {
+            "@type": "GeoCoordinates",
+            "latitude": city.location?.lat,
+            "longitude": city.location?.lng
+          }
+        }}
       />
       {/* Hero Section */}
       <div className="relative pt-24 pb-16 md:pt-32 md:pb-24 overflow-hidden">

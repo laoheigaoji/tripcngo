@@ -58,7 +58,29 @@ const SEO: React.FC<SEOProps> = ({
       <meta name="twitter:description" content={metaDescription} />
       <meta name="twitter:image" content={image} />
 
-      {/* JSON-LD Structured Data */}
+      {/* Hreflang for International SEO */}
+      <link rel="alternate" hrefLang="zh" href="https://tripcngo.com/cn" />
+      <link rel="alternate" hrefLang="en" href="https://tripcngo.com/en" />
+      <link rel="alternate" hrefLang="x-default" href="https://tripcngo.com/en" />
+
+      {/* Default JSON-LD Structured Data */}
+      {!schemaData && (
+        <script type="application/ld+json">
+          {JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "WebSite",
+            "name": "tripcngo",
+            "url": "https://tripcngo.com",
+            "potentialAction": {
+              "@type": "SearchAction",
+              "target": "https://tripcngo.com/search?q={search_term_string}",
+              "query-input": "required name=search_term_string"
+            }
+          })}
+        </script>
+      )}
+
+      {/* Custom JSON-LD Structured Data */}
       {schemaData && (
         <script type="application/ld+json">
           {JSON.stringify(schemaData)}

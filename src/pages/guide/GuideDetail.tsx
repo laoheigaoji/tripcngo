@@ -9,7 +9,8 @@ import {
   User, 
   Calendar, 
   FolderIcon,
-  ThumbsUp
+  ThumbsUp,
+  MessageSquare
 } from 'lucide-react';
 import Markdown from 'react-markdown';
 import { supabase } from '../../lib/supabase';
@@ -52,6 +53,72 @@ export default function GuideDetail() {
   const displaySubtitle = (article && language === 'en' && article.subtitleEn) ? article.subtitleEn : (article?.subtitle || '');
   const displayContent = (article && language === 'en' && article.contentEn) ? article.contentEn : (article?.content || '');
 
+  const [commentName, setCommentName] = useState('');
+  const [commentText, setCommentText] = useState('');
+  const [comments, setComments] = useState<any[]>([]);
+  const [submittingComment, setSubmittingComment] = useState(false);
+  const [captcha, setCaptcha] = useState({ a: 0, b: 0, userAns: '' });
+
+  const generateCaptcha = () => {
+    setCaptcha({
+      a: Math.floor(Math.random() * 10) + 1,
+      b: Math.floor(Math.random() * 10) + 1,
+      userAns: ''
+    });
+  };
+
+  const fetchComments = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('article_comments')
+        .select('*')
+        .eq('articleId', id)
+        .order('createdAt', { ascending: false });
+      if (!error && data) setComments(data);
+    } catch (err) {
+      console.error("Error fetching comments:", err);
+    }
+  };
+
+  const handleSubmitComment = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!commentText.trim() || !commentName.trim()) return;
+
+    // CAPTCHA check
+    if (parseInt(captcha.userAns) !== (captcha.a + captcha.b)) {
+      alert(language === 'zh' ? '算术题答案错误，请重试' : 'Wrong answer for the math quiz, please try again.');
+      return;
+    }
+
+    setSubmittingComment(true);
+    try {
+      const { error } = await supabase
+        .from('article_comments')
+        .insert([{
+          articleId: id,
+          name: commentName,
+          content: commentText,
+          createdAt: new Date().toISOString()
+        }]);
+      
+      if (error) throw error;
+      
+      setCommentText('');
+      setCaptcha(prev => ({ ...prev, userAns: '' }));
+      generateCaptcha();
+      fetchComments();
+      alert(language === 'zh' ? '评论提交成功！' : 'Comment submitted successfully!');
+    } catch (err: any) {
+      alert(language === 'zh' ? '提交失败' : 'Failed to submit comment: ' + err.message);
+    } finally {
+      setSubmittingComment(false);
+    }
+  };
+
+  useEffect(() => {
+    generateCaptcha();
+  }, [id]);
+
   useEffect(() => {
     const fetchArticle = async () => {
       setLoading(true);
@@ -70,58 +137,91 @@ export default function GuideDetail() {
           } as Article;
 
           setArticle(loadedArticle);
+          setLoading(false); // Set loading to false once the main article is loaded
           window.scrollTo(0, 0);
 
-          try {
-            const { data: citiesData, error: citiesError } = await supabase.from('cities').select('id, name, enName, listCover, heroImage, stats').limit(5);
-            if (!citiesError && citiesData) {
-              setRecommendedCities(citiesData);
-            }
-          } catch (e) {
-            console.error('Failed to fetch cities for recommendation', e);
-          }
-
-          try {
-            const { data: allDocs, error: allDocsError } = await supabase.from('articles').select('*').order('createdAt', { ascending: false });
-            if (!allDocsError && allDocs) {
-              const allArticles = allDocs.map(dData => ({
-                _id: dData.id,
-                ...dData,
-                createdAt: dData.createdAt || new Date().toISOString()
-              })) as Article[];
-              
-              const currentIndex = allArticles.findIndex(a => a._id === id);
-              if (currentIndex !== -1) {
-                setPrevArticle(currentIndex > 0 ? allArticles[currentIndex - 1] : null);
-                setNextArticle(currentIndex < allArticles.length - 1 ? allArticles[currentIndex + 1] : null);
+          // Non-blocking secondary fetches
+          Promise.all([
+            // Fetch Recommended Cities
+            (async () => {
+              try {
+                const { data: citiesData, error: citiesError } = await supabase
+                  .from('cities')
+                  .select('id, name, enName, listCover, heroImage, stats')
+                  .limit(5);
+                if (!citiesError && citiesData) {
+                  setRecommendedCities(citiesData);
+                }
+              } catch (e) {
+                console.error('Failed to fetch cities for recommendation', e);
               }
-              
-              const others = allArticles.filter(a => a._id !== id);
-              setRecommendedArticles(others.sort(() => 0.5 - Math.random()).slice(0, 3));
-            }
-          } catch (e) {
-            console.error('Failed to fetch other articles', e);
-          }
+            })(),
 
-          try {
-            await supabase.from('articles').update({
-              views: (data.views || 0) + 1
-            }).eq('id', id);
-          } catch (e) {
-            console.error('Failed to increment views', e);
-          }
+            // Fetch Prev/Next and Recommended Articles
+            (async () => {
+              try {
+                // Fetch recommended (excluding current)
+                const { data: recData, error: recError } = await supabase
+                  .from('articles')
+                  .select('*')
+                  .neq('id', id)
+                  .limit(10);
+                
+                if (!recError && recData) {
+                  const mapped = recData.map(d => ({
+                    _id: d.id,
+                    ...d,
+                    createdAt: d.createdAt || new Date().toISOString()
+                  })) as Article[];
+                  setRecommendedArticles(mapped.sort(() => 0.5 - Math.random()).slice(0, 3));
+                }
+
+                // Fetch all to find prev/next (this could be optimized further with indexed queries)
+                const { data: allDocs, error: allDocsError } = await supabase
+                  .from('articles')
+                  .select('id, title, titleEn, thumbnail, createdAt')
+                  .order('createdAt', { ascending: false });
+
+                if (!allDocsError && allDocs) {
+                  const currentIndex = allDocs.findIndex(a => a.id === id);
+                  if (currentIndex !== -1) {
+                    const prev = allDocs[currentIndex - 1];
+                    const next = allDocs[currentIndex + 1];
+                    setPrevArticle(prev ? ({ _id: prev.id, ...prev } as any) : null);
+                    setNextArticle(next ? ({ _id: next.id, ...next } as any) : null);
+                  }
+                }
+              } catch (e) {
+                console.error('Failed to fetch other articles', e);
+              }
+            })(),
+
+            // Increment Views
+            (async () => {
+              try {
+                await supabase.from('articles').update({
+                  views: (data.views || 0) + 1
+                }).eq('id', id);
+              } catch (e) {
+                console.error('Failed to increment views', e);
+              }
+            })()
+          ]);
         } else {
           setError(error?.message || "Article Not Found");
+          setLoading(false);
         }
       } catch (error) {
         console.error("Error fetching article:", error);
         setError("Database connection error");
-      } finally {
         setLoading(false);
       }
     };
-    if (id) fetchArticle();
-  }, [id]);
+    if (id) {
+      fetchArticle();
+      fetchComments();
+    }
+  }, [id, language]);
 
   const handleLike = async () => {
     if (!article || !id) return;
@@ -174,9 +274,31 @@ export default function GuideDetail() {
       <SEO 
         title={displayTitle}
         description={displaySubtitle}
-        keywords={`${article.category}, ${language === 'zh' ? '中国旅行攻略' : 'China travel tips'}`}
+        keywords={`${article.category}, ${language === 'zh' ? '中国旅行攻略' : 'China travel tips'}, ${article.author ? article.author : ''}`}
         type="article"
         image={article.thumbnail}
+        url={`https://tripcngo.com/${language === 'zh' ? 'cn' : 'en'}/articles/${id}`}
+        schemaData={{
+          "@context": "https://schema.org",
+          "@type": "BlogPosting",
+          "headline": displayTitle,
+          "description": displaySubtitle,
+          "image": article.thumbnail,
+          "author": {
+            "@type": "Person",
+            "name": article.author || "tripcngo Team"
+          },
+          "publisher": {
+            "@type": "Organization",
+            "name": "tripcngo",
+            "logo": {
+              "@type": "ImageObject",
+              "url": "https://tripcngo.com/logo.png"
+            }
+          },
+          "datePublished": article.createdAt,
+          "dateModified": article.createdAt
+        }}
       />
       {/* Article Header Section */}
       <section className="bg-[#005043] pt-32 pb-16 text-white">
@@ -242,6 +364,83 @@ export default function GuideDetail() {
                     {article.likes || 0} {t('guide.helpful')}
                   </span>
                </button>
+            </div>
+
+            {/* Comments Section */}
+            <div className="mt-16 pt-12 border-t border-gray-100">
+              <h3 className="text-2xl font-bold text-gray-900 mb-8 flex items-center gap-2">
+                <MessageSquare className="w-6 h-6 text-[#1b887a]" />
+                {language === 'zh' ? '社区互动' : 'Community Discussion'}
+                <span className="text-sm font-normal text-gray-500 ml-2">({comments.length})</span>
+              </h3>
+
+              {/* Comment Form */}
+              <form onSubmit={handleSubmitComment} className="bg-gray-50 p-6 rounded-xl mb-12">
+                <h4 className="font-bold text-gray-800 mb-4">{language === 'zh' ? '发表评论' : 'Leave a Comment'}</h4>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                  <input 
+                    type="text" 
+                    placeholder={language === 'zh' ? '您的昵称' : 'Your Name'}
+                    className="bg-white border border-gray-200 rounded-lg px-4 py-2 focus:ring-2 focus:ring-[#1b887a] outline-none"
+                    value={commentName}
+                    onChange={(e) => setCommentName(e.target.value)}
+                    required
+                  />
+                  <div className="flex items-center gap-3 bg-white border border-gray-200 rounded-lg px-4 py-2">
+                    <span className="text-gray-500 font-bold whitespace-nowrap">{captcha.a} + {captcha.b} = </span>
+                    <input 
+                      type="number" 
+                      placeholder="?"
+                      className="w-full outline-none"
+                      value={captcha.userAns}
+                      onChange={(e) => setCaptcha(prev => ({ ...prev, userAns: e.target.value }))}
+                      required
+                    />
+                  </div>
+                </div>
+                <textarea 
+                  rows={4}
+                  placeholder={language === 'zh' ? '分享您的想法或经验...' : 'Share your ideas or experiences...'}
+                  className="w-full bg-white border border-gray-200 rounded-lg px-4 py-3 focus:ring-2 focus:ring-[#1b887a] outline-none mb-4"
+                  value={commentText}
+                  onChange={(e) => setCommentText(e.target.value)}
+                  required
+                ></textarea>
+                <button 
+                  type="submit"
+                  disabled={submittingComment}
+                  className="bg-[#1b887a] text-white px-8 py-3 rounded-lg font-bold hover:bg-[#156d61] transition-colors disabled:opacity-50"
+                >
+                  {submittingComment 
+                    ? (language === 'zh' ? '提交中...' : 'Submitting...') 
+                    : (language === 'zh' ? '提交评论' : 'Post Comment')}
+                </button>
+              </form>
+
+              {/* Comments List */}
+              <div className="space-y-8">
+                {comments.map((comment, idx) => (
+                  <div key={idx} className="flex gap-4">
+                    <div className="w-10 h-10 rounded-full bg-gray-200 flex-shrink-0 flex items-center justify-center text-[#1b887a] font-bold uppercase">
+                      {comment.name[0]}
+                    </div>
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2 mb-1">
+                        <span className="font-bold text-gray-900">{comment.name}</span>
+                        <span className="text-xs text-gray-400">
+                          {new Date(comment.createdAt).toLocaleDateString()}
+                        </span>
+                      </div>
+                      <p className="text-gray-600 leading-relaxed text-sm md:text-base">{comment.content}</p>
+                    </div>
+                  </div>
+                ))}
+                {comments.length === 0 && (
+                  <p className="text-center text-gray-400 py-8">
+                    {language === 'zh' ? '暂无评论，来当第一个发言的人吧！' : 'No comments yet. Be the first to share!'}
+                  </p>
+                )}
+              </div>
             </div>
 
             {/* Prev/Next Section */}

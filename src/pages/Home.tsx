@@ -153,49 +153,91 @@ export default function Home() {
   const langPrefix = language === 'zh' ? 'cn' : 'en';
 
   useEffect(() => {
-    const fetchGuides = async () => {
+    const fetchData = async () => {
+      // Parallelize both fetches
       try {
-        const { data, error } = await supabase
-          .from('articles')
-          .select('id, thumbnail, title, titleEn, subtitle, subtitleEn, views')
-          .order('createdAt', { ascending: false })
-          .limit(6);
-          
-        if (error) throw error;
+        await Promise.all([
+          // Fetch Guides
+          (async () => {
+            try {
+              const { data, error } = await supabase
+                .from('articles')
+                .select('id, thumbnail, title, titleEn, subtitle, subtitleEn, views')
+                .order('createdAt', { ascending: false })
+                .limit(6);
+                
+              if (error) throw error;
 
-        const mappedData = data?.map((doc: any) => ({
-           id: doc.id,
-           img: doc.thumbnail || '',
-           title: doc.title || '',
-           enTitle: doc.titleEn || doc.title || '',
-           desc: doc.subtitle || '',
-           enDesc: doc.subtitleEn || doc.subtitle || '',
-           views: doc.views || undefined
-        })) || [];
-        
-        setGuides(mappedData);
+              const mappedData = data?.map((doc: any) => ({
+                 id: doc.id,
+                 img: doc.thumbnail || '',
+                 title: doc.title || '',
+                 enTitle: doc.titleEn || doc.title || '',
+                 desc: doc.subtitle || '',
+                 enDesc: doc.subtitleEn || doc.subtitle || '',
+                 views: doc.views || undefined
+              })) || [];
+              
+              setGuides(mappedData);
+            } catch (err) {
+              console.error("Error fetching latest guides:", err);
+            }
+          })(),
+
+          // Fetch Cities
+          (async () => {
+            try {
+              const { data, error } = await supabase
+                .from('cities')
+                .select('*');
+                
+              if (error) throw error;
+              setCities(data || []);
+            } catch (err) {
+              console.error("Error fetching cities:", err);
+            }
+          })()
+        ]);
       } catch (err) {
-        console.error("Error fetching latest guides:", err);
-        setGuides([]);
+        console.error("Global data fetch error in Home:", err);
       }
     };
-    const fetchCities = async () => {
-      try {
-        const { data, error } = await supabase
-          .from('cities')
-          .select('*');
-          
-        if (error) throw error;
-        
-        setCities(data || []);
-      } catch (err) {
-        console.error("Error fetching cities:", err);
-        setCities([]);
-      }
-    };
-    fetchGuides();
-    fetchCities();
+    
+    fetchData();
   }, []);
+
+  const [votedCities, setVotedCities] = useState<string[]>([]);
+
+  const toggleWantToVisit = async (e: React.MouseEvent, cityId: string) => {
+    e.stopPropagation();
+    if (votedCities.includes(cityId)) return;
+
+    setVotedCities(prev => [...prev, cityId]);
+    
+    // Optimistic UI update
+    setCities(prev => prev.map(c => 
+      c.id === cityId 
+        ? { ...c, stats: { ...c.stats, wantToVisit: (c.stats?.wantToVisit || 0) + 1 } }
+        : c
+    ));
+
+    try {
+      const city = cities.find(c => c.id === cityId);
+      if (!city) return;
+
+      const currentStats = city.stats || {};
+      const newCount = (currentStats.wantToVisit || 0) + 1;
+
+      await supabase
+        .from('cities')
+        .update({
+          stats: { ...currentStats, wantToVisit: newCount }
+        })
+        .eq('id', cityId);
+    } catch (err) {
+      console.error("Error updating heart count:", err);
+    }
+  };
 
   const handleSearch = () => {
     const city = cities.find(c => 
@@ -218,10 +260,11 @@ export default function Home() {
     <div className="w-full bg-[#f7f7f7]">
       <SEO 
         isHome={true}
+        url={`https://tripcngo.com/${language === 'zh' ? 'cn' : 'en'}`}
         description={language === 'zh' 
-          ? 'tripcngo.com 是您的中国旅行终极指南。探索最新的144小时过境免签政策、寻找热门城市攻略及实用的中国旅行工具。' 
-          : 'tripcngo.com is your ultimate guide to traveling in China. Explore the latest 144-hour transit visa-free policies, top city guides, and practical travel tools.'}
-        keywords={language === 'zh' ? '中国旅游, 免签中国, 144小时过境免签, 中国旅行攻略, 中国城市指南' : 'China travel, visa free China, 144h transit visa free, China travel guide, Chinese cities'}
+          ? 'tripcngo.com 是您的中国旅行终极指南。探索最新的144/240小时过境免签政策、寻找热门城市攻略及实用的中国旅行工具。' 
+          : 'tripcngo.com is your ultimate guide to traveling in China. Explore the latest 144/240-hour transit visa-free policies, top city guides, and practical travel tools.'}
+        keywords={language === 'zh' ? '中国旅游, 免签中国, 144小时过境免签, 240小时过境免签, 中国旅行攻略, 中国城市指南' : 'China travel, visa free China, 144h transit visa free, 240h transit visa free, China travel guide, Chinese cities'}
       />
       
       {/* Hero Section */}
@@ -392,7 +435,13 @@ export default function Home() {
                     <span className="ml-2 text-xs text-gray-500 font-medium uppercase tracking-wider">{city.enName || city.name}</span>
                   </div>
                   <div className="flex gap-3 text-gray-500">
-                    <span className="flex items-center gap-1 text-xs font-medium"><Heart className="w-3.5 h-3.5 text-red-500 fill-red-500" /> {city.stats?.wantToVisit || 0}</span>
+                    <button 
+                      onClick={(e) => toggleWantToVisit(e, city.id)}
+                      className={`flex items-center gap-1 text-xs font-medium transition-colors hover:text-red-500 ${votedCities.includes(city.id) ? 'text-red-500' : ''}`}
+                    >
+                      <Heart className={`w-3.5 h-3.5 ${votedCities.includes(city.id) ? 'fill-red-500 text-red-500' : ''}`} /> 
+                      {city.stats?.wantToVisit || 0}
+                    </button>
                     <span className="flex items-center gap-1 text-xs font-medium"><ThumbsUp className="w-3.5 h-3.5 text-[#1b887a] fill-[#1b887a]" /> {city.stats?.recommended || 0}</span>
                   </div>
                 </div>
