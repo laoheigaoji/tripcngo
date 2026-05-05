@@ -14,6 +14,8 @@ import {
 import Markdown from 'react-markdown';
 import { doc, getDoc, updateDoc, increment, collection, getDocs, query, limit, where } from 'firebase/firestore';
 import { db } from '../../lib/firebase';
+import { fetchWithTimeout } from '../../lib/fetchUtils';
+import { fallbackArticles } from '../../data/fallbackData';
 
 interface Article {
   _id: string;
@@ -39,6 +41,7 @@ export default function GuideDetail() {
   const [prevArticle, setPrevArticle] = useState<Article | null>(null);
   const [nextArticle, setNextArticle] = useState<Article | null>(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const langPrefix = language === 'zh' ? 'cn' : 'en';
 
   const displayTitle = (article && language === 'en' && article.titleEn) ? article.titleEn : (article?.title || '');
@@ -48,10 +51,11 @@ export default function GuideDetail() {
   useEffect(() => {
     const fetchArticle = async () => {
       setLoading(true);
+      setError(null);
       try {
         if (!id) return;
         const docRef = doc(db, 'articles', id);
-        const docSnap = await getDoc(docRef);
+        const docSnap = await fetchWithTimeout(getDoc(docRef), 5000);
         
         if (docSnap.exists()) {
           const data = docSnap.data();
@@ -60,14 +64,14 @@ export default function GuideDetail() {
             ...data,
             views: (data.views || 0) + 1,
             likes: data.likes || 0,
-            createdAt: data.createdAt?.toDate().toISOString() || new Date().toISOString()
+            createdAt: data.createdAt?.toDate?.()?.toISOString() || data.createdAt || new Date().toISOString()
           } as Article;
           
           setArticle(loadedArticle);
           window.scrollTo(0, 0);
 
           try {
-            const allDocs = await getDocs(collection(db, 'articles'));
+            const allDocs = await fetchWithTimeout(getDocs(collection(db, 'articles')), 5000);
             const allArticles = allDocs.docs.map(d => {
               const dData = d.data();
               return { 
@@ -96,9 +100,48 @@ export default function GuideDetail() {
           } catch (e) {
             console.error('Failed to increment views', e);
           }
+        } else {
+          // Check fallback
+          const fallback = fallbackArticles.find(a => a.id === id);
+          if (fallback) {
+            const mappedFb = {
+              _id: fallback.id,
+              ...fallback,
+              title: fallback.title,
+              titleEn: fallback.enTitle,
+              subtitle: fallback.desc,
+              subtitleEn: fallback.enDesc,
+              content: "### " + fallback.title + "\n\n" + fallback.desc + "\n\n*(Full content only available with active database connection)*",
+              contentEn: "### " + fallback.enTitle + "\n\n" + fallback.enDesc + "\n\n*(Full content only available with active database connection)*",
+              thumbnail: fallback.img,
+              category: 'City Guide',
+              createdAt: new Date().toISOString()
+            } as Article;
+            setArticle(mappedFb);
+          }
         }
       } catch (error) {
         console.error("Error fetching article:", error);
+        // Try fallback on network error
+        const fallback = fallbackArticles.find(a => a.id === id);
+        if (fallback) {
+          const mappedFb = {
+            _id: fallback.id,
+            ...fallback,
+            title: fallback.title,
+            titleEn: fallback.enTitle,
+            subtitle: fallback.desc,
+            subtitleEn: fallback.enDesc,
+            content: "### " + fallback.title + "\n\n" + fallback.desc + "\n\n*(Full content only available with active database connection)*",
+            contentEn: "### " + fallback.enTitle + "\n\n" + fallback.enDesc + "\n\n*(Full content only available with active database connection)*",
+            thumbnail: fallback.img,
+            category: 'City Guide',
+            createdAt: new Date().toISOString()
+          } as Article;
+          setArticle(mappedFb);
+        } else {
+          setError("Connection failed. If you are in China, please use a VPN.");
+        }
       } finally {
         setLoading(false);
       }
@@ -125,6 +168,21 @@ export default function GuideDetail() {
   if (loading) return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50">
       <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[#1b887a]"></div>
+    </div>
+  );
+
+  if (error && !article) return (
+    <div className="min-h-screen flex flex-col items-center justify-center p-6 bg-white">
+      <div className="bg-red-50 p-8 rounded-2xl border border-red-100 max-w-md text-center">
+        <h2 className="text-2xl font-bold text-red-600 mb-4">Connection Failed</h2>
+        <p className="text-gray-600 mb-6">{error}</p>
+        <button 
+          onClick={() => window.location.reload()}
+          className="px-6 py-3 bg-[#1b887a] text-white rounded-xl font-bold shadow-lg active:scale-95 transition-transform"
+        >
+          Try Again
+        </button>
+      </div>
     </div>
   );
 

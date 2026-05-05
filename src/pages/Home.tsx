@@ -6,6 +6,8 @@ import { useLanguage } from '../context/LanguageContext';
 import SEO from '../components/SEO';
 import { collection, query, orderBy, limit, getDocs } from 'firebase/firestore';
 import { db } from '../lib/firebase';
+import { fallbackCities, fallbackArticles } from '../data/fallbackData';
+import { fetchWithTimeout } from '../lib/fetchUtils';
 
 const FAQS = [
   { 
@@ -156,8 +158,8 @@ export default function Home() {
     const fetchGuides = async () => {
       try {
         const q = query(collection(db, 'articles'), orderBy('createdAt', 'desc'), limit(6));
-        const snapshot = await getDocs(q);
-        const data = snapshot.docs.map(doc => ({
+        const snapshot = await fetchWithTimeout(getDocs(q), 5000);
+        const data = snapshot.docs.map((doc: any) => ({
            id: doc.id,
            img: doc.data().thumbnail || '',
            title: doc.data().title || '',
@@ -166,21 +168,31 @@ export default function Home() {
            enDesc: doc.data().subtitleEn || '',
            views: doc.data().views || undefined
         }));
-        setGuides(data);
+        if (data.length > 0) {
+          setGuides(data);
+        } else {
+          setGuides(fallbackArticles);
+        }
       } catch (err) {
-        console.error("Error fetching latest guides", err);
+        console.error("Error fetching latest guides, using fallback", err);
+        setGuides(fallbackArticles);
       }
     };
     const fetchCities = async () => {
       try {
-        const snapshot = await getDocs(collection(db, 'cities'));
-        const data = snapshot.docs.map(doc => ({
+        const snapshot = await fetchWithTimeout(getDocs(collection(db, 'cities')), 5000);
+        const data = snapshot.docs.map((doc: any) => ({
            ...(doc.data() as any),
            id: doc.id
         }));
-        setCities(data);
+        if (data.length > 0) {
+          setCities(data);
+        } else {
+          setCities(fallbackCities);
+        }
       } catch (err) {
-        console.error("Error fetching cities", err);
+        console.error("Error fetching cities, using fallback", err);
+        setCities(fallbackCities);
       }
     };
     fetchGuides();

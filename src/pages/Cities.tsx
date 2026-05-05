@@ -5,6 +5,8 @@ import SEO from '../components/SEO';
 import { useLanguage } from '../context/LanguageContext';
 import { collection, getDocs } from 'firebase/firestore';
 import { db } from '../lib/firebase';
+import { fallbackCities } from '../data/fallbackData';
+import { fetchWithTimeout } from '../lib/fetchUtils';
 
 const ITEMS_PER_PAGE = 9;
 
@@ -16,14 +18,19 @@ export default function Cities() {
   useEffect(() => {
     const fetchCities = async () => {
       try {
-        const snapshot = await getDocs(collection(db, 'cities'));
+        const snapshot = await fetchWithTimeout(getDocs(collection(db, 'cities')), 5000);
         const data = snapshot.docs.map(doc => ({
            ...(doc.data() as any),
            id: doc.id
         }));
-        setAllCities(data);
+        if (data.length > 0) {
+          setAllCities(data);
+        } else {
+          setAllCities(fallbackCities);
+        }
       } catch (err) {
-        console.error("Error fetching cities", err);
+        console.error("Error fetching cities, using fallback", err);
+        setAllCities(fallbackCities);
       }
     };
     fetchCities();

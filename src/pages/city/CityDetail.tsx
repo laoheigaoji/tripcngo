@@ -6,6 +6,8 @@ import SEO from '../../components/SEO';
 import { doc, getDoc, updateDoc, increment } from 'firebase/firestore';
 import { db } from '../../lib/firebase';
 import WeatherWidget from '../../components/WeatherWidget';
+import { fetchWithTimeout } from '../../lib/fetchUtils';
+import { fallbackCities } from '../../data/fallbackData';
 
 const iconMap: Record<string, React.ElementType> = {
   Plane, TrainFront, BusFront, Car, Bike, Train, Ship
@@ -17,6 +19,7 @@ export default function CityDetail() {
   const isEn = language === 'en';
   const [city, setCity] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [voted, setVoted] = useState<Record<string, boolean>>({});
 
   useEffect(() => {
@@ -34,16 +37,31 @@ export default function CityDetail() {
   useEffect(() => {
     const fetchCity = async () => {
       if (!id) return;
+      setLoading(true);
+      setError(null);
       try {
         const docRef = doc(db, 'cities', id);
-        const docSnap = await getDoc(docRef);
+        const docSnap = await fetchWithTimeout(getDoc(docRef), 5000);
         if (docSnap.exists()) {
           setCity({ ...docSnap.data(), id: docSnap.id });
         } else {
-          console.warn("No such city with id:", id);
+          // Check if it's in fallbacks
+          const fallback = fallbackCities.find(c => c.id === id);
+          if (fallback) {
+            setCity(fallback);
+          } else {
+            console.warn("No such city with id:", id);
+          }
         }
       } catch (err) {
         console.error("Error fetching city:", err);
+        // Try fallback if network error
+        const fallback = fallbackCities.find(c => c.id === id);
+        if (fallback) {
+          setCity(fallback);
+        } else {
+          setError("Network connection issue. If you are in mainland China, please try using a VPN.");
+        }
       } finally {
         setLoading(false);
       }
@@ -51,7 +69,26 @@ export default function CityDetail() {
     fetchCity();
   }, [id]);
 
-  if (loading) return <div className="p-20 text-center">Loading...</div>;
+  if (loading) return <div className="p-20 text-center flex flex-col items-center gap-4">
+    <div className="w-8 h-8 border-4 border-[#1b887a] border-t-transparent rounded-full animate-spin"></div>
+    <div className="text-gray-500 font-medium">Loading destination info...</div>
+  </div>;
+  
+  if (error && !city) return (
+    <div className="min-h-screen flex flex-col items-center justify-center p-6 bg-white">
+      <div className="bg-red-50 p-8 rounded-2xl border border-red-100 max-w-md text-center">
+        <h2 className="text-2xl font-bold text-red-600 mb-4">Connection Failed</h2>
+        <p className="text-gray-600 mb-6">{error}</p>
+        <button 
+          onClick={() => window.location.reload()}
+          className="px-6 py-3 bg-[#1b887a] text-white rounded-xl font-bold shadow-lg active:scale-95 transition-transform"
+        >
+          Try Again
+        </button>
+      </div>
+    </div>
+  );
+
   if (!city) return <Navigate to="/cities" replace />;
 
   const getTranslatedValue = (zh: any, en: any) => {
