@@ -306,7 +306,7 @@ export default function Admin() {
           }
         }
         
-        if (actualSrc.includes('firebasestorage.googleapis.com')) {
+        if (actualSrc.includes('firebasestorage.googleapis.com') || actualSrc.includes('supabase.co/storage')) {
            return; // skip already uploaded
         }
 
@@ -337,15 +337,36 @@ export default function Admin() {
                 const res = await fetch(task.actualSrc);
                 blob = await res.blob();
               } else {
-                const res = await fetch(task.actualSrc);
-                if (!res.ok) throw new Error(`Network error: ${res.status} ${res.statusText}`);
-                blob = await res.blob();
+                // Multi-layered fetch strategy to bypass CORS
+                try {
+                  const res = await fetch(task.actualSrc);
+                  if (!res.ok) throw new Error("Direct fetch failed");
+                  blob = await res.blob();
+                } catch (err) {
+                  console.log("Direct fetch failed, trying proxy for:", task.actualSrc);
+                  try {
+                    // Try wsrv.nl proxy (reliable for images)
+                    const proxyUrl = `https://wsrv.nl/?url=${encodeURIComponent(task.actualSrc)}&default=404`;
+                    const res = await fetch(proxyUrl);
+                    if (!res.ok) throw new Error("Proxy 1 failed");
+                    blob = await res.blob();
+                  } catch (err2) {
+                    // Fallback to corsproxy.io
+                    const proxyUrl2 = `https://corsproxy.io/?${encodeURIComponent(task.actualSrc)}`;
+                    const res = await fetch(proxyUrl2);
+                    if (!res.ok) throw new Error("Proxy 2 failed");
+                    blob = await res.blob();
+                  }
+                }
               }
 
               const fileName = `${Date.now()}-${Math.random().toString(36).substring(7)}.png`;
               const path = `articles/${fileName}`;
               
-              const { error } = await supabase.storage.from('images').upload(path, blob, { contentType: 'image/png' });
+              const { error } = await supabase.storage.from('images').upload(path, blob, { 
+                contentType: blob.type || 'image/png',
+                upsert: true 
+              });
               if (error) throw error;
               
               const url = supabase.storage.from('images').getPublicUrl(path).data.publicUrl;
