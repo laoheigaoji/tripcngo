@@ -195,7 +195,7 @@ export default function Admin() {
 
     try {
       setLoading(true);
-      const path = `articles/${Date.now()}-${file.name}`;
+      const path = `articles/${Date.now()}-${Math.random().toString(36).substring(7)}.png`;
       const { error } = await supabase.storage.from('images').upload(path, file);
       if (error) throw error;
       const url = supabase.storage.from('images').getPublicUrl(path).data.publicUrl;
@@ -345,7 +345,7 @@ export default function Admin() {
               const fileName = `${Date.now()}-${Math.random().toString(36).substring(7)}.png`;
               const path = `articles/${fileName}`;
               
-              const { error } = await supabase.storage.from('images').upload(path, blob);
+              const { error } = await supabase.storage.from('images').upload(path, blob, { contentType: 'image/png' });
               if (error) throw error;
               
               const url = supabase.storage.from('images').getPublicUrl(path).data.publicUrl;
@@ -380,8 +380,8 @@ export default function Admin() {
 
     try {
       setLoading(true);
-      const path = `thumbnails/${Date.now()}-${file.name}`;
-      const { error } = await supabase.storage.from('images').upload(path, file);
+      const path = `thumbnails/${Date.now()}-${Math.random().toString(36).substring(7)}.png`;
+      const { error } = await supabase.storage.from('images').upload(path, file, { contentType: file.type });
       if (error) throw error;
       const url = supabase.storage.from('images').getPublicUrl(path).data.publicUrl;
       
