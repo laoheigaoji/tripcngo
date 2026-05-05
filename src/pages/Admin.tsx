@@ -4,14 +4,14 @@ import { Trash2, Plus, LogOut, ChevronRight, Save, Image as ImageIcon, Filter, F
 import Markdown from 'react-markdown';
 import MDEditor from '@uiw/react-md-editor';
 import TurndownService from 'turndown';
-import { auth, db, storage } from '../lib/firebase';
-import { signInWithEmailAndPassword, signInWithPopup, GoogleAuthProvider, signOut, onAuthStateChanged, User } from 'firebase/auth';
+import { db, storage } from '../lib/firebase';
 import { collection, getDocs, addDoc, updateDoc, deleteDoc, doc, serverTimestamp, query, orderBy, setDoc } from 'firebase/firestore';
-import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
-import { generateCityData, askDeepSeek } from '../lib/deepseek';
+import { supabase } from '../lib/supabase';
+import { User } from '@supabase/supabase-js';
 import { CityData } from '../types/city';
 import { citiesData } from '../data/citiesData';
 import CityForm from '../components/CityForm';
+import { generateCityData, askDeepSeek } from '../lib/deepseek';
 
 const categoryMap: Record<string, string> = {
   'National Policy': '国家政策',
@@ -88,18 +88,18 @@ export default function Admin() {
     try {
       const response = await fetch(url);
       const blob = await response.blob();
-      const storageRef = ref(storage, path);
-      const snapshot = await uploadBytes(storageRef, blob);
-      return await getDownloadURL(snapshot.ref);
+      const { error } = await supabase.storage.from('images').upload(path, blob, { upsert: true });
+      if (error) throw error;
+      return supabase.storage.from('images').getPublicUrl(path).data.publicUrl;
     } catch (e) {
       console.warn("Failed to proxy image via direct fetch:", url, e);
       try {
         const proxyUrl = `https://wsrv.nl/?url=${encodeURIComponent(url)}`;
         const res = await fetch(proxyUrl);
         const blob = await res.blob();
-        const storageRef = ref(storage, path);
-        const snapshot = await uploadBytes(storageRef, blob);
-        return await getDownloadURL(snapshot.ref);
+        const { error } = await supabase.storage.from('images').upload(path, blob, { upsert: true });
+        if (error) throw error;
+        return supabase.storage.from('images').getPublicUrl(path).data.publicUrl;
       } catch (e2) {
         return url; 
       }
@@ -134,6 +134,7 @@ export default function Admin() {
                     - Food: Provide 10-12 local specialties, including main dishes, street foods, and traditional desserts.
                     - Transportation: Provide a highly detailed guide for Plane, Train, and Bus/Local Metro.
                     - History: Provide 5-6 key historical milestones.
+                    - Highlights: Include 2-3 World Heritage sites (if any) and 2-3 Intangible Cultural Heritages.
                 - Every field must have its corresponding 'en' field filled.
                 - CRITICAL: Primary fields (without 'en' prefix, e.g., 'paragraphs') MUST contain ONLY Chinese content.
                 - 'en' prefixed fields (e.g., 'enParagraphs') MUST contain ONLY English content.
@@ -152,6 +153,8 @@ export default function Admin() {
                   bestTravelTime: {strongText: string, enStrongText: string, paragraphs: string[], enParagraphs: string[]},
                   history: [{year: string, enYear: string, title: string, enTitle: string, desc: string, enDesc: string}],
                   attractions: [{name: string, enName: string, desc: string, enDesc: string, price: string, enPrice: string, season: string, enSeason: string, time: string, enTime: string}],
+                  worldHeritage: [{name: string, enName: string, year: string, enYear: string, desc: string, enDesc: string}],
+                  intangibleHeritage: [{name: string, enName: string, year: string, enYear: string, desc: string, enDesc: string, imageUrl: string}],
                   transportation: [{iconName: "Plane"|"Train"|"Bus", title: string, enTitle: string, desc: string, enDesc: string, price: string, enPrice: string}],
                   food: [{name: string, enName: string, pinyin: string, price: string, desc: string, enDesc: string, ingredients: string, enIngredients: string}]
                 }`;
@@ -192,9 +195,10 @@ export default function Admin() {
 
     try {
       setLoading(true);
-      const storageRef = ref(storage, `articles/${Date.now()}-${file.name}`);
-      const snapshot = await uploadBytes(storageRef, file);
-      const url = await getDownloadURL(snapshot.ref);
+      const path = `articles/${Date.now()}-${file.name}`;
+      const { error } = await supabase.storage.from('images').upload(path, file);
+      if (error) throw error;
+      const url = supabase.storage.from('images').getPublicUrl(path).data.publicUrl;
       
       const markdownImage = `\n![图片描述](${url})\n`;
       const targetField = activeTab === 'zh' ? 'content' : 'contentEn';
@@ -264,9 +268,10 @@ export default function Admin() {
         setUploadingImages(prev => prev + 1);
         for (const task of tasks) {
           try {
-            const storageRef = ref(storage, `articles/${Date.now()}-${task.file.name || 'image.png'}`);
-            const snapshot = await uploadBytes(storageRef, task.file);
-            const url = await getDownloadURL(snapshot.ref);
+            const path = `articles/${Date.now()}-${task.file.name || 'image.png'}`;
+            const { error } = await supabase.storage.from('images').upload(path, task.file);
+            if (error) throw error;
+            const url = supabase.storage.from('images').getPublicUrl(path).data.publicUrl;
             setFormData(prev => ({
                ...prev,
                [field]: ((prev[field] as string) || '').split(task.id).join(`![图片](${url})\n`)
@@ -332,24 +337,37 @@ export default function Admin() {
                 blob = await res.blob();
               } else {
                 try {
-                  const res = await fetch(task.actualSrc);
-                  if (!res.ok) throw new Error('Network error');
+                  console.log("Attempting direct fetch for:", task.actualSrc);
+                  const res = await fetch(task.actualSrc, {
+                    headers: { 
+                      'Referer': 'https://wanderchina.guide/',
+                      'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
+                    }
+                  });
+                  if (!res.ok) throw new Error(`Network error: ${res.status} ${res.statusText}`);
                   blob = await res.blob();
                 } catch (fetchErr) {
+                  console.warn("Direct fetch failed for:", task.actualSrc, fetchErr);
                   try {
                     const proxyUrl = `https://wsrv.nl/?url=${encodeURIComponent(task.actualSrc)}`;
+                    console.log("Attempting wsrv.nl proxy for:", task.actualSrc);
                     const proxyRes = await fetch(proxyUrl);
-                    if (!proxyRes.ok) throw new Error('Proxy 1 failed');
+                    if (!proxyRes.ok) throw new Error(`Proxy 1 failed: ${proxyRes.status} ${proxyRes.statusText}`);
                     blob = await proxyRes.blob();
                   } catch (proxy1Err) {
+                    console.warn("Proxy 1 failed for:", task.actualSrc, proxy1Err);
                     try {
                       const proxyUrl2 = `https://corsproxy.io/?${encodeURIComponent(task.actualSrc)}`;
+                      console.log("Attempting corsproxy.io for:", task.actualSrc);
                       const proxyRes2 = await fetch(proxyUrl2);
-                      if (!proxyRes2.ok) throw new Error('Proxy 2 failed');
+                      if (!proxyRes2.ok) throw new Error(`Proxy 2 failed: ${proxyRes2.status} ${proxyRes2.statusText}`);
                       blob = await proxyRes2.blob();
                     } catch (proxy2Err) {
+                      console.warn("Proxy 2 failed for:", task.actualSrc, proxy2Err);
                       const proxyUrl3 = `https://api.allorigins.win/raw?url=${encodeURIComponent(task.actualSrc)}`;
+                      console.log("Attempting allorigins.win for:", task.actualSrc);
                       const proxyRes3 = await fetch(proxyUrl3);
+                      if (!proxyRes3.ok) throw new Error(`Proxy 3 failed: ${proxyRes3.status} ${proxyRes3.statusText}`);
                       blob = await proxyRes3.blob();
                     }
                   }
@@ -357,9 +375,10 @@ export default function Admin() {
               }
 
               const fileName = `paste-html-${Date.now()}-${Math.random().toString(36).substring(7)}.png`;
-              const storageRef = ref(storage, `articles/${fileName}`);
-              const snapshot = await uploadBytes(storageRef, blob);
-              const url = await getDownloadURL(snapshot.ref);
+              const path = `articles/${fileName}`;
+              const { error } = await supabase.storage.from('images').upload(path, blob);
+              if (error) throw error;
+              const url = supabase.storage.from('images').getPublicUrl(path).data.publicUrl;
               
               setFormData(prev => {
                 const currentText = prev[field] as string;
@@ -393,9 +412,10 @@ export default function Admin() {
 
     try {
       setLoading(true);
-      const storageRef = ref(storage, `thumbnails/${Date.now()}-${file.name}`);
-      const snapshot = await uploadBytes(storageRef, file);
-      const url = await getDownloadURL(snapshot.ref);
+      const path = `thumbnails/${Date.now()}-${file.name}`;
+      const { error } = await supabase.storage.from('images').upload(path, file);
+      if (error) throw error;
+      const url = supabase.storage.from('images').getPublicUrl(path).data.publicUrl;
       
       setFormData(prev => ({ ...prev, thumbnail: url }));
     } catch (err) {
@@ -418,11 +438,12 @@ export default function Admin() {
         if (!file) continue;
 
         setLoading(true);
-        const storageRef = ref(storage, `thumbnails/${Date.now()}-${file.name || 'image.png'}`);
+        const path = `thumbnails/${Date.now()}-${file.name || 'image.png'}`;
         
         try {
-          const snapshot = await uploadBytes(storageRef, file);
-          const url = await getDownloadURL(snapshot.ref);
+          const { error } = await supabase.storage.from('images').upload(path, file);
+          if (error) throw error;
+          const url = supabase.storage.from('images').getPublicUrl(path).data.publicUrl;
           setFormData(prev => ({ ...prev, thumbnail: url }));
         } catch (err) {
           console.error("Error uploading pasted image:", err);
@@ -475,23 +496,30 @@ export default function Admin() {
   };
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
-      if (currentUser) {
-        // Allow any authenticated user in since there is no public registration
-        setUser(currentUser);
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setUser(session?.user ?? null);
+      if (session?.user) {
         fetchArticles();
         fetchCities();
-      } else {
-        setUser(null);
       }
     });
-    return () => unsubscribe();
+
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setUser(session?.user ?? null);
+      if (session?.user) {
+        fetchArticles();
+        fetchCities();
+      }
+    });
+
+    return () => subscription.unsubscribe();
   }, []);
 
   const handleEmailLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      await signInWithEmailAndPassword(auth, email, password);
+      const { error } = await supabase.auth.signInWithPassword({ email, password });
+      if (error) throw error;
     } catch (error: any) {
       console.error(error);
       alert('账号密码登录失败，请检查账号和密码。');
@@ -500,18 +528,16 @@ export default function Admin() {
 
   const handleGoogleLogin = async () => {
     try {
-      const provider = new GoogleAuthProvider();
-      await signInWithPopup(auth, provider);
+      const { error } = await supabase.auth.signInWithOAuth({ provider: 'google' });
+      if (error) throw error;
     } catch (error: any) {
-      if (error?.code !== 'auth/popup-closed-by-user') {
-        console.error(error);
-        alert('Google登录失败，请重试。');
-      }
+      console.error(error);
+      alert('Google登录失败，请重试。');
     }
   };
 
   const handleLogout = async () => {
-    await signOut(auth);
+    await supabase.auth.signOut();
     setArticles([]);
   };
 
@@ -600,10 +626,10 @@ export default function Admin() {
     const errInfo = {
       error: error instanceof Error ? error.message : String(error),
       authInfo: {
-        userId: auth.currentUser?.uid,
-        email: auth.currentUser?.email,
-        emailVerified: auth.currentUser?.emailVerified,
-        isAnonymous: auth.currentUser?.isAnonymous,
+        userId: user?.id,
+        email: user?.email,
+        emailVerified: !!user?.email_confirmed_at,
+        isAnonymous: user?.is_anonymous,
       },
       operationType,
       path

@@ -18,13 +18,94 @@ export default function Visa() {
   ];
 
   const FAQS = [
-    { q: language === 'zh' ? "这240小时是从什么时候开始计算的?" : "When does the 240 hours start counting?", a: language === 'zh' ? "240小时从入境当天的次日零时起计算，出境当天的24时止。例如：12月1日入境，则10天免签期限为12月2日0时至12月11日24时，必须在12月11日24时前出境。" : "The 240 hours are calculated from 00:00 on the day following the day of entry until 24:00 on the day of exit." },
-    { q: language === 'zh' ? "可以跨省旅游吗?" : "Can I travel across provinces?", a: language === 'zh' ? "是的，可以在10天内在免签政策覆盖的省份内自由旅行。" : "Yes, you can travel freely within the provinces covered by the visa-free policy within 10 days." },
-    { q: language === 'zh' ? "根据官方政策，我可以从香港进入大陆内地吗?" : "Can I enter mainland China from Hong Kong?", a: language === 'zh' ? "不可以，根据政策规定，从香港、澳门、台湾地区入境的外国人不适用于240小时过境免签政策，您需要提前申请相应签证。" : "No, travelers entering from HK, Macau, or Taiwan are generally not eligible for the transit visa-free policy and need a regular visa." },
-    { q: language === 'zh' ? "可否入境后再购买出境机票？" : "Can I buy the outbound ticket after entry?", a: language === 'zh' ? "不可以，必须提前持有确定日期和座位的联程票" : "No, you must hold a confirmed onward ticket with a fixed date and seat." },
-    { q: language === 'zh' ? "从广州入境上海出境是否允许？" : "Is it allowed to enter via Guangzhou and exit via Shanghai?", a: language === 'zh' ? "允许，支持不同口岸出入境" : "Yes, entry and exit through different ports are supported." },
-    { q: language === 'zh' ? "如何办理临时入境许可？" : "How to apply for a temporary entry permit?", a: language === 'zh' ? "在指定口岸（如北京首都机场T3航站楼）设有专门柜台，需现场填写《临时入境外国人入境卡》，提交护照+联程机票，经边检审核后发放许可。" : "Special counters are set up at designated ports. You need to fill out the 'Arrival Card for Temporary Entry Foreigners' on-site and submit your passport and onward ticket." },
-    // ... Simplified for brevity as many FAQs exist, prioritizing UI strings first
+    { 
+      q: language === 'zh' ? '这240小时是从什么时候开始计算的?' : 'When does the 240 hours start counting?', 
+      a: language === 'zh' ? '240小时从入境当天的次日零时起计算，出境当天的24时止。例如：12月1日入境，则10天免签期限为12月2日0时至12月11日24时，必须在12月11日24时前出境。' : 'The 240 hours are calculated from 00:00 on the day following the day of entry until 24:00 on the day of exit. For example: if you enter on December 1st, the 10-day visa-free period is from 00:00 on December 2nd to 24:00 on December 11th, and you must exit before 24:00 on December 11th.' 
+    },
+    { 
+      q: language === 'zh' ? '可以跨省旅游吗?' : 'Can I travel across provinces?', 
+      a: language === 'zh' ? '是的，可以在10天内在免签政策覆盖的省份内自由旅行。' : 'Yes, you can travel freely within the provinces covered by the visa-free policy within the 10 days.' 
+    },
+    { 
+      q: language === 'zh' ? '根据官方政策，我可以从香港进入大陆内地吗?' : 'Can I enter mainland China from Hong Kong according to the official policy?', 
+      a: language === 'zh' ? '不可以，根据政策规定，从香港、澳门、台湾地区入境的外国人不适用于240小时过境免签政策，您需要提前申请相应签证。' : 'No, according to the policy, foreigners entering from Hong Kong, Macau, and Taiwan are not eligible for the 240-hour transit visa-free policy. You need to apply for the corresponding visa in advance.' 
+    },
+    { 
+      q: language === 'zh' ? '可否入境后再购买出境机票？' : 'Can I buy the outbound ticket after entry?', 
+      a: language === 'zh' ? '不可以，必须提前持有确定日期和座位的联程票' : 'No, you must hold a confirmed onward ticket with a fixed date and seat in advance.' 
+    },
+    { 
+      q: language === 'zh' ? '从广州入境上海出境是否允许？' : 'Is it allowed to enter via Guangzhou and exit via Shanghai?', 
+      a: language === 'zh' ? '允许，支持不同口岸出入境' : 'Yes, entry and exit through different ports are supported.' 
+    },
+    { 
+      q: language === 'zh' ? '如何办理临时入境许可？' : 'How to apply for a temporary entry permit?', 
+      a: language === 'zh' ? '在指定口岸（如北京首都机场T3航站楼）设有专门柜台，需现场填写《临时入境外国人入境卡》，提交护照+联程机票，经边检审核后发放许可。' : 'Special counters are set up at designated ports (e.g., Beijing Capital Airport T3). You need to fill out the \'Arrival Card for Temporary Entry Foreigners\' on-site, submit your passport and onward ticket, and the permit will be issued after border inspection approval.' 
+    },
+    { 
+      q: language === 'zh' ? '从香港/澳门转机是否适用？' : 'Is transiting through Hong Kong/Macau applicable?', 
+      a: language === 'zh' ? '允许。例如美国→广州→香港西九龙，凭高铁票可申请免签；加拿大→珠海→澳门，凭船票同样适用。' : 'Yes. For example, USA → Guangzhou → Hong Kong West Kowloon, you can apply with a high-speed rail ticket; Canada → Zhuhai → Macau, applicable with a ferry ticket.' 
+    },
+    { 
+      q: language === 'zh' ? '联程票可否包含陆路交通？' : 'Can the onward ticket include land transportation?', 
+      a: language === 'zh' ? '允许。如持有广州→香港高铁票、珠海→澳门船票等跨境陆海空联运票据均符合要求。' : 'Yes. Cross-border land, sea, and air transport tickets such as Guangzhou → Hong Kong high-speed rail tickets, Zhuhai → Macau ferry tickets all meet the requirements.' 
+    },
+    { 
+      q: language === 'zh' ? '证件丢失怎么办？' : 'What should I do if I lose my documents?', 
+      a: language === 'zh' ? '立即向停留地公安机关报案，凭《护照报失证明》到出入境管理部门申请停留证件，同时联系本国使领馆补办旅行证件。' : 'Immediately report to the public security organ in your place of stay, apply for a stay permit at the exit-entry administration department with the \'Passport Loss Report Certificate\', and contact your country\'s embassy or consulate to reissue travel documents.' 
+    },
+    { 
+      q: language === 'zh' ? '与互免签证如何选择？' : 'How to choose between mutual visa exemption and transit visa exemption?', 
+      a: language === 'zh' ? '如属新加坡等互免国公民，建议直接使用30天免签（更灵活）；若仅过境则选240小时免签（无需签证费）。' : 'If you are a citizen of a mutual visa exemption country like Singapore, it\'s recommended to use the 30-day visa exemption (more flexible); if merely transiting, the 240-hour visa exemption (no visa fee) can be chosen.' 
+    },
+    { 
+      q: language === 'zh' ? '超期停留会怎样？' : 'What happens if I overstay?', 
+      a: language === 'zh' ? '每日处罚款500元，最高可处10日拘留并限期离境，且5年内不得申请过境免签。' : 'A fine of 500 RMB per day, up to 10 days of detention, and ordered to leave within a time limit. Moreover, you are not allowed to apply for transit visa exemption for 5 years.' 
+    },
+    { 
+      q: language === 'zh' ? '如何查询实时政策？' : 'How to inquire about real-time policies?', 
+      a: language === 'zh' ? '微信搜索"国家移民管理局"小程序，或拨打12367热线（支持英/日/韩等8语种服务）。' : 'Search for the \'National Immigration Administration\' mini-program on WeChat, or dial the 12367 hotline (supports 8 languages including English, Japanese, and Korean).' 
+    },
+    { 
+      q: language === 'zh' ? '哪些行为会被视为非法就业？' : 'What behaviors are considered illegal employment?', 
+      a: language === 'zh' ? '包括商业拍摄、网络直播获利、临时授课等，即使未签订劳动合同也可能被认定违法。' : 'Including commercial photography, profiting from live streaming, temporary teaching, etc. Even if no labor contract is signed, it could be deemed illegal.' 
+    },
+    { 
+      q: language === 'zh' ? '北京首都机场办理流程有何特殊安排？' : 'Are there any special arrangements for the procedure at Beijing Capital Airport?', 
+      a: language === 'zh' ? 'T3航站楼设立"过境免签快速通道"，配备英/日/韩三语服务专员，办理时间缩短至15分钟内。需注意每日22:00-6:00时段需前往24小时应急窗口办理。' : 'Terminal 3 has a \'Transit Visa-Free Fast Channel\' equipped with trilingual service staff (English/Japanese/Korean), shortening processing time to within 15 minutes. Note that from 22:00 to 6:00 daily, you must go to the 24-hour emergency window.' 
+    },
+    { 
+      q: language === 'zh' ? '上海浦东机场转机如何衔接？' : 'How to connect transit at Shanghai Pudong Airport?', 
+      a: language === 'zh' ? '提供"空铁联运"服务，持高铁票可在卫星厅直接办理过境手续。例如：巴黎→上海→杭州东站的高铁联程票，可在隔离区内完成所有手续。' : 'Provides \'Air-Rail Intermodal Transport\' service. Passengers with high-speed rail tickets can directly handle transit procedures in the satellite hall. For example: a Paris → Shanghai → Hangzhou East onward high-speed rail ticket allows completing all procedures in the isolated area.' 
+    },
+    { 
+      q: language === 'zh' ? '摄影爱好者有哪些限制？' : 'What restrictions exist for photography enthusiasts?', 
+      a: language === 'zh' ? '商业拍摄需申请工作签证，但个人旅游拍摄允许。禁飞区（如军事设施周边500米）严禁无人机航拍，违者最高罚款2万元。' : 'Commercial photography requires a work visa, but personal travel photography is allowed. Drone aerial photography is strictly prohibited in no-fly zones (like within 500m of military facilities), with violators facing fines up to 20,000 RMB.' 
+    },
+    { 
+      q: language === 'zh' ? '联程票改签如何处理？' : 'How to handle onward ticket rescheduling?', 
+      a: language === 'zh' ? '允许免费改签1次，需在停留期第7天前完成。例如原定D10香港航班改签至D11，需在D7前持新机票到入境口岸边检站备案。' : 'One free date change is allowed, and must be completed before the 7th day of the stay period. For example, changing a D10 Hong Kong-bound flight to D11 requires filing the new ticket with the entry port border inspection station before D7.' 
+    },
+    { 
+      q: language === 'zh' ? '跨境高铁票是否认可？' : 'Are cross-border high-speed rail tickets recognized?', 
+      a: language === 'zh' ? '中老铁路（昆明→万象）、中越铁路（南宁→河内）等国际班次车票均被认可，需提供纸质票与电子客票号双验证。' : 'International train tickets like the China-Laos Railway (Kunming → Vientiane) and China-Vietnam Railway (Nanning → Hanoi) are recognized. Dual verification with both physical ticket and electronic ticket number is required.' 
+    },
+    { 
+      q: language === 'zh' ? '如何通过微信办理预审？' : 'How to handle pre-approval via WeChat?', 
+      a: language === 'zh' ? '在"移民局"小程序提交护照首页+电子机票，AI系统10分钟生成《过境预审码》，可减少口岸办理时间50%。' : 'Submit the passport bio page + electronic ticket in the \'Immigration Administration\' mini-program. The AI system generates a \'Transit Pre-Approval Code\' in 10 minutes, reducing port processing time by 50%.' 
+    },
+    { 
+      q: language === 'zh' ? '哪些行为可能引发误会？' : 'What behaviors might cause misunderstandings?', 
+      a: language === 'zh' ? '避免在政府机关门前比"V"手势拍照、未经许可拍摄少数民族服饰者。宗教场所需注意着装要求（如寺庙不穿短裤入内）。' : 'Avoid making \'V\' gestures for photos in front of government organs, or photographing ethnic minority clothing wearers without permission. Religious places have dress codes (e.g., no shorts inside temples).' 
+    },
+    { 
+      q: language === 'zh' ? '突发疾病如何就医？' : 'How to seek medical care in case of sudden illness?', 
+      a: language === 'zh' ? '持护照可在二级以上医院挂急诊，推荐北京协和/上海瑞金等53家涉外医院。保留医疗票据可申请停留延期。' : 'You can visit the emergency room at Class II or above hospitals with your passport. 53 foreign-related hospitals like Beijing Union Medical College Hospital/Shanghai Ruijin are recommended. Keep medical receipts to apply for a stay extension.' 
+    },
+    { 
+      q: language === 'zh' ? '突发疾病如何延期？' : 'How to extend stay due to sudden illness?', 
+      a: language === 'zh' ? '需提供医院诊断证明，在停留期满前3个工作日向所在地市级公安局出入境管理处申请，最长可延期30天。' : 'You must provide a hospital diagnosis certificate and apply to the municipal public security bureau exit-entry administration office 3 working days before your stay period expires. The maximum extension is 30 days.' 
+    }
   ];
 
   return (
@@ -448,7 +529,7 @@ export default function Visa() {
                   </div>
                 </div>
                 
-                <div className="flex-1 bg-white border border-gray-100 shadow-sm rounded-lg p-4 flex flex-col items-center justify-center gap-2 cursor-pointer hover:shadow-md transition-shadow">
+                <a href="https://www.nia.gov.cn/Enquiry/" target="_blank" rel="noopener noreferrer" className="flex-1 bg-white border border-gray-100 shadow-sm rounded-lg p-4 flex flex-col items-center justify-center gap-2 cursor-pointer hover:shadow-md transition-shadow">
                   <div className="w-8 h-8 rounded-full bg-green-50 text-[var(--color-primary)] flex items-center justify-center">
                     <ExternalLink className="w-4 h-4" />
                   </div>
@@ -456,7 +537,7 @@ export default function Visa() {
                     <div className="text-xs text-gray-500">{t('visa.sidebar.interaction')}</div>
                     <div className="font-bold text-gray-900">{t('visa.sidebar.ask')}</div>
                   </div>
-                </div>
+                </a>
               </div>
             </div>
 

@@ -3,10 +3,8 @@ import { useParams, Navigate } from 'react-router-dom';
 import { Clock, Navigation, Map, CloudRain, Sun, Cloud, Calendar, Building2, Users, MapPin, Tag, ArrowRight, Star, Plane, TrainFront, BusFront, Car, Bike, Train, Ship } from 'lucide-react';
 import { useLanguage } from '../../context/LanguageContext';
 import SEO from '../../components/SEO';
-import { doc, getDoc, updateDoc, increment } from 'firebase/firestore';
-import { db } from '../../lib/firebase';
+import { supabase } from '../../lib/supabase';
 import WeatherWidget from '../../components/WeatherWidget';
-import { fetchWithTimeout } from '../../lib/fetchUtils';
 import { fallbackCities } from '../../data/fallbackData';
 
 const iconMap: Record<string, React.ElementType> = {
@@ -40,17 +38,17 @@ export default function CityDetail() {
       setLoading(true);
       setError(null);
       try {
-        const docRef = doc(db, 'cities', id);
-        const docSnap = await fetchWithTimeout(getDoc(docRef), 5000);
-        if (docSnap.exists()) {
-          setCity({ ...docSnap.data(), id: docSnap.id });
+        const { data, error } = await supabase.from('cities').select('*').eq('id', id).single();
+        if (!error && data) {
+          setCity(data);
         } else {
           // Check if it's in fallbacks
           const fallback = fallbackCities.find(c => c.id === id);
           if (fallback) {
             setCity(fallback);
           } else {
-            console.warn("No such city with id:", id);
+            console.warn("No such city with id:", id, error);
+            setError(error?.message || "Not found");
           }
         }
       } catch (err) {
@@ -114,10 +112,15 @@ export default function CityDetail() {
       setVoted(prev => ({ ...prev, [field]: true }));
       localStorage.setItem(storageKey, 'true');
 
-      const docRef = doc(db, 'cities', id);
-      await updateDoc(docRef, {
-        [`stats.${field}`]: increment(1)
-      });
+      const currentStats = city.stats || {};
+      const { error } = await supabase.from('cities').update({
+        stats: {
+          ...currentStats,
+          [field]: (currentStats[field] || 0) + 1
+        }
+      }).eq('id', id);
+
+      if (error) throw error;
     } catch (err) {
       console.error(`Error updating ${field}:`, err);
       // Revert if failed
@@ -139,7 +142,7 @@ export default function CityDetail() {
       <div className="relative pt-24 pb-16 md:pt-32 md:pb-24 overflow-hidden">
         <div className="absolute inset-0 z-0">
           <img 
-            src={city.heroImage}
+            src={city.heroImage || 'https://images.unsplash.com/photo-1540202403-b712e0e026ee?w=1600&q=80&auto=format&fit=crop'}
             alt={city.enName} 
             className="w-full h-full object-cover"
           />
@@ -153,7 +156,7 @@ export default function CityDetail() {
               {!isEn && <span className="text-white/40 font-medium text-2xl md:text-4xl">{city.enName}</span>}
             </h1>
             <div className="flex flex-wrap items-center gap-3">
-              {city.tags.map((tag, idx) => (
+              {(city.tags || []).map((tag: any, idx: number) => (
                 <span key={idx} className="px-5 py-2 bg-[#e6f4ea] text-[#1b887a] rounded-full text-[10px] font-black shadow-sm border border-[#1b887a]/20 tracking-widest uppercase">
                   {getTranslatedValue(tag.text, tag.enText)}
                 </span>
@@ -164,7 +167,7 @@ export default function CityDetail() {
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-12 items-start">
             <div className="col-span-1 lg:col-span-2 text-white">
               <div className="space-y-6 text-white/90 text-base md:text-xl leading-relaxed max-w-4xl">
-                {(isEn && city.enParagraphs ? city.enParagraphs : city.paragraphs).map((p, idx) => (
+                {(isEn && city.enParagraphs ? city.enParagraphs : (city.paragraphs || [])).map((p: string, idx: number) => (
                   <p key={idx}>{p}</p>
                 ))}
               </div>
@@ -181,7 +184,7 @@ export default function CityDetail() {
                 >
                   <Star className={`w-4 h-4 ${voted.wantToVisit ? 'fill-current' : ''}`} />
                   <span>{voted.wantToVisit ? (isEn ? 'Added to Wishlist' : '已在想去清单') : t('city.stats.wantToVisit')}</span> 
-                  <span className="bg-black/20 px-2 py-0.5 rounded-lg text-xs">{city.stats.wantToVisit}</span>
+                  <span className="bg-black/20 px-2 py-0.5 rounded-lg text-xs">{city.stats?.wantToVisit || 0}</span>
                 </button>
                 <button 
                   onClick={() => handleStatsUpdate('recommended')}
@@ -194,7 +197,7 @@ export default function CityDetail() {
                 >
                   <Tag className={`w-4 h-4 ${voted.recommended ? 'fill-current' : ''}`} />
                   <span>{voted.recommended ? (isEn ? 'Recommended' : '已推荐给他人') : t('city.stats.recommended')}</span> 
-                  <span className="bg-black/20 px-2 py-0.5 rounded-lg text-xs">{city.stats.recommended}</span>
+                  <span className="bg-black/20 px-2 py-0.5 rounded-lg text-xs">{city.stats?.recommended || 0}</span>
                 </button>
               </div>
             </div>
@@ -207,12 +210,12 @@ export default function CityDetail() {
                 <div className="text-center">
                   <MapPin className="w-5 h-5 mx-auto text-white/50 mb-2" />
                   <div className="text-xs text-white/50">{t('city.weather.area')}</div>
-                  <div className="font-semibold text-lg">{city.info.area}</div>
+                  <div className="font-semibold text-lg">{city.info?.area || '-'}</div>
                 </div>
                 <div className="text-center">
                   <Users className="w-5 h-5 mx-auto text-white/50 mb-2" />
                   <div className="text-xs text-white/50">{t('city.weather.population')}</div>
-                  <div className="font-semibold text-lg">{city.info.population}</div>
+                  <div className="font-semibold text-lg">{city.info?.population || '-'}</div>
                 </div>
               </div>
             </div>
@@ -226,43 +229,43 @@ export default function CityDetail() {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-16">
             
             {/* Travel Time */}
-            <div>
-              <h2 className="text-3xl font-bold text-gray-900 mb-8 tracking-tight text-center md:text-left">
-                {getTranslatedValue(city.name, city.enName)}{t('city.bestTime.title')}
-              </h2>
-              <div className="bg-white rounded-2xl p-8 shadow-sm border border-gray-100 relative">
-                <div className="absolute top-0 left-8 -translate-y-1/2 text-6xl text-gray-100 font-serif leading-none">"</div>
-                <p className="text-lg text-gray-700 leading-relaxed font-medium mb-4 relative z-10">
-                  {t('city.bestTime.descPrefix')}{getTranslatedValue(city.name, city.enName)}{t('city.bestTime.descSuffix')}
-                  <strong className="text-gray-900 font-bold ml-1">
-                    {getTranslatedValue(city.bestTravelTime.strongText, city.bestTravelTime.enStrongText)}
-                  </strong>.
-                </p>
-                {(isEn && city.bestTravelTime.enParagraphs ? city.bestTravelTime.enParagraphs : city.bestTravelTime.paragraphs).map((p, idx) => (
-                  <p key={idx} className="text-gray-600 leading-relaxed mb-4 relative z-10">
-                    {p}
+              <div>
+                <h2 className="text-3xl font-bold text-gray-900 mb-8 tracking-tight text-center md:text-left">
+                  {getTranslatedValue(city.name, city.enName)}{t('city.bestTime.title')}
+                </h2>
+                <div className="bg-white rounded-2xl p-8 shadow-sm border border-gray-100 relative">
+                  <div className="absolute top-0 left-8 -translate-y-1/2 text-6xl text-gray-100 font-serif leading-none">"</div>
+                  <p className="text-lg text-gray-700 leading-relaxed font-medium mb-4 relative z-10">
+                    {t('city.bestTime.descPrefix')}{getTranslatedValue(city.name, city.enName)}{t('city.bestTime.descSuffix')}
+                    <strong className="text-gray-900 font-bold ml-1">
+                      {getTranslatedValue(city.bestTravelTime?.strongText || '...', city.bestTravelTime?.enStrongText || '...')}
+                    </strong>.
                   </p>
-                ))}
-                <div className="absolute bottom-0 right-8 translate-y-1/2 text-6xl text-gray-100 font-serif leading-none rotate-180">"</div>
+                  {(isEn && (city.bestTravelTime?.enParagraphs || []).length > 0 ? city.bestTravelTime.enParagraphs : (city.bestTravelTime?.paragraphs || [])).map((p: string, idx: number) => (
+                    <p key={idx} className="text-gray-600 leading-relaxed mb-4 relative z-10">
+                      {p}
+                    </p>
+                  ))}
+                  <div className="absolute bottom-0 right-8 translate-y-1/2 text-6xl text-gray-100 font-serif leading-none rotate-180">"</div>
+                </div>
               </div>
-            </div>
 
             {/* History */}
-            <div>
-              <h2 className="text-3xl font-bold text-gray-900 mb-8 tracking-tight text-center md:text-left">
-                {getTranslatedValue(city.name, city.enName)}{t('city.history.title')}
-              </h2>
-              <div className="relative border-l-2 border-green-100 pl-8 space-y-8 pb-4">
-                {city.history.map((item, idx) => (
-                  <div key={idx} className="relative">
-                    <div className="absolute -left-[41px] bg-green-500 w-4 h-4 rounded-full border-4 border-white shadow-sm"></div>
-                    <div className="text-sm font-semibold text-green-600 mb-1">{getTranslatedValue(item.year, item.enYear)}</div>
-                    <h3 className="text-xl font-bold text-gray-900 mb-2">{getTranslatedValue(item.title, item.enTitle)}</h3>
-                    <p className="text-gray-600 text-sm leading-relaxed">{getTranslatedValue(item.desc, item.enDesc)}</p>
-                  </div>
-                ))}
+              <div>
+                <h2 className="text-3xl font-bold text-gray-900 mb-8 tracking-tight text-center md:text-left">
+                  {getTranslatedValue(city.name, city.enName)}{t('city.history.title')}
+                </h2>
+                <div className="relative border-l-2 border-green-100 pl-8 space-y-8 pb-4">
+                  {(city.history || []).map((item: any, idx: number) => (
+                    <div key={idx} className="relative">
+                      <div className="absolute -left-[41px] bg-green-500 w-4 h-4 rounded-full border-4 border-white shadow-sm"></div>
+                      <div className="text-sm font-semibold text-green-600 mb-1">{getTranslatedValue(item.year, item.enYear)}</div>
+                      <h3 className="text-xl font-bold text-gray-900 mb-2">{getTranslatedValue(item.title, item.enTitle)}</h3>
+                      <p className="text-gray-600 text-sm leading-relaxed">{getTranslatedValue(item.desc, item.enDesc)}</p>
+                    </div>
+                  ))}
+                </div>
               </div>
-            </div>
 
           </div>
         </div>
@@ -277,7 +280,7 @@ export default function CityDetail() {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-            {city.attractions.map((spot, idx) => (
+            {(city.attractions || []).map((spot: any, idx: number) => (
               <div key={idx} className="bg-white border text-left border-gray-100 rounded-xl overflow-hidden hover:shadow-xl transition-all duration-300 group flex flex-col">
                 <div className="h-48 bg-gray-100 relative overflow-hidden flex items-center justify-center">
                   <div className="absolute inset-0 bg-[#e6f4ea] opacity-30"></div>
@@ -319,8 +322,7 @@ export default function CityDetail() {
         </div>
       </div>
 
-      {/* Optional World Heritage Section */}
-      {city.worldHeritage && city.worldHeritage.length > 0 && (
+            {/* Optional World Heritage Section */}
         <div className="py-16 bg-white border-t border-gray-100">
           <div className="max-w-7xl mx-auto px-6 text-center">
             <div className="mb-12">
@@ -329,9 +331,9 @@ export default function CityDetail() {
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-              {city.worldHeritage.map((heritage, idx) => (
+              {(city.worldHeritage || []).length > 0 ? (city.worldHeritage || []).map((heritage: any, idx: number) => (
                 <div key={idx} className="relative h-64 rounded-xl overflow-hidden group cursor-pointer text-left">
-                  <img src={`https://images.unsplash.com/photo-1599571234909-29ed5d1321d6?w=600&q=80&auto=format&fit=crop&random=${idx}`} alt={heritage.name} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" />
+                  <img src={heritage.imageUrl || `https://images.unsplash.com/photo-1599571234909-29ed5d1321d6?w=600&q=80&auto=format&fit=crop&random=${idx}`} alt={heritage.name} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" />
                   <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent"></div>
                   <div className="absolute top-4 right-4 bg-white/90 backdrop-blur-sm text-gray-900 text-xs font-bold px-2 py-1 rounded-full shadow-sm">
                     {getTranslatedValue(heritage.year, heritage.enYear)}
@@ -341,14 +343,14 @@ export default function CityDetail() {
                     <p className="text-white/80 text-xs line-clamp-2 leading-relaxed opacity-0 group-hover:opacity-100 transition-opacity duration-300 translate-y-2 group-hover:translate-y-0">{getTranslatedValue(heritage.desc, heritage.enDesc)}</p>
                   </div>
                 </div>
-              ))}
+              )) : (
+                <p className="text-gray-500 w-full text-center">{t('city.none')}</p>
+              )}
             </div>
           </div>
         </div>
-      )}
 
-      {/* Optional Intangible Cultural Heritage */}
-      {city.intangibleHeritage && city.intangibleHeritage.length > 0 && (
+       {/* Optional Intangible Cultural Heritage */}
         <div className="py-16 bg-gray-50 border-t border-gray-100">
           <div className="max-w-5xl mx-auto px-6 text-center">
             <div className="mb-12">
@@ -357,10 +359,10 @@ export default function CityDetail() {
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8 text-left">
-              {city.intangibleHeritage.map((item, idx) => (
-                <div key={idx} className={`${idx === 2 && city.intangibleHeritage!.length === 3 ? 'md:col-span-2' : ''} bg-white rounded-2xl p-6 shadow-sm border border-gray-100 flex flex-col md:flex-row gap-6 hover:shadow-md transition-shadow`}>
-                  <div className={`w-full ${idx === 2 && city.intangibleHeritage!.length === 3 ? 'md:w-1/4' : 'md:w-1/3'} flex-shrink-0 h-40`}>
-                    <img src={item.imageUrl} alt={item.name} className="w-full h-full object-cover rounded-xl" />
+              {(city.intangibleHeritage || []).length > 0 ? (city.intangibleHeritage || []).map((item: any, idx: number) => (
+                <div key={idx} className={`${idx === 2 && (city.intangibleHeritage || []).length === 3 ? 'md:col-span-2' : ''} bg-white rounded-2xl p-6 shadow-sm border border-gray-100 flex flex-col md:flex-row gap-6 hover:shadow-md transition-shadow`}>
+                  <div className={`w-full ${idx === 2 && (city.intangibleHeritage || []).length === 3 ? 'md:w-1/4' : 'md:w-1/3'} flex-shrink-0 h-40`}>
+                    <img src={item.imageUrl || 'https://images.unsplash.com/photo-1544025162-811c75c82de1?w=400&q=80&auto=format&fit=crop'} alt={item.name} className="w-full h-full object-cover rounded-xl" />
                   </div>
                   <div className="flex-grow flex flex-col justify-center">
                     <h3 className="text-xl font-bold text-gray-900 mb-1">{getTranslatedValue(item.name, item.enName)}</h3>
@@ -370,11 +372,12 @@ export default function CityDetail() {
                     </p>
                   </div>
                 </div>
-              ))}
+              )) : (
+                <p className="text-gray-500 w-full text-center">{t('city.none')}</p>
+              )}
             </div>
           </div>
         </div>
-      )}
 
       {/* Transportation Section */}
       <div className="py-16 bg-white border-t border-gray-100 text-center">
@@ -385,7 +388,7 @@ export default function CityDetail() {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 text-left">
-            {city.transportation.map((item, idx) => {
+            {(city.transportation || []).map((item: any, idx: number) => {
               const Icon = iconMap[item.iconName] || Navigation;
               return (
                 <div key={idx} className="bg-gray-50 rounded-xl p-6 border border-gray-100 hover:shadow-md transition-shadow">
@@ -413,7 +416,7 @@ export default function CityDetail() {
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 text-left">
-            {city.food.map((food, idx) => (
+            {(city.food || []).map((food: any, idx: number) => (
               <div key={idx} className="bg-white rounded-xl p-5 shadow-sm border border-gray-100 flex gap-5 hover:shadow-md transition-shadow">
                 <div className="w-32 h-32 flex-shrink-0">
                   <img src={food.imageUrl || `https://images.unsplash.com/photo-1544025162-811c75c82de1?w=400&q=80&auto=format&fit=crop&random=${food.imageIdx}`} alt={food.name} className="w-full h-full object-cover rounded-lg" />

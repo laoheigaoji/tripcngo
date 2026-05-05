@@ -3,10 +3,8 @@ import { Heart, ThumbsUp } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import SEO from '../components/SEO';
 import { useLanguage } from '../context/LanguageContext';
-import { collection, getDocs } from 'firebase/firestore';
-import { db } from '../lib/firebase';
+import { supabase } from '../lib/supabase';
 import { fallbackCities } from '../data/fallbackData';
-import { fetchWithTimeout } from '../lib/fetchUtils';
 
 const ITEMS_PER_PAGE = 9;
 
@@ -18,12 +16,10 @@ export default function Cities() {
   useEffect(() => {
     const fetchCities = async () => {
       try {
-        const snapshot = await fetchWithTimeout(getDocs(collection(db, 'cities')), 5000);
-        const data = snapshot.docs.map(doc => ({
-           ...(doc.data() as any),
-           id: doc.id
-        }));
-        if (data.length > 0) {
+        const { data, error } = await supabase.from('cities').select('*');
+        if (error) throw error;
+        
+        if (data && data.length > 0) {
           setAllCities(data);
         } else {
           setAllCities(fallbackCities);

@@ -12,9 +12,7 @@ import {
   ThumbsUp
 } from 'lucide-react';
 import Markdown from 'react-markdown';
-import { doc, getDoc, updateDoc, increment, collection, getDocs, query, limit, where } from 'firebase/firestore';
-import { db } from '../../lib/firebase';
-import { fetchWithTimeout } from '../../lib/fetchUtils';
+import { supabase } from '../../lib/supabase';
 import { fallbackArticles } from '../../data/fallbackData';
 
 interface Article {
@@ -36,8 +34,14 @@ interface Article {
 export default function GuideDetail() {
   const { id } = useParams();
   const { language, t } = useLanguage();
+  const isEn = language === 'en';
+  const getTranslatedValue = (zh: any, en: any) => {
+    if (isEn && en) return en;
+    return zh;
+  };
   const [article, setArticle] = useState<Article | null>(null);
   const [recommendedArticles, setRecommendedArticles] = useState<Article[]>([]);
+  const [recommendedCities, setRecommendedCities] = useState<any[]>([]);
   const [prevArticle, setPrevArticle] = useState<Article | null>(null);
   const [nextArticle, setNextArticle] = useState<Article | null>(null);
   const [loading, setLoading] = useState(true);
@@ -54,49 +58,55 @@ export default function GuideDetail() {
       setError(null);
       try {
         if (!id) return;
-        const docRef = doc(db, 'articles', id);
-        const docSnap = await fetchWithTimeout(getDoc(docRef), 5000);
+        const { data, error } = await supabase.from('articles').select('*').eq('id', id).single();
         
-        if (docSnap.exists()) {
-          const data = docSnap.data();
+        if (!error && data) {
           const loadedArticle = {
-            _id: docSnap.id,
+            _id: data.id,
             ...data,
             views: (data.views || 0) + 1,
             likes: data.likes || 0,
-            createdAt: data.createdAt?.toDate?.()?.toISOString() || data.createdAt || new Date().toISOString()
+            createdAt: data.createdAt || new Date().toISOString()
           } as Article;
-          
+
           setArticle(loadedArticle);
           window.scrollTo(0, 0);
 
           try {
-            const allDocs = await fetchWithTimeout(getDocs(collection(db, 'articles')), 5000);
-            const allArticles = allDocs.docs.map(d => {
-              const dData = d.data();
-              return { 
-                _id: d.id, 
-                ...dData,
-                createdAt: dData.createdAt?.toDate?.()?.toISOString() || dData.createdAt || new Date().toISOString()
-              } as Article;
-            }).sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
-            
-            const currentIndex = allArticles.findIndex(a => a._id === id);
-            if (currentIndex !== -1) {
-              setPrevArticle(currentIndex > 0 ? allArticles[currentIndex - 1] : null);
-              setNextArticle(currentIndex < allArticles.length - 1 ? allArticles[currentIndex + 1] : null);
+            const { data: citiesData, error: citiesError } = await supabase.from('cities').select('id, name, enName, listCover, heroImage, stats').limit(5);
+            if (!citiesError && citiesData) {
+              setRecommendedCities(citiesData);
             }
-            
-            const others = allArticles.filter(a => a._id !== id);
-            setRecommendedArticles(others.sort(() => 0.5 - Math.random()).slice(0, 3));
+          } catch (e) {
+            console.error('Failed to fetch cities for recommendation', e);
+          }
+
+          try {
+            const { data: allDocs, error: allDocsError } = await supabase.from('articles').select('*').order('createdAt', { ascending: false });
+            if (!allDocsError && allDocs) {
+              const allArticles = allDocs.map(dData => ({
+                _id: dData.id,
+                ...dData,
+                createdAt: dData.createdAt || new Date().toISOString()
+              })) as Article[];
+              
+              const currentIndex = allArticles.findIndex(a => a._id === id);
+              if (currentIndex !== -1) {
+                setPrevArticle(currentIndex > 0 ? allArticles[currentIndex - 1] : null);
+                setNextArticle(currentIndex < allArticles.length - 1 ? allArticles[currentIndex + 1] : null);
+              }
+              
+              const others = allArticles.filter(a => a._id !== id);
+              setRecommendedArticles(others.sort(() => 0.5 - Math.random()).slice(0, 3));
+            }
           } catch (e) {
             console.error('Failed to fetch other articles', e);
           }
 
           try {
-            await updateDoc(docRef, {
-              views: increment(1)
-            });
+            await supabase.from('articles').update({
+              views: (data.views || 0) + 1
+            }).eq('id', id);
           } catch (e) {
             console.error('Failed to increment views', e);
           }
@@ -156,10 +166,12 @@ export default function GuideDetail() {
     setArticle(prev => prev ? {...prev, likes: (prev.likes || 0) + 1} : null);
     
     try {
-      const docRef = doc(db, 'articles', id);
-      await updateDoc(docRef, {
-        likes: increment(1)
-      });
+      const { data, error } = await supabase.from('articles').select('likes').eq('id', id).single();
+      if (!error && data) {
+        await supabase.from('articles').update({
+          likes: (data.likes || 0) + 1
+        }).eq('id', id);
+      }
     } catch (e) {
       console.error('Failed to update likes', e);
     }
@@ -335,24 +347,18 @@ export default function GuideDetail() {
                      {t('guide.recommendCity')}
                    </h3>
                    <div className="space-y-4">
-                      {[
-                        { name: t('city.changsha'), en: 'Changsha', id: 'changsha', count: 64, img: 'https://images.unsplash.com/photo-1547981609-4b6bfe67ca0b?auto=format&fit=crop&q=80&w=100' },
-                        { name: t('city.fuzhou'), en: 'Fuzhou', id: 'fuzhou', count: 61, img: 'https://images.unsplash.com/photo-1549221530-47ea067066bc?auto=format&fit=crop&q=80&w=100' },
-                        { name: t('city.beijing'), en: 'Beijing', id: 'beijing', count: 9, img: 'https://images.unsplash.com/photo-1508804185872-d7badad00f7d?auto=format&fit=crop&q=80&w=100' },
-                        { name: t('city.guangzhou'), en: 'Guangzhou', id: 'guangzhou', count: 5, img: 'https://images.unsplash.com/photo-1547981609-4b6bfe67ca0b?auto=format&fit=crop&q=80&w=100' },
-                        { name: t('city.shanghai'), en: 'Shanghai', id: 'shanghai', count: 3, img: 'https://images.unsplash.com/photo-1549221530-47ea067066bc?auto=format&fit=crop&q=80&w=100' }
-                      ].map((city, i) => (
-                        <Link key={i} to={`/${langPrefix}/cities/${city.id}`} className="flex items-center justify-between group cursor-pointer p-2 hover:bg-gray-50 rounded-xl transition-all">
+                      {recommendedCities.map((city, i) => (
+                        <Link key={city.id} to={`/${langPrefix}/cities/${city.id}`} className="flex items-center justify-between group cursor-pointer p-2 hover:bg-gray-50 rounded-xl transition-all">
                           <div className="flex items-center gap-3">
                              <div className="w-11 h-11 rounded-lg overflow-hidden bg-gray-100 grayscale-[0.5] group-hover:grayscale-0 transition-all border border-gray-100">
-                                <img src={city.img} alt={city.name} className="w-full h-full object-cover" />
+                                <img src={city.listCover || city.heroImage} alt={getTranslatedValue(city.name, city.enName)} className="w-full h-full object-cover" />
                              </div>
                              <div>
-                                <h4 className="text-sm font-bold text-gray-700 leading-none mb-1">{city.name}</h4>
-                                <span className="text-[10px] text-gray-400 uppercase tracking-wider">{city.en}</span>
+                                <h4 className="text-sm font-bold text-gray-700 leading-none mb-1">{getTranslatedValue(city.name, city.enName)}</h4>
+                                <span className="text-[10px] text-gray-400 uppercase tracking-wider">{getTranslatedValue(city.enName, city.name)}</span>
                              </div>
                           </div>
-                          <span className="text-[10px] font-bold text-gray-300 bg-gray-50 px-2 py-1 rounded-full">{city.count} {t('city.stats.recommended')}</span>
+                          <span className="text-[10px] font-bold text-gray-300 bg-gray-50 px-2 py-1 rounded-full">{city.stats?.recommended || 0} {t('city.stats.recommended')}</span>
                         </Link>
                       ))}
                    </div>

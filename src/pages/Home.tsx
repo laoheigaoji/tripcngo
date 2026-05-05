@@ -4,10 +4,8 @@ import { Search, ChevronRight, Heart, ThumbsUp, ChevronDown, ChevronUp, MapPin }
 import { useNavigate } from 'react-router-dom';
 import { useLanguage } from '../context/LanguageContext';
 import SEO from '../components/SEO';
-import { collection, query, orderBy, limit, getDocs } from 'firebase/firestore';
-import { db } from '../lib/firebase';
+import { supabase } from '../lib/supabase';
 import { fallbackCities, fallbackArticles } from '../data/fallbackData';
-import { fetchWithTimeout } from '../lib/fetchUtils';
 
 const FAQS = [
   { 
@@ -157,19 +155,25 @@ export default function Home() {
   useEffect(() => {
     const fetchGuides = async () => {
       try {
-        const q = query(collection(db, 'articles'), orderBy('createdAt', 'desc'), limit(6));
-        const snapshot = await fetchWithTimeout(getDocs(q), 5000);
-        const data = snapshot.docs.map((doc: any) => ({
+        const { data, error } = await supabase
+          .from('articles')
+          .select('id, thumbnail, title, titleEn, subtitle, subtitleEn, views')
+          .order('createdAt', { ascending: false })
+          .limit(6);
+          
+        if (error) throw error;
+
+        const mappedData = data?.map((doc: any) => ({
            id: doc.id,
-           img: doc.data().thumbnail || '',
-           title: doc.data().title || '',
-           enTitle: doc.data().titleEn || '',
-           desc: doc.data().subtitle || '',
-           enDesc: doc.data().subtitleEn || '',
-           views: doc.data().views || undefined
-        }));
-        if (data.length > 0) {
-          setGuides(data);
+           img: doc.thumbnail || '',
+           title: doc.title || '',
+           enTitle: doc.titleEn || '',
+           desc: doc.subtitle || '',
+           enDesc: doc.subtitleEn || '',
+           views: doc.views || undefined
+        })) || [];
+        if (mappedData.length > 0) {
+          setGuides(mappedData);
         } else {
           setGuides(fallbackArticles);
         }
@@ -180,12 +184,13 @@ export default function Home() {
     };
     const fetchCities = async () => {
       try {
-        const snapshot = await fetchWithTimeout(getDocs(collection(db, 'cities')), 5000);
-        const data = snapshot.docs.map((doc: any) => ({
-           ...(doc.data() as any),
-           id: doc.id
-        }));
-        if (data.length > 0) {
+        const { data, error } = await supabase
+          .from('cities')
+          .select('*');
+          
+        if (error) throw error;
+        
+        if (data && data.length > 0) {
           setCities(data);
         } else {
           setCities(fallbackCities);
@@ -408,7 +413,7 @@ export default function Home() {
       <section className="py-20 max-w-[1400px] mx-auto px-6">
         <div className="flex justify-between items-end mb-10">
           <h2 className="text-3xl font-bold text-gray-900">{t('home.guides.title')}</h2>
-          <button className="text-[#1b887a] text-sm font-medium hover:underline" onClick={() => navigate(`/${langPrefix}/guide`)}>
+          <button className="text-[#1b887a] text-sm font-medium hover:underline" onClick={() => navigate(`/${langPrefix}/articles`)}>
              {t('home.guides.more')}
           </button>
         </div>

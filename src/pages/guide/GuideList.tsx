@@ -4,10 +4,8 @@ import { Link } from 'react-router-dom';
 import { useLanguage } from '../../context/LanguageContext';
 import { ChevronRight, Heart, Eye } from 'lucide-react';
 import SEO from '../../components/SEO';
-import { collection, getDocs, query, orderBy, where } from 'firebase/firestore';
-import { db } from '../../lib/firebase';
+import { supabase } from '../../lib/supabase';
 import { fallbackArticles } from '../../data/fallbackData';
-import { fetchWithTimeout } from '../../lib/fetchUtils';
 
 interface Article {
   _id: string;
@@ -45,26 +43,25 @@ export default function GuideList() {
     const fetchArticles = async () => {
       setLoading(true);
       try {
-        let q;
-        if (activeCategory === 'All') {
-          q = query(collection(db, 'articles'), orderBy('createdAt', 'desc'));
-        } else {
-          q = query(collection(db, 'articles'), where('category', '==', activeCategory), orderBy('createdAt', 'desc'));
+        let fetcher = supabase.from('articles').select('*').order('createdAt', { ascending: false });
+        if (activeCategory !== 'All') {
+          fetcher = fetcher.eq('category', activeCategory);
         }
         
-        const snapshot = await fetchWithTimeout(getDocs(q), 5000);
-        const data = snapshot.docs.map(doc => {
-          const docData = doc.data() as any;
+        const { data, error } = await fetcher;
+        if (error) throw error;
+        
+        const mappedData = data?.map((docData: any) => {
           return {
             ...docData,
-            _id: doc.id,
+            _id: docData.id,
             views: docData.views || 0,
             likes: docData.likes || 0
           } as Article;
-        });
+        }) || [];
         
-        if (data.length > 0) {
-          setArticles(data);
+        if (mappedData.length > 0) {
+          setArticles(mappedData);
         } else if (activeCategory === 'All') {
           // Only show fallbacks for 'All' category if DB is empty
           setArticles(fallbackArticles.map(a => ({

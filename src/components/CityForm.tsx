@@ -1,8 +1,7 @@
 import React, { useState, useRef } from 'react';
 import { CityData } from '../types/city';
 import { X, Loader2, Sparkles, Save, ChevronDown, ChevronUp, Image as ImageIcon } from 'lucide-react';
-import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
-import { storage } from '../lib/firebase';
+import { supabase } from '../lib/supabase';
 import { generateCityData } from '../lib/deepseek';
 
 interface CityFormProps {
@@ -12,22 +11,39 @@ interface CityFormProps {
 }
 
 export default function CityForm({ city, onClose, onSave }: CityFormProps) {
-  const [formData, setFormData] = useState<CityData>(city || {
-    id: '',
-    name: '',
-    enName: '',
-    heroImage: '',
-    listCover: '',
-    tags: [],
-    paragraphs: [],
-    enParagraphs: [],
-    stats: { wantToVisit: 0, recommended: 0 },
-    info: { area: '', population: '' },
-    bestTravelTime: { strongText: '', enStrongText: '', paragraphs: [], enParagraphs: [] },
-    history: [],
-    attractions: [],
-    transportation: [],
-    food: []
+  const [formData, setFormData] = useState<CityData>(() => {
+    const defaults = {
+      id: '',
+      name: '',
+      enName: '',
+      heroImage: '',
+      listCover: '',
+      tags: [],
+      paragraphs: [],
+      enParagraphs: [],
+      stats: { wantToVisit: 0, recommended: 0 },
+      info: { area: '', population: '' },
+      bestTravelTime: { strongText: '', enStrongText: '', paragraphs: [], enParagraphs: [] },
+      history: [],
+      attractions: [],
+      transportation: [],
+      food: []
+    };
+    if (!city) return defaults;
+    return {
+      ...defaults,
+      ...city,
+      stats: { ...defaults.stats, ...(city.stats || {}) },
+      info: { ...defaults.info, ...(city.info || {}) },
+      bestTravelTime: { ...defaults.bestTravelTime, ...(city.bestTravelTime || {}) },
+      tags: city.tags || [],
+      paragraphs: city.paragraphs || [],
+      enParagraphs: city.enParagraphs || [],
+      history: city.history || [],
+      attractions: city.attractions || [],
+      transportation: city.transportation || [],
+      food: city.food || [],
+    };
   });
   const [isGenerating, setIsGenerating] = useState(false);
   const [activeTab, setActiveTab] = useState('basic');
@@ -38,10 +54,10 @@ export default function CityForm({ city, onClose, onSave }: CityFormProps) {
   const handleFileUpload = async (file: File, folder: string) => {
     setUploading(true);
     try {
-      const storageRef = ref(storage, `${folder}/${Date.now()}-${file.name}`);
-      const snapshot = await uploadBytes(storageRef, file);
-      const url = await getDownloadURL(snapshot.ref);
-      return url;
+      const path = `${folder}/${Date.now()}-${file.name}`;
+      const { error } = await supabase.storage.from('images').upload(path, file);
+      if (error) throw error;
+      return supabase.storage.from('images').getPublicUrl(path).data.publicUrl;
     } catch (err) {
       console.error(err);
       alert('上传失败');
@@ -70,18 +86,18 @@ export default function CityForm({ city, onClose, onSave }: CityFormProps) {
     try {
       const response = await fetch(url);
       const blob = await response.blob();
-      const storageRef = ref(storage, path);
-      const snapshot = await uploadBytes(storageRef, blob);
-      return await getDownloadURL(snapshot.ref);
+      const { error } = await supabase.storage.from('images').upload(path, blob, { upsert: true });
+      if (error) throw error;
+      return supabase.storage.from('images').getPublicUrl(path).data.publicUrl;
     } catch (e) {
       console.warn("Failed to proxy image via direct fetch:", url, e);
       try {
         const proxyUrl = `https://wsrv.nl/?url=${encodeURIComponent(url)}`;
         const res = await fetch(proxyUrl);
         const blob = await res.blob();
-        const storageRef = ref(storage, path);
-        const snapshot = await uploadBytes(storageRef, blob);
-        return await getDownloadURL(snapshot.ref);
+        const { error } = await supabase.storage.from('images').upload(path, blob, { upsert: true });
+        if (error) throw error;
+        return supabase.storage.from('images').getPublicUrl(path).data.publicUrl;
       } catch (e2) {
         return url; 
       }
@@ -117,6 +133,8 @@ export default function CityForm({ city, onClose, onSave }: CityFormProps) {
       - Transportation: Provide a highly detailed guide for Plane, Train, and Bus/Local Metro.
       - History: Provide 5-6 key historical milestones.
 
+      - Highlights: Include 2-3 World Heritage sites (if any) and 2-3 Intangible Cultural Heritages that represent the city's traditions.
+      
       Return a JSON object that matches the following TypeScript structure exactly. 
       Ensure every field has its corresponding 'en' field filled correctly. 
       CRITICAL: Primary fields (without 'en' prefix, e.g., 'paragraphs') MUST contain ONLY Chinese content. 
@@ -135,6 +153,8 @@ export default function CityForm({ city, onClose, onSave }: CityFormProps) {
         bestTravelTime: {strongText: string, enStrongText: string, paragraphs: string[], enParagraphs: string[]},
         history: [{year: string, enYear: string, title: string, enTitle: string, desc: string, enDesc: string}],
         attractions: [{name: string, enName: string, desc: string, enDesc: string, price: string, enPrice: string, season: string, enSeason: string, time: string, enTime: string}],
+        worldHeritage: [{name: string, enName: string, year: string, enYear: string, desc: string, enDesc: string}],
+        intangibleHeritage: [{name: string, enName: string, year: string, enYear: string, desc: string, enDesc: string, imageUrl: string}],
         transportation: [{iconName: "Plane" | "Train" | "Bus", title: string, enTitle: string, desc: string, enDesc: string, price: string, enPrice: string}],
         food: [{name: string, enName: string, pinyin: string, price: string, desc: string, enDesc: string, ingredients: string, enIngredients: string, imageIdx: number}]
       }
