@@ -23,6 +23,9 @@ export async function askDeepSeek(prompt: string, isJson: boolean = false) {
       response_format: isJson ? { type: 'json_object' } : undefined
     });
 
+    if (!response.choices || response.choices.length === 0) {
+      return isJson ? '{}' : '';
+    }
     return response.choices[0].message.content || (isJson ? '{}' : '');
   } catch (error) {
     console.error('DeepSeek generation failed:', error);

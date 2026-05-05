@@ -254,20 +254,22 @@ export default function Visa() {
                       ].map((item, index) => (
                         <tr key={index}>
                           <td className="p-3">
-                            <div>{item.city}</div>
-                            <div className="text-gray-400 text-xs">({item.cityEn})</div>
+                            <div>{language === 'zh' ? item.city : item.cityEn}</div>
+                            {language === 'zh' && <div className="text-gray-400 text-xs">({item.cityEn})</div>}
                           </td>
                           <td className="p-3">
                             {item.ports.map((port, pIndex) => (
                               <div key={pIndex} className="mb-2 last:mb-0">
-                                <div>{port.name}</div>
-                                <div className="text-gray-400 text-xs">({port.nameEn})</div>
+                                <div>{language === 'zh' ? port.name : port.nameEn}</div>
+                                {language === 'zh' && <div className="text-gray-400 text-xs">({port.nameEn})</div>}
                               </div>
                             ))}
                           </td>
                           <td className="p-3 bg-gray-50/50 border-l border-gray-200">
-                            <div>{item.area}</div>
-                            <div className="text-gray-400 text-[10px] leading-tight max-w-[200px]">({item.areaEn})</div>
+                            <div>{language === 'zh' ? item.area : item.areaEn}</div>
+                            <div className="text-gray-400 text-[10px] leading-tight max-w-[200px]">
+                              {language === 'zh' ? `(${item.areaEn})` : `(${item.area})`}
+                            </div>
                           </td>
                         </tr>
                       ))}
@@ -291,56 +293,56 @@ export default function Visa() {
                     </thead>
                     <tbody className="text-gray-600 divide-y divide-gray-200">
                       {[
-                        {n: '澳大利亚', en: '(Australia)', d: '30天', den: '30 days'},
-                        {n: '奥地利', en: '(Austria)', d: '30天', den: '30 days'},
-                        {n: '安道尔', en: '(Andorra)', d: '30天', den: '30 days'},
-                        {n: '阿根廷', en: '(Argentina)', d: '30天', den: '30 days'},
-                        {n: '比利时', en: '(Belgium)', d: '30天', den: '30 days'},
-                        {n: '保加利亚', en: '(Bulgaria)', d: '30天', den: '30 days'},
-                        {n: '巴西', en: '(Brazil)', d: '30天', den: '30 days'},
-                        {n: '塞浦路斯', en: '(Cyprus)', d: '30天', den: '30 days'},
-                        {n: '克罗地亚', en: '(Croatia)', d: '30天', den: '30 days'},
-                        {n: '智利', en: '(Chile)', d: '30天', den: '30 days'},
-                        {n: '丹麦', en: '(Denmark)', d: '30天', den: '30 days'},
-                        {n: '爱沙尼亚', en: '(Estonia)', d: '30天', den: '30 days'},
-                        {n: '芬兰', en: '(Finland)', d: '30天', den: '30 days'},
-                        {n: '法国', en: '(France)', d: '30天', den: '30 days'},
-                        {n: '德国', en: '(Germany)', d: '30天', den: '30 days'},
-                        {n: '希腊', en: '(Greece)', d: '30天', den: '30 days'},
-                        {n: '匈牙利', en: '(Hungary)', d: '30天', den: '30 days'},
-                        {n: '冰岛', en: '(Iceland)', d: '30天', den: '30 days'},
-                        {n: '爱尔兰', en: '(Ireland)', d: '30天', den: '30 days'},
-                        {n: '意大利', en: '(Italy)', d: '30天', den: '30 days'},
-                        {n: '日本', en: '(Japan)', d: '30天', den: '30 days'},
-                        {n: '韩国', en: '((South) Korea)', d: '30天', den: '30 days'},
-                        {n: '卢森堡', en: '(Luxembourg)', d: '30天', den: '30 days'},
-                        {n: '列支敦士登', en: '(Liechtenstein)', d: '30天', den: '30 days'},
-                        {n: '拉脱维亚', en: '(Latvia)', d: '30天', den: '30 days'},
-                        {n: '摩纳哥', en: '(Monaco)', d: '30天', den: '30 days'},
-                        {n: '黑山', en: '(Montenegro)', d: '30天', den: '30 days'},
-                        {n: '马耳他', en: '(Malta)', d: '30天', den: '30 days'},
-                        {n: '荷兰', en: '(Netherlands)', d: '30天', den: '30 days'},
-                        {n: '新西兰', en: '(New Zealand)', d: '30天', den: '30 days'},
-                        {n: '挪威', en: '(Norway)', d: '30天', den: '30 days'},
-                        {n: '北马其顿', en: '(North Macedonia)', d: '30天', den: '30 days'},
-                        {n: '波兰', en: '(Poland)', d: '30天', den: '30 days'},
-                        {n: '葡萄牙', en: '(Portugal)', d: '30天', den: '30 days'},
-                        {n: '秘鲁', en: '(Peru)', d: '30天', den: '30 days'},
-                        {n: '罗马尼亚', en: '(Romania)', d: '30天', den: '30 days'},
-                        {n: '斯洛伐克', en: '(Slovakia)', d: '30天', den: '30 days'},
-                        {n: '斯洛文尼亚', en: '(Slovenia)', d: '30天', den: '30 days'},
-                        {n: '西班牙', en: '(Spain)', d: '30天', den: '30 days'},
-                        {n: '瑞士', en: '(Switzerland)', d: '30天', den: '30 days'},
-                        {n: '乌拉圭', en: '(Uruguay)', d: '30天', den: '30 days'},
+                        {n: '澳大利亚', en: 'Australia', d: '30天', den: '30 days'},
+                        {n: '奥地利', en: 'Austria', d: '30天', den: '30 days'},
+                        {n: '安道尔', en: 'Andorra', d: '30天', den: '30 days'},
+                        {n: '阿根廷', en: 'Argentina', d: '30天', den: '30 days'},
+                        {n: '比利时', en: 'Belgium', d: '30天', den: '30 days'},
+                        {n: '保加利亚', en: 'Bulgaria', d: '30天', den: '30 days'},
+                        {n: '巴西', en: 'Brazil', d: '30天', den: '30 days'},
+                        {n: '塞浦路斯', en: 'Cyprus', d: '30天', den: '30 days'},
+                        {n: '克罗地亚', en: 'Croatia', d: '30天', den: '30 days'},
+                        {n: '智利', en: 'Chile', d: '30天', den: '30 days'},
+                        {n: '丹麦', en: 'Denmark', d: '30天', den: '30 days'},
+                        {n: '爱沙尼亚', en: 'Estonia', d: '30天', den: '30 days'},
+                        {n: '芬兰', en: 'Finland', d: '30天', den: '30 days'},
+                        {n: '法国', en: 'France', d: '30天', den: '30 days'},
+                        {n: '德国', en: 'Germany', d: '30天', den: '30 days'},
+                        {n: '希腊', en: 'Greece', d: '30天', den: '30 days'},
+                        {n: '匈牙利', en: 'Hungary', d: '30天', den: '30 days'},
+                        {n: '冰岛', en: 'Iceland', d: '30天', den: '30 days'},
+                        {n: '爱尔兰', en: 'Ireland', d: '30天', den: '30 days'},
+                        {n: '意大利', en: 'Italy', d: '30天', den: '30 days'},
+                        {n: '日本', en: 'Japan', d: '30天', den: '30 days'},
+                        {n: '韩国', en: 'South Korea', d: '30天', den: '30 days'},
+                        {n: '卢森堡', en: 'Luxembourg', d: '30天', den: '30 days'},
+                        {n: '列支敦士登', en: 'Liechtenstein', d: '30天', den: '30 days'},
+                        {n: '拉脱维亚', en: 'Latvia', d: '30天', den: '30 days'},
+                        {n: '摩纳哥', en: 'Monaco', d: '30天', den: '30 days'},
+                        {n: '黑山', en: 'Montenegro', d: '30天', den: '30 days'},
+                        {n: '马耳他', en: 'Malta', d: '30天', den: '30 days'},
+                        {n: '荷兰', en: 'Netherlands', d: '30天', den: '30 days'},
+                        {n: '新西兰', en: 'New Zealand', d: '30天', den: '30 days'},
+                        {n: '挪威', en: 'Norway', d: '30天', den: '30 days'},
+                        {n: '北马其顿', en: 'North Macedonia', d: '30天', den: '30 days'},
+                        {n: '波兰', en: 'Poland', d: '30天', den: '30 days'},
+                        {n: '葡萄牙', en: 'Portugal', d: '30天', den: '30 days'},
+                        {n: '秘鲁', en: 'Peru', d: '30天', den: '30 days'},
+                        {n: '罗马尼亚', en: 'Romania', d: '30天', den: '30 days'},
+                        {n: '斯洛伐克', en: 'Slovakia', d: '30天', den: '30 days'},
+                        {n: '斯洛文尼亚', en: 'Slovenia', d: '30天', den: '30 days'},
+                        {n: '西班牙', en: 'Spain', d: '30天', den: '30 days'},
+                        {n: '瑞士', en: 'Switzerland', d: '30天', den: '30 days'},
+                        {n: '乌拉圭', en: 'Uruguay', d: '30天', den: '30 days'},
                       ].map((c, i) => (
                         <tr key={i}>
                           <td className="p-3">
-                            <div>{c.n}</div>
-                            <div className="text-gray-400 text-xs">{c.en}</div>
+                            <div className="font-bold">{language === 'zh' ? c.n : c.en}</div>
+                            {language === 'zh' && <div className="text-gray-400 text-xs">{c.en}</div>}
                           </td>
                           <td className="p-3 border-l border-gray-200">
-                            <div>{c.d}</div>
-                            <div className="text-gray-400 text-xs">{c.den}</div>
+                            <div>{language === 'zh' ? c.d : c.den}</div>
+                            {language === 'zh' && <div className="text-gray-400 text-xs">{c.den}</div>}
                           </td>
                         </tr>
                       ))}
@@ -363,45 +365,45 @@ export default function Visa() {
                     </thead>
                     <tbody className="text-gray-600 divide-y divide-gray-200">
                       {[
-                        {n: '阿尔巴尼亚', en: '(Albania)', d: '每180天停留最长不超过90天', den: 'Maximum stay of no more than 90 days per 180 days'},
-                        {n: '安提瓜和巴布达', en: '(Antigua and Barbuda)', d: '30天; 每180天累计停留不超过90天', den: '30 days; cumulative stay of no more than 90 days per 180 days'},
-                        {n: '亚美尼亚', en: '(Armenia)', d: '每180天停留最长不超过90天', den: 'Maximum stay of no more than 90 days per 180 days'},
-                        {n: '巴哈马', en: '(Bahamas)', d: '30天', den: '30 days'},
-                        {n: '巴巴多斯', en: '(Barbados)', d: '30天', den: '30 days'},
-                        {n: '白俄罗斯', en: '(Belarus)', d: '30天, 每年不超过90天', den: '30 days, not exceeding 90 days per year'},
-                        {n: '波斯尼亚和黑塞哥维那', en: '(Bosnia and Herzegovina)', d: '每180天停留最长不超过90天', den: 'Maximum stay of no more than 90 days per 180 days'},
-                        {n: '文莱', en: '(Brunei)', d: '30天', den: '30 days'},
-                        {n: '多米尼克', en: '(Dominica)', d: '30天', den: '30 days'},
-                        {n: '俄罗斯', en: '(Russia)', d: '30天，从2025年9月15日至2026年9月14日试行', den: '30 days, from September 15, 2025 to September 14, 2026 (trial run)'},
-                        {n: '厄瓜多尔', en: '(Ecuador)', d: '30天', den: '30 days'},
-                        {n: '斐济', en: '(Fiji)', d: '30天', den: '30 days'},
-                        {n: '格林纳达', en: '(Grenada)', d: '30天', den: '30 days'},
-                        {n: '格鲁吉亚', en: '(Georgia)', d: '30天, 每180天累计停留不超过90天', den: '30 days, cumulative stay of no more than 90 days per 180 days'},
-                        {n: '哈萨克斯坦', en: '(Kazakhstan)', d: '30天, 每180天停留最长不超过90天', den: '30 days, maximum stay of no more than 90 days per 180 days'},
-                        {n: '马尔代夫', en: '(Maldives)', d: '30天', den: '30 days'},
-                        {n: '毛里求斯', en: '(Mauritius)', d: '60天', den: '60 days'},
-                        {n: '马来西亚', en: '(Malaysia)', d: '30天', den: '30 days'},
-                        {n: '卡塔尔', en: '(Qatar)', d: '30天', den: '30 days'},
-                        {n: '圣马力诺', en: '(San Marino)', d: '不超过90天', den: 'Not exceeding 90 days'},
-                        {n: '塞尔维亚', en: '(Serbia)', d: '30天', den: '30 days'},
-                        {n: '塞舌尔', en: '(Seychelles)', d: '30天', den: '30 days'},
-                        {n: '苏里南', en: '(Suriname)', d: '30天', den: '30 days'},
-                        {n: '新加坡', en: '(Singapore)', d: '30天', den: '30 days'},
-                        {n: '所罗门群岛', en: '(Solomon Islands)', d: '30天, 每180天累计停留不超过90天', den: '30 days, cumulative stay of no more than 90 days per 180 days'},
-                        {n: '萨摩亚独立国', en: '(Samoa)', d: '30天, 每180天累计停留不超过90天', den: '30 days, cumulative stay of no more than 90 days per 180 days'},
-                        {n: '汤加', en: '(Tonga)', d: '30天', den: '30 days'},
-                        {n: '泰国', en: '(Thailand)', d: '30天, 每180天停留最长不超过90天', den: '30 days, maximum stay of no more than 90 days per 180 days'},
-                        {n: '阿拉伯联合酋长国', en: '(United Arab Emirates)', d: '30天', den: '30 days'},
-                        {n: '乌兹别克斯坦', en: '(Uzbekistan)', d: '30天, 每180天累计停留不超过90天', den: '30 days, cumulative stay of no more than 90 days per 180 days'},
+                        {n: '阿尔巴尼亚', en: 'Albania', d: '每180天停留最长不超过90天', den: 'Maximum stay of no more than 90 days per 180 days'},
+                        {n: '安提瓜和巴布达', en: 'Antigua and Barbuda', d: '30天; 每180天累计停留不超过90天', den: '30 days; cumulative stay of no more than 90 days per 180 days'},
+                        {n: '亚美尼亚', en: 'Armenia', d: '每180天停留最长不超过90天', den: 'Maximum stay of no more than 90 days per 180 days'},
+                        {n: '巴哈马', en: 'Bahamas', d: '30天', den: '30 days'},
+                        {n: '巴巴多斯', en: 'Barbados', d: '30天', den: '30 days'},
+                        {n: '白俄罗斯', en: 'Belarus', d: '30天, 每年不超过90天', den: '30 days, not exceeding 90 days per year'},
+                        {n: '波斯尼亚和黑塞哥维那', en: 'Bosnia and Herzegovina', d: '每180天停留最长不超过90天', den: 'Maximum stay of no more than 90 days per 180 days'},
+                        {n: '文莱', en: 'Brunei', d: '30天', den: '30 days'},
+                        {n: '多米尼克', en: 'Dominica', d: '30天', den: '30 days'},
+                        {n: '俄罗斯', en: 'Russia', d: '30天', den: '30 days (Trial run till Sep 2026)'},
+                        {n: '厄瓜多尔', en: 'Ecuador', d: '30天', den: '30 days'},
+                        {n: '斐济', en: 'Fiji', d: '30天', den: '30 days'},
+                        {n: '格林纳达', en: 'Grenada', d: '30天', den: '30 days'},
+                        {n: '格鲁吉亚', en: 'Georgia', d: '30天, 每180天累计停留不超过90天', den: '30 days, cumulative stay of no more than 90 days per 180 days'},
+                        {n: '哈萨克斯坦', en: 'Kazakhstan', d: '30天, 每180天停留最长不超过90天', den: '30 days, maximum stay of no more than 90 days per 180 days'},
+                        {n: '马尔代夫', en: 'Maldives', d: '30天', den: '30 days'},
+                        {n: '毛里求斯', en: 'Mauritius', d: '60天', den: '60 days'},
+                        {n: '马来西亚', en: 'Malaysia', d: '30天', den: '30 days'},
+                        {n: '卡塔尔', en: 'Qatar', d: '30天', den: '30 days'},
+                        {n: '圣马力诺', en: 'San Marino', d: '不超过90天', den: 'Not exceeding 90 days'},
+                        {n: '塞尔维亚', en: 'Serbia', d: '30天', den: '30 days'},
+                        {n: '塞舌尔', en: 'Seychelles', d: '30天', den: '30 days'},
+                        {n: '苏里南', en: 'Suriname', d: '30天', den: '30 days'},
+                        {n: '新加坡', en: 'Singapore', d: '30天', den: '30 days'},
+                        {n: '所罗门群岛', en: 'Solomon Islands', d: '30天, 每180天累计停留不超过90天', den: '30 days, cumulative stay of no more than 90 days per 180 days'},
+                        {n: '萨摩亚独立国', en: 'Samoa', d: '30天, 每180天累计停留不超过90天', den: '30 days, cumulative stay of no more than 90 days per 180 days'},
+                        {n: '汤加', en: 'Tonga', d: '30天', den: '30 days'},
+                        {n: '泰国', en: 'Thailand', d: '30天, 每180天停留最长不超过90天', den: '30 days, maximum stay of no more than 90 days per 180 days'},
+                        {n: '阿拉伯联合酋长国', en: 'United Arab Emirates', d: '30天', den: '30 days'},
+                        {n: '乌兹别克斯坦', en: 'Uzbekistan', d: '30天, 每180天累计停留不超过90天', den: '30 days, cumulative stay of no more than 90 days per 180 days'},
                       ].map((c, i) => (
                         <tr key={i}>
                           <td className="p-3">
-                            <div>{c.n}</div>
-                            <div className="text-gray-400 text-xs">{c.en}</div>
+                            <div className="font-bold">{language === 'zh' ? c.n : c.en}</div>
+                            {language === 'zh' && <div className="text-gray-400 text-xs">{c.en}</div>}
                           </td>
                           <td className="p-3 border-l border-gray-200">
-                            <div>{c.d}</div>
-                            {c.den && <div className="text-gray-400 text-xs">{c.den}</div>}
+                            <div>{language === 'zh' ? c.d : c.den}</div>
+                            {language === 'zh' && <div className="text-gray-400 text-xs">{c.den}</div>}
                           </td>
                         </tr>
                       ))}

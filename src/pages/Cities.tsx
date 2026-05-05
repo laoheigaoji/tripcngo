@@ -19,14 +19,10 @@ export default function Cities() {
         const { data, error } = await supabase.from('cities').select('*');
         if (error) throw error;
         
-        if (data && data.length > 0) {
-          setAllCities(data);
-        } else {
-          setAllCities(fallbackCities);
-        }
+        setAllCities(data || []);
       } catch (err) {
-        console.error("Error fetching cities, using fallback", err);
-        setAllCities(fallbackCities);
+        console.error("Error fetching cities:", err);
+        setAllCities([]);
       }
     };
     fetchCities();

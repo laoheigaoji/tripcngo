@@ -111,47 +111,11 @@ export default function GuideDetail() {
             console.error('Failed to increment views', e);
           }
         } else {
-          // Check fallback
-          const fallback = fallbackArticles.find(a => a.id === id);
-          if (fallback) {
-            const mappedFb = {
-              _id: fallback.id,
-              ...fallback,
-              title: fallback.title,
-              titleEn: fallback.enTitle,
-              subtitle: fallback.desc,
-              subtitleEn: fallback.enDesc,
-              content: "### " + fallback.title + "\n\n" + fallback.desc + "\n\n*(Full content only available with active database connection)*",
-              contentEn: "### " + fallback.enTitle + "\n\n" + fallback.enDesc + "\n\n*(Full content only available with active database connection)*",
-              thumbnail: fallback.img,
-              category: 'City Guide',
-              createdAt: new Date().toISOString()
-            } as Article;
-            setArticle(mappedFb);
-          }
+          setError(error?.message || "Article Not Found");
         }
       } catch (error) {
         console.error("Error fetching article:", error);
-        // Try fallback on network error
-        const fallback = fallbackArticles.find(a => a.id === id);
-        if (fallback) {
-          const mappedFb = {
-            _id: fallback.id,
-            ...fallback,
-            title: fallback.title,
-            titleEn: fallback.enTitle,
-            subtitle: fallback.desc,
-            subtitleEn: fallback.enDesc,
-            content: "### " + fallback.title + "\n\n" + fallback.desc + "\n\n*(Full content only available with active database connection)*",
-            contentEn: "### " + fallback.enTitle + "\n\n" + fallback.enDesc + "\n\n*(Full content only available with active database connection)*",
-            thumbnail: fallback.img,
-            category: 'City Guide',
-            createdAt: new Date().toISOString()
-          } as Article;
-          setArticle(mappedFb);
-        } else {
-          setError("Connection failed. If you are in China, please use a VPN.");
-        }
+        setError("Database connection error");
       } finally {
         setLoading(false);
       }

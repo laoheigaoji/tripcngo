@@ -167,19 +167,16 @@ export default function Home() {
            id: doc.id,
            img: doc.thumbnail || '',
            title: doc.title || '',
-           enTitle: doc.titleEn || '',
+           enTitle: doc.titleEn || doc.title || '',
            desc: doc.subtitle || '',
-           enDesc: doc.subtitleEn || '',
+           enDesc: doc.subtitleEn || doc.subtitle || '',
            views: doc.views || undefined
         })) || [];
-        if (mappedData.length > 0) {
-          setGuides(mappedData);
-        } else {
-          setGuides(fallbackArticles);
-        }
+        
+        setGuides(mappedData);
       } catch (err) {
-        console.error("Error fetching latest guides, using fallback", err);
-        setGuides(fallbackArticles);
+        console.error("Error fetching latest guides:", err);
+        setGuides([]);
       }
     };
     const fetchCities = async () => {
@@ -190,14 +187,10 @@ export default function Home() {
           
         if (error) throw error;
         
-        if (data && data.length > 0) {
-          setCities(data);
-        } else {
-          setCities(fallbackCities);
-        }
+        setCities(data || []);
       } catch (err) {
-        console.error("Error fetching cities, using fallback", err);
-        setCities(fallbackCities);
+        console.error("Error fetching cities:", err);
+        setCities([]);
       }
     };
     fetchGuides();
@@ -323,8 +316,8 @@ export default function Home() {
                           />
                         </div>
                         <div>
-                          <div className="font-bold text-gray-900 text-base">{city.name}</div>
-                          <div className="text-sm text-gray-500">{city.enName} {city.name}</div>
+                          <div className="font-bold text-gray-900 text-base">{language === 'zh' ? city.name : (city.enName || city.name)}</div>
+                          <div className="text-sm text-gray-500">{language === 'zh' ? city.enName : city.name}</div>
                         </div>
                       </button>
                     ))}
@@ -395,8 +388,8 @@ export default function Home() {
                 </div>
                 <div className="p-4 flex items-center justify-between bg-white border-t border-gray-100">
                   <div>
-                    <span className="text-[15px] font-bold text-gray-900">{language === 'zh' ? city.name : city.enName}</span>
-                    <span className="ml-2 text-xs text-gray-500 font-medium uppercase tracking-wider">{city.enName}</span>
+                    <span className="text-[15px] font-bold text-gray-900">{language === 'zh' ? city.name : (city.enName || city.name)}</span>
+                    <span className="ml-2 text-xs text-gray-500 font-medium uppercase tracking-wider">{city.enName || city.name}</span>
                   </div>
                   <div className="flex gap-3 text-gray-500">
                     <span className="flex items-center gap-1 text-xs font-medium"><Heart className="w-3.5 h-3.5 text-red-500 fill-red-500" /> {city.stats?.wantToVisit || 0}</span>
@@ -425,7 +418,7 @@ export default function Home() {
                </div>
                <div className="flex flex-col py-1">
                  <h3 className="text-[17px] font-bold text-gray-900 leading-snug group-hover:text-[#1b887a] transition-colors mb-2 line-clamp-2">
-                    {language === 'zh' ? guide.title : guide.enTitle}
+                    {language === 'zh' ? guide.title : (guide.enTitle || guide.title)}
                  </h3>
                  <p className="text-gray-500 text-[13px] line-clamp-3 mb-3 leading-relaxed">
                    {language === 'zh' ? guide.desc : guide.enDesc}

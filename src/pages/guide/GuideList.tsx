@@ -60,40 +60,11 @@ export default function GuideList() {
           } as Article;
         }) || [];
         
-        if (mappedData.length > 0) {
-          setArticles(mappedData);
-        } else if (activeCategory === 'All') {
-          // Only show fallbacks for 'All' category if DB is empty
-          setArticles(fallbackArticles.map(a => ({
-            ...a,
-            _id: a.id,
-            category: 'City Guide',
-            title: a.title,
-            titleEn: a.enTitle,
-            subtitle: a.desc,
-            subtitleEn: a.enDesc,
-            thumbnail: a.img
-          })) as Article[]);
-        } else {
-          setArticles([]);
-        }
+        setArticles(mappedData);
         setCurrentPage(1); 
       } catch (error) {
-        console.error("Error fetching articles, using fallback:", error);
-        if (activeCategory === 'All') {
-          setArticles(fallbackArticles.map(a => ({
-            ...a,
-            _id: a.id,
-            category: 'City Guide',
-            title: a.title,
-            titleEn: a.enTitle,
-            subtitle: a.desc,
-            subtitleEn: a.enDesc,
-            thumbnail: a.img
-          })) as Article[]);
-        } else {
-          setArticles([]);
-        }
+        console.error("Error fetching articles:", error);
+        setArticles([]);
       } finally {
         setLoading(false);
       }

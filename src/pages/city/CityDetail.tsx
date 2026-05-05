@@ -42,24 +42,12 @@ export default function CityDetail() {
         if (!error && data) {
           setCity(data);
         } else {
-          // Check if it's in fallbacks
-          const fallback = fallbackCities.find(c => c.id === id);
-          if (fallback) {
-            setCity(fallback);
-          } else {
-            console.warn("No such city with id:", id, error);
-            setError(error?.message || "Not found");
-          }
+          console.warn("No such city with id:", id, error);
+          setError(error?.message || "City Not Found");
         }
       } catch (err) {
         console.error("Error fetching city:", err);
-        // Try fallback if network error
-        const fallback = fallbackCities.find(c => c.id === id);
-        if (fallback) {
-          setCity(fallback);
-        } else {
-          setError("Network connection issue. If you are in mainland China, please try using a VPN.");
-        }
+        setError("Could not connect to the database. Please check your connection.");
       } finally {
         setLoading(false);
       }
