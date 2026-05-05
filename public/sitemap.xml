@@ -1,39 +1,92 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:xhtml="http://www.w3.org/1999/xhtml">
+  <!-- Home -->
   <url>
-    <loc>https://tripcngo.com/</loc>
-    <lastmod>2026-05-03</lastmod>
+    <loc>https://tripcngo.com/en</loc>
+    <lastmod>2026-05-05</lastmod>
     <changefreq>daily</changefreq>
     <priority>1.0</priority>
+    <xhtml:link rel="alternate" hreflang="zh" href="https://tripcngo.com/cn"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://tripcngo.com/en"/>
   </url>
   <url>
-    <loc>https://tripcngo.com/visa</loc>
-    <lastmod>2026-05-03</lastmod>
+    <loc>https://tripcngo.com/cn</loc>
+    <lastmod>2026-05-05</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>1.0</priority>
+    <xhtml:link rel="alternate" hreflang="zh" href="https://tripcngo.com/cn"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://tripcngo.com/en"/>
+  </url>
+
+  <!-- Visa Sections -->
+  <url>
+    <loc>https://tripcngo.com/en/visa</loc>
+    <lastmod>2026-05-05</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.9</priority>
   </url>
   <url>
-    <loc>https://tripcngo.com/cities</loc>
-    <lastmod>2026-05-03</lastmod>
-    <changefreq>weekly</changefreq>
+    <loc>https://tripcngo.com/en/visa/types</loc>
+    <lastmod>2026-05-05</lastmod>
+    <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://tripcngo.com/guide</loc>
-    <lastmod>2026-05-03</lastmod>
+    <loc>https://tripcngo.com/en/visa/fees</loc>
+    <lastmod>2026-05-05</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+
+  <!-- Cities -->
+  <url>
+    <loc>https://tripcngo.com/en/cities</loc>
+    <lastmod>2026-05-05</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
+
+  <!-- Guides -->
   <url>
-    <loc>https://tripcngo.com/apps</loc>
-    <lastmod>2026-05-03</lastmod>
+    <loc>https://tripcngo.com/en/guide</loc>
+    <lastmod>2026-05-05</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.9</priority>
+  </url>
+  <url>
+    <loc>https://tripcngo.com/en/articles</loc>
+    <lastmod>2026-05-05</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.8</priority>
+  </url>
+
+  <!-- Tools -->
+  <url>
+    <loc>https://tripcngo.com/en/tools/zodiac</loc>
+    <lastmod>2026-05-05</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://tripcngo.com/en/tools/name</loc>
+    <lastmod>2026-05-05</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+
+  <!-- Apps -->
+  <url>
+    <loc>https://tripcngo.com/en/apps</loc>
+    <lastmod>2026-05-05</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
+
+  <!-- About -->
   <url>
-    <loc>https://tripcngo.com/about</loc>
-    <lastmod>2026-05-03</lastmod>
+    <loc>https://tripcngo.com/en/about</loc>
+    <lastmod>2026-05-05</lastmod>
     <changefreq>monthly</changefreq>
-    <priority>0.5</priority>
+    <priority>0.4</priority>
   </url>
 </urlset>

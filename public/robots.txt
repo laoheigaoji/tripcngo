@@ -1,4 +1,7 @@
 User-agent: *
 Allow: /
+Disallow: /admin
+Disallow: /migration
+Disallow: /feedback
 
 Sitemap: https://tripcngo.com/sitemap.xml
