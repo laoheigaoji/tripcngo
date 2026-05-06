@@ -7,7 +7,39 @@ import SEO from '../components/SEO';
 import { supabase } from '../lib/supabase';
 import { fallbackCities, fallbackArticles } from '../data/fallbackData';
 
-const FAQS = [
+interface HomeFAQ {
+  id: string;
+  sort_order: number;
+  q_zh: string | null;
+  q_en: string | null;
+  q_ja: string | null;
+  q_ko: string | null;
+  a_zh: string | null;
+  a_en: string | null;
+  a_ja: string | null;
+  a_ko: string | null;
+}
+
+// 获取多语言FAQ内容
+const getLocalizedFAQ = (faq: HomeFAQ, language: string) => {
+  const langMap: Record<string, string> = {
+    'zh': 'zh',
+    'en': 'en',
+    'ja': 'ja',
+    'ko': 'ko',
+  };
+  
+  const lang = langMap[language] || 'en';
+  const suffix = lang === 'zh' ? '_zh' : `_${lang}`;
+  
+  return {
+    q: (faq as any)[`q${suffix}`] || faq.q_en || '',
+    a: (faq as any)[`a${suffix}`] || faq.a_en || '',
+  };
+};
+
+// 备用FAQ数据（用于数据库连接失败时）
+const fallbackFAQS = [
   { 
     q: "这240小时是从什么时候开始计算的?", 
     enQ: "When does the 240 hours start counting?",
@@ -149,12 +181,13 @@ export default function Home() {
   const [isSearchFocused, setIsSearchFocused] = useState(false);
   const [guides, setGuides] = useState<any[]>([]);
   const [cities, setCities] = useState<any[]>([]);
+  const [faqs, setFaqs] = useState<HomeFAQ[]>([]);
   const navigate = useNavigate();
   const langPrefix = language === 'zh' ? 'cn' : 'en';
 
   useEffect(() => {
     const fetchData = async () => {
-      // Parallelize both fetches
+      // Parallelize all fetches
       try {
         await Promise.all([
           // Fetch Guides
@@ -195,6 +228,22 @@ export default function Home() {
               setCities(data || []);
             } catch (err) {
               console.error("Error fetching cities:", err);
+            }
+          })(),
+
+          // Fetch FAQs
+          (async () => {
+            try {
+              const { data, error } = await supabase
+                .from('home_faqs')
+                .select('*')
+                .eq('is_active', true)
+                .order('sort_order', { ascending: true });
+                
+              if (error) throw error;
+              setFaqs(data || []);
+            } catch (err) {
+              console.error("Error fetching FAQs:", err);
             }
           })()
         ]);
@@ -492,28 +541,38 @@ export default function Home() {
           <p className="text-gray-500 text-center mb-10">{t('home.faq.subtitle')}</p>
           
           <div className="space-y-4">
-            {FAQS.map((faq, i) => (
-              <div key={i} className="bg-white rounded-md overflow-hidden shadow-sm border border-gray-100 cursor-pointer" onClick={() => setOpenFAQ(openFAQ === i ? null : i)}>
-                <div className="px-6 py-5 flex justify-between items-center text-gray-900 font-bold hover:bg-gray-50 transition-colors border-b border-gray-100/50">
-                  <div className="flex gap-4">
-                    <span className="text-[#1b887a]">{i + 1}.</span>
-                    <span>{language === 'zh' ? faq.q : faq.enQ}</span>
-                  </div>
-                  {openFAQ === i ? <ChevronUp className="w-5 h-5 text-gray-400" /> : <ChevronDown className="w-5 h-5 text-gray-400" />}
-                </div>
-                {openFAQ === i && (
-                  <motion.div 
-                    initial={{ height: 0, opacity: 0 }}
-                    animate={{ height: 'auto', opacity: 1 }}
-                    className="overflow-hidden"
-                  >
-                    <div className="px-12 py-5 bg-white text-gray-600 leading-relaxed border-t border-gray-50">
-                      {language === 'zh' ? faq.a : faq.enA}
+            {(faqs.length > 0 ? faqs : fallbackFAQS.map((f, i) => ({ ...f, id: String(i) }))).map((faq, i) => {
+              // 优先从数据库获取，否则使用备用数据
+              const isDbFaq = 'q_zh' in faq;
+              const localizedContent = isDbFaq 
+                ? getLocalizedFAQ(faq as HomeFAQ, language)
+                : { q: (faq as any).q, a: (faq as any).a };
+              const displayQ = isDbFaq ? localizedContent.q : (language === 'zh' ? (faq as any).q : (faq as any).enQ);
+              const displayA = isDbFaq ? localizedContent.a : (language === 'zh' ? (faq as any).a : (faq as any).enA);
+              
+              return (
+                <div key={i} className="bg-white rounded-md overflow-hidden shadow-sm border border-gray-100 cursor-pointer" onClick={() => setOpenFAQ(openFAQ === i ? null : i)}>
+                  <div className="px-6 py-5 flex justify-between items-center text-gray-900 font-bold hover:bg-gray-50 transition-colors border-b border-gray-100/50">
+                    <div className="flex gap-4">
+                      <span className="text-[#1b887a]">{i + 1}.</span>
+                      <span>{displayQ}</span>
                     </div>
-                  </motion.div>
-                )}
-              </div>
-            ))}
+                    {openFAQ === i ? <ChevronUp className="w-5 h-5 text-gray-400" /> : <ChevronDown className="w-5 h-5 text-gray-400" />}
+                  </div>
+                  {openFAQ === i && (
+                    <motion.div 
+                      initial={{ height: 0, opacity: 0 }}
+                      animate={{ height: 'auto', opacity: 1 }}
+                      className="overflow-hidden"
+                    >
+                      <div className="px-12 py-5 bg-white text-gray-600 leading-relaxed border-t border-gray-50">
+                        {displayA}
+                      </div>
+                    </motion.div>
+                  )}
+                </div>
+              );
+            })}
           </div>
         </div>
       </section>

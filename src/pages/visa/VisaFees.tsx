@@ -1,43 +1,177 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import VisaLayout from '../../components/visa/VisaLayout';
 import { useLanguage } from '../../context/LanguageContext';
+import { supabase } from '../../lib/supabase';
+import SEO from '../../components/SEO';
+
+interface VisaFee {
+  id: string;
+  visa_code: string;
+  purpose: string;
+  purpose_en: string;
+  fee_range: string;
+  note: string;
+  note_en: string;
+  sort_order: number;
+}
 
 export default function VisaFees() {
   const { language, t } = useLanguage();
+  const [visaFees, setVisaFees] = useState<VisaFee[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [dbTranslations, setDbTranslations] = useState<Record<string, string>>({});
 
-  const visaFees = [
-    { type: 'L', purpose: language === 'zh' ? '旅游、探亲' : 'Tourism, Visiting Relatives', range: '约 2000-3000 元', note: language === 'zh' ? '费用因停留次数（单次/多次）和国籍不同可能调整，需提供行程证明和邀请函' : 'Fees vary based on entry count (single/multiple) and nationality; itinerary proof and invitation letter required.' },
-    { type: 'M', purpose: language === 'zh' ? '商务贸易活动' : 'Business/Trade', range: '约 1000-2000 元', note: language === 'zh' ? '需提供邀请函及公司资质文件，对等国家可能按协议收费' : 'Invitation letter and company documents required; reciprocal fees may apply for certain countries.' },
-    { type: 'Z', purpose: language === 'zh' ? '工作' : 'Work', range: '约 800-2000 元', note: language === 'zh' ? '需额外支付《外国人工作许可证》申请费（约500元）及体检费等' : 'Additional work permit application fee (approx. 500 RMB) and medical exam fees apply.' },
-    { type: 'X', purpose: language === 'zh' ? '学习' : 'Study', range: '约 1000-1500 元', note: language === 'zh' ? '长期学习 (X1) 可能涉及居留许可费用（约800元/年）' : 'Long-term study (X1) may involve residence permit fees (approx. 800 RMB/year).' },
-    { type: 'Q', purpose: language === 'zh' ? '家庭团聚/探亲' : 'Family Reunion', range: '约 1000-2000 元', note: language === 'zh' ? 'Q1 (长期) 需提供亲属关系证明，Q2 (短期) 费用较低' : 'Q1 (long-term) requires proof of kinship; Q2 (short-term) fees are lower.' },
-    { type: 'S', purpose: language === 'zh' ? '私人事务探亲' : 'Private Affairs', range: '约 1000-2000 元', note: language === 'zh' ? '需提供亲属在华居留证明或事务证明文件' : 'Proof of kinship or purpose of private affairs in China required.' },
-    { type: 'F', purpose: language === 'zh' ? '交流、访问、考察' : 'Exchange/Visit', range: '约 800-1500 元', note: language === 'zh' ? '非商业活动，需邀请单位出具证明' : 'Non-commercial activities; certificate from inviting unit required.' },
-    { type: 'G', purpose: language === 'zh' ? '过境' : 'Transit', range: '约 500-1000 元', note: language === 'zh' ? '需提供联程交通票据，停留时间通常不超过7天' : 'Connecting transport tickets required; stay usually no more than 7 days.' },
-    { type: 'R', purpose: language === 'zh' ? '高层次人才' : 'High-Level Talent', range: '约 1000-2000 元', note: language === 'zh' ? '需提供人才认定证明，部分国家可能免签证费' : 'Talent identification certificate required; visa fee exemption possible for some countries.' },
-    { type: 'D', purpose: language === 'zh' ? '永久居留申请' : 'Permanent Residence', range: '约 2000-3000 元', note: language === 'zh' ? '需公安部审批，含《外国人永久居留身份确认表》费用' : 'Requires Ministry of Public Security approval; includes permanent residence confirmation form fee.' },
-  ];
+  // 从数据库加载签证相关翻译（包括所有类型分类）
+  useEffect(() => {
+    const loadTranslations = async () => {
+      try {
+        const { data } = await supabase
+          .from('translations')
+          .select('key, value')
+          .eq('lang', language)
+          .or('category.eq.visa,category.eq.visa_fee,category.eq.type,category.eq.types,category.eq.visaType');
+        
+        if (data && data.length > 0) {
+          const transMap: Record<string, string> = {};
+          data.forEach((item: { key: string; value: string }) => {
+            transMap[item.key] = item.value;
+          });
+          setDbTranslations(transMap);
+        }
+      } catch (e) {
+        console.error('Failed to load visa fee translations:', e);
+      }
+    };
+    loadTranslations();
+  }, [language]);
+
+  // 签证代码到翻译键code的映射
+  const visaCodeToTranslationKey: Record<string, string> = {
+    L: 'tourism',
+    M: 'business',
+    Q1: 'familyQ1',
+    Q2: 'familyQ2',
+    Z: 'work',
+    X1: 'studyX1',
+    X2: 'studyX2',
+    G: 'transit',
+    C: 'crew',
+    D: 'permanent',
+    F: 'exchange',
+    J1: 'journalistJ1',
+    J2: 'journalistJ2',
+    R: 'talent',
+    S1: 'privateS1',
+    S2: 'privateS2',
+  };
+
+  // 多语言支持：优先使用数据库翻译，否则使用中英文字段
+  const getLocalizedText = (zh: string, en: string | null, key?: string) => {
+    if (key && dbTranslations[key]) {
+      return dbTranslations[key];
+    }
+    return language === 'zh' ? zh : (en || zh);
+  };
+
+  // 获取签证类型的翻译名称
+  const getVisaTypeName = (visaCode: string) => {
+    const translationKey = visaCodeToTranslationKey[visaCode];
+    return translationKey ? `type.${translationKey}` : undefined;
+  };
+
+  useEffect(() => {
+    fetchVisaFees();
+  }, [language]);
+
+  const fetchVisaFees = async () => {
+    setLoading(true);
+    const { data } = await supabase
+      .from('visa_fees')
+      .select('*')
+      .eq('is_active', true)
+      .order('sort_order');
+    
+    if (data) {
+      setVisaFees(data);
+    }
+    setLoading(false);
+  };
+
+  // 翻译键
+  const tr = {
+    pageTitle: t('visa.menu.fee', 'Fee Schedule'),
+    visaType: t('visa.page.fee.visaType', 'Visa Type'),
+    mainPurpose: t('visa.page.fee.mainPurpose', 'Main Purpose'),
+    costRange: t('visa.page.fee.costRange', 'Cost Range'),
+    notes: t('visa.page.fee.notes', 'Notes'),
+    visaSuffix: t('visa.page.fee.visaSuffix', 'Visa'),
+    additionalInfo: t('visa.page.fee.additionalInfo', 'Additional Info'),
+    reciprocal: t('visa.page.fee.reciprocal', 'Reciprocal vs Non-Reciprocal'),
+    reciprocalDesc: t('visa.page.fee.reciprocalDesc', 'Some countries have reciprocal visa agreements with China (e.g., USA, UK, Canada), which may result in higher fees than for non-reciprocal countries.'),
+    additionalFees: t('visa.page.fee.additionalFees', 'Additional Fees'),
+    expedited: t('visa.page.fee.expedited', 'Expedited service: Usually an additional 300-500 RMB.'),
+    mailing: t('visa.page.fee.mailing', 'Mailing fee: Approx. 50-100 RMB (if mailing documents).'),
+    medical: t('visa.page.fee.medical', 'Medical exam fee: Approx. 500-800 RMB (required for some visa types).'),
+    residencePermit: t('visa.page.fee.residencePermit', 'Residence Permit Fees'),
+    permit1: t('visa.page.fee.permit1', 'Residence permit < 1 year: Approx. 800 RMB.'),
+    permit2: t('visa.page.fee.permit2', '1-3 years residence permit: Approx. 1000 RMB.'),
+    permit3: t('visa.page.fee.permit3', '3-5 years residence permit: Approx. 1500 RMB.'),
+    note: t('visa.page.fee.note', 'Note:'),
+    feeNote1: t('visa.page.fee.feeNote1', 'The above fees are for reference only; exact amounts are subject to the latest announcements from Chinese embassies, consulates, or visa centers.'),
+    feeNote2: t('visa.page.fee.feeNote2', 'It is recommended to check the specific fee standards for your country on the embassy website or consult a local visa agency in advance.'),
+  };
+
+  if (loading) {
+    return (
+      <>
+        <SEO 
+          title="China Visa Fees and Costs"
+          titleZh="中国签证费用标准"
+          description="Complete guide to China visa fees. Find the cost for different visa types including tourist, business, work and student visas."
+          descriptionZh="中国签证费用完整指南。查找不同签证类型的费用，包括旅游、商务、工作和学生签证。"
+          keywordsZh="签证费用, 中国签证费, 签证价格, 旅游签证费用, 商务签证费用"
+          keywords="China visa fees, visa cost, Chinese visa price, visa application fee"
+          url="https://tripcngo.com/visa/fees"
+        />
+        <VisaLayout breadcrumbTitle={tr.pageTitle}>
+          <div className="flex justify-center items-center py-20">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#1b887a]"></div>
+          </div>
+        </VisaLayout>
+      </>
+    );
+  }
 
   return (
-    <VisaLayout breadcrumbTitle={t('visa.menu.fee')}>
+    <>
+      <SEO 
+        title="China Visa Fees and Costs"
+        titleZh="中国签证费用标准"
+        description="Complete guide to China visa fees. Find the cost for different visa types including tourist, business, work and student visas."
+        descriptionZh="中国签证费用完整指南。查找不同签证类型的费用，包括旅游、商务、工作和学生签证。"
+        keywordsZh="签证费用, 中国签证费, 签证价格, 旅游签证费用, 商务签证费用"
+        keywords="China visa fees, visa cost, Chinese visa price, visa application fee"
+        url="https://tripcngo.com/visa/fees"
+      />
+      <VisaLayout breadcrumbTitle={tr.pageTitle}>
       <div className="p-6">
         <div className="bg-[#1b887a] text-white p-6 rounded-t-lg">
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-[#1b887a]/50">
-                <th className="text-left py-2">{language === 'zh' ? '签证类型' : 'Visa Type'}</th>
-                <th className="text-left py-2">{language === 'zh' ? '主要用途' : 'Main Purpose'}</th>
-                <th className="text-left py-2">{language === 'zh' ? '费用范围' : 'Cost Range'}</th>
-                <th className="text-left py-2">{language === 'zh' ? '特别说明' : 'Notes'}</th>
+                <th className="text-left py-2">{tr.visaType}</th>
+                <th className="text-left py-2">{tr.mainPurpose}</th>
+                <th className="text-left py-2">{tr.costRange}</th>
+                <th className="text-left py-2">{tr.notes}</th>
               </tr>
             </thead>
             <tbody>
               {visaFees.map((v, i) => (
-                <tr key={i} className="border-b border-[#1b887a]/50 last:border-none">
-                  <td className="py-3 font-semibold">{v.type} {language === 'zh' ? '签证' : 'Visa'}</td>
-                  <td className="py-3">{v.purpose}</td>
-                  <td className="py-3 text-[#e0f2f1] font-medium">{v.range}</td>
-                  <td className="py-3 text-xs opacity-90">{v.note}</td>
+                <tr key={v.id} className="border-b border-[#1b887a]/50 last:border-none">
+                  <td className="py-3 font-semibold">{v.visa_code} {tr.visaSuffix}</td>
+                  <td className="py-3">{getLocalizedText(v.purpose, v.purpose_en, getVisaTypeName(v.visa_code))}</td>
+                  <td className="py-3 text-[#e0f2f1] font-medium">{v.fee_range}</td>
+                  <td className="py-3 text-xs opacity-90">{getLocalizedText(v.note, v.note_en, `visa.fee.${v.visa_code}.note`)}</td>
                 </tr>
               ))}
             </tbody>
@@ -45,42 +179,43 @@ export default function VisaFees() {
         </div>
 
         <div className="bg-white p-8 rounded-b-lg border-x border-b border-gray-200 shadow-sm">
-          <h3 className="font-bold text-lg mb-4">{language === 'zh' ? '更多费用信息' : 'Additional Info'}</h3>
+          <h3 className="font-bold text-lg mb-4">{tr.additionalInfo}</h3>
           
           <div className="space-y-6 text-sm text-gray-700">
             <div>
-              <h4 className="font-semibold text-gray-900">{language === 'zh' ? '对等国家与非对等国家' : 'Reciprocal vs Non-Reciprocal'}</h4>
+              <h4 className="font-semibold text-gray-900">{tr.reciprocal}</h4>
               <ul className="list-disc pl-5 mt-2 space-y-1">
-                <li>{language === 'zh' ? '部分国家与中国签订签证费用对等协议（如美国、英国、加拿大等），费用可能高于非对等国家' : 'Some countries have reciprocal visa agreements with China (e.g., USA, UK, Canada), which may result in higher fees than for non-reciprocal countries.'}</li>
+                <li>{tr.reciprocalDesc}</li>
               </ul>
             </div>
 
             <div>
-              <h4 className="font-semibold text-gray-900">{language === 'zh' ? '附加费用' : 'Additional Fees'}</h4>
+              <h4 className="font-semibold text-gray-900">{tr.additionalFees}</h4>
               <ul className="list-disc pl-5 mt-2 space-y-1">
-                <li>{language === 'zh' ? '加急服务：通常额外收取300-500元' : 'Expedited service: Usually an additional 300-500 RMB.'}</li>
-                <li>{language === 'zh' ? '邮寄费：约50-100元（若是邮寄材料）' : 'Mailing fee: Approx. 50-100 RMB (if mailing documents).'}</li>
-                <li>{language === 'zh' ? '体检费：约500-800元（部分签证类型要求）' : 'Medical exam fee: Approx. 500-800 RMB (required for some visa types).'}</li>
+                <li>{tr.expedited}</li>
+                <li>{tr.mailing}</li>
+                <li>{tr.medical}</li>
               </ul>
             </div>
 
             <div>
-              <h4 className="font-semibold text-gray-900">{language === 'zh' ? '居留许可费用' : 'Residence Permit Fees'}</h4>
+              <h4 className="font-semibold text-gray-900">{tr.residencePermit}</h4>
               <ul className="list-disc pl-5 mt-2 space-y-1">
-                <li>{language === 'zh' ? '一年内居留许可：约800元' : 'Residence permit < 1 year: Approx. 800 RMB.'}</li>
-                <li>{language === 'zh' ? '1-3年居留许可：约1000元' : '1-3 years residence permit: Approx. 1000 RMB.'}</li>
-                <li>{language === 'zh' ? '3-5年居留许可：约1500元' : '3-5 years residence permit: Approx. 1500 RMB.'}</li>
+                <li>{tr.permit1}</li>
+                <li>{tr.permit2}</li>
+                <li>{tr.permit3}</li>
               </ul>
             </div>
 
             <div className="p-4 bg-gray-50 rounded border border-gray-100 text-xs text-gray-500">
-              <p className="font-semibold text-gray-700 mb-1">{language === 'zh' ? '注意事项:' : 'Note:'}</p>
-              <p>{language === 'zh' ? '以上费用仅供参考，具体金额需以中国驻外使领馆或签证中心最新公告为准' : 'The above fees are for reference only; exact amounts are subject to the latest announcements from Chinese embassies, consulates, or visa centers.'}</p>
-              <p>{language === 'zh' ? '建议提前通过使领馆官网查询目标国家的详细收费标准，或咨询当地签证代理机构' : 'It is recommended to check the specific fee standards for your country on the embassy website or consult a local visa agency in advance.'}</p>
+              <p className="font-semibold text-gray-700 mb-1">{tr.note}</p>
+              <p>{tr.feeNote1}</p>
+              <p>{tr.feeNote2}</p>
             </div>
           </div>
         </div>
       </div>
     </VisaLayout>
+    </>
   );
 }

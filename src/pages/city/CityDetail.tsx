@@ -77,9 +77,128 @@ export default function CityDetail() {
 
   if (!city) return <Navigate to="/cities" replace />;
 
-  const getTranslatedValue = (zh: any, en: any) => {
-    if (isEn && en) return en;
-    return zh;
+  // 从 translations 字段获取翻译内容
+  const getTranslation = (lang: string): any => {
+    if (!city?.translations) return {};
+    return city.translations[lang] || {};
+  };
+  
+  // 获取翻译文本 - 从 translations JSONB 字段读取
+  const getI18n = (item: any, baseField: string) => {
+    if (!item) return '';
+    
+    // 中文：直接返回原字段
+    if (language === 'zh') {
+      return item[baseField] || '';
+    }
+    
+    // 从 translations 获取当前语言的翻译
+    const langTranslation = getTranslation(language);
+    
+    // 先从 translations 中查找
+    if (langTranslation && langTranslation[baseField]) {
+      return langTranslation[baseField];
+    }
+    
+    // 回退到原字段（如 enParagraphs）
+    return item[baseField] || '';
+  };
+  
+  // 获取翻译文本数组（如 paragraphs）
+  const getI18nArray = (item: any, baseField: string): string[] => {
+    if (!item) return [];
+    
+    // 中文：直接返回原字段
+    if (language === 'zh') {
+      return item[baseField] || [];
+    }
+    
+    // 从 translations 获取当前语言的翻译
+    const langTranslation = getTranslation(language);
+    
+    // 先从 translations 中查找
+    if (langTranslation && Array.isArray(langTranslation[baseField])) {
+      return langTranslation[baseField];
+    }
+    
+    // 回退到原字段
+    const result = item[baseField];
+    return Array.isArray(result) ? result : [];
+  };
+  
+  // 获取 bestTravelTime 的翻译内容
+  const getBestTravelTimeTranslation = () => {
+    if (!city?.translations) return null;
+    const langTranslation = city.translations[language];
+    if (langTranslation?.bestTravelTime) {
+      return langTranslation.bestTravelTime;
+    }
+    return null;
+  };
+  
+  // 获取翻译后的对象数组（如 attractions, history, food）
+  const getI18nArrayItems = (baseField: string): any[] => {
+    if (language === 'zh') {
+      return city?.[baseField] || [];
+    }
+    
+    // 语言代码映射
+    const langSuffixMap: Record<string, string> = {
+      'en': 'En', 'ja': 'Ja', 'ko': 'Ko', 'ru': 'Ru',
+      'fr': 'Fr', 'es': 'Es', 'de': 'De', 'tw': 'Tw', 'it': 'It'
+    };
+    const suffix = langSuffixMap[language];
+    
+    const originalItems = city?.[baseField] || [];
+    
+    // 优先尝试从 translations JSONB 字段获取翻译
+    const langTranslation = getTranslation(language);
+    if (langTranslation && Array.isArray(langTranslation[baseField])) {
+      const translatedItems = langTranslation[baseField];
+      return originalItems.map((original: any, idx: number) => ({
+        ...original,
+        ...(translatedItems[idx] || {})
+      }));
+    }
+    
+    // 如果 translations JSONB 中没有翻译，则使用内联翻译字段（如 nameJa, descJa）
+    if (suffix && Array.isArray(originalItems)) {
+      return originalItems.map((item: any) => {
+        const translated: any = { ...item };
+        
+        // 检查是否有内联翻译字段
+        if (item[`name${suffix}`]) {
+          translated.name = item[`name${suffix}`];
+        }
+        if (item[`desc${suffix}`]) {
+          translated.desc = item[`desc${suffix}`];
+        }
+        if (item[`price${suffix}`]) {
+          translated.price = item[`price${suffix}`];
+        }
+        if (item[`title${suffix}`]) {
+          translated.title = item[`title${suffix}`];
+        }
+        if (item[`year${suffix}`]) {
+          translated.year = item[`year${suffix}`];
+        }
+        if (item[`ingredients${suffix}`]) {
+          translated.ingredients = item[`ingredients${suffix}`];
+        }
+        
+        return translated;
+      });
+    }
+    
+    return originalItems;
+  };
+
+  // 获取城市主名称
+  const getCityName = () => getI18n(city, 'name') || city?.name || '';
+  const getCityAltName = () => {
+    const altLang = language === 'zh' ? 'en' : 'zh';
+    const langMap: Record<string, string> = { 'zh': 'zh', 'en': 'en', 'ja': 'ja', 'ko': 'ko', 'ru': 'ru', 'fr': 'fr', 'es': 'es', 'de': 'de', 'tw': 'tw', 'it': 'it' };
+    return city?.[`name_${altLang}`] || city?.enName || city?.name || '';
   };
 
   const handleStatsUpdate = async (field: 'wantToVisit' | 'recommended') => {
@@ -121,20 +240,20 @@ export default function CityDetail() {
   return (
     <div className="bg-gray-50 min-h-screen">
       <SEO 
-        title={isEn ? city.enName : city.name}
-        description={getTranslatedValue(city.paragraphs?.[0], city.enParagraphs?.[0])}
-        keywords={`${isEn ? city.enName : city.name}, ${isEn ? 'China Travel' : '中国旅游'}, ${isEn ? 'Top Attractions' : '热门景点'}, ${city.province}`}
+        title={getCityName()}
+        description={getI18n(city, 'paragraphs')?.[0] || getI18n(city, 'enParagraphs')?.[0] || ''}
+        keywords={`${getCityName()}, ${language === 'zh' ? '中国旅游' : 'China Travel'}, ${language === 'zh' ? '热门景点' : 'Top Attractions'}, ${city.province}`}
         image={city.heroImage}
         url={`https://tripcngo.com/${language === 'zh' ? 'cn' : 'en'}/cities/${id}`}
         schemaData={{
           "@context": "https://schema.org",
           "@type": "TouristDestination",
-          "name": isEn ? city.enName : city.name,
-          "description": getTranslatedValue(city.paragraphs?.[0], city.enParagraphs?.[0]),
+          "name": getCityName(),
+          "description": getI18n(city, 'paragraphs')?.[0] || '',
           "image": city.heroImage,
           "address": {
             "@type": "PostalAddress",
-            "addressLocality": isEn ? city.enName : city.name,
+            "addressLocality": getCityName(),
             "addressRegion": city.province,
             "addressCountry": "CN"
           },
@@ -160,22 +279,48 @@ export default function CityDetail() {
         <div className="max-w-7xl mx-auto px-6 relative z-10">
           <div className="mb-10 pb-10 border-b border-white/10 flex flex-wrap items-center gap-6">
             <h1 className="text-4xl md:text-6xl font-extrabold tracking-tight text-white flex items-baseline gap-4">
-              {isEn ? city.enName : city.name} 
-              {!isEn && <span className="text-white/40 font-medium text-2xl md:text-4xl">{city.enName}</span>}
+              {getCityName()} 
+              {language === 'zh' && <span className="text-white/40 font-medium text-2xl md:text-4xl">{getCityAltName()}</span>}
+              {language !== 'zh' && <span className="text-white/40 font-medium text-xl md:text-2xl">{getI18n(city, 'name_zh')}</span>}
             </h1>
             <div className="flex flex-wrap items-center gap-3">
-              {(city.tags || []).map((tag: any, idx: number) => (
-                <span key={idx} className="px-5 py-2 bg-[#e6f4ea] text-[#1b887a] rounded-full text-[10px] font-black shadow-sm border border-[#1b887a]/20 tracking-widest uppercase">
-                  {getTranslatedValue(tag.text, tag.enText)}
-                </span>
-              ))}
+              {(city.tags || []).map((tag: any, idx: number) => {
+                // 语言代码到后缀的映射
+                const langSuffixMap: Record<string, string> = {
+                  'en': 'En', 'ja': 'Ja', 'ko': 'Ko', 'ru': 'Ru',
+                  'fr': 'Fr', 'es': 'Es', 'de': 'De', 'tw': 'Tw', 'it': 'It'
+                };
+                const suffix = langSuffixMap[language];
+                
+                // 获取标签翻译
+                let tagText = tag.text || '';
+                if (language !== 'zh') {
+                  // 1. 优先从内联翻译字段获取（如 tag.jaText）
+                  if (suffix && tag[`text${suffix}`]) {
+                    tagText = tag[`text${suffix}`];
+                  } else {
+                    // 2. 回退到 translations JSONB 字段
+                    const tagTranslations = getTranslation(language)?.tags?.[idx];
+                    if (tagTranslations?.text) {
+                      tagText = tagTranslations.text;
+                    } else if (tagTranslations?.text?.text) {
+                      tagText = tagTranslations.text;
+                    }
+                  }
+                }
+                return (
+                  <span key={idx} className="px-5 py-2 bg-[#e6f4ea] text-[#1b887a] rounded-full text-[10px] font-black shadow-sm border border-[#1b887a]/20 tracking-widest uppercase">
+                    {tagText}
+                  </span>
+                );
+              })}
             </div>
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-12 items-start">
             <div className="col-span-1 lg:col-span-2 text-white">
               <div className="space-y-6 text-white/90 text-base md:text-xl leading-relaxed max-w-4xl">
-                {(isEn && city.enParagraphs ? city.enParagraphs : (city.paragraphs || [])).map((p: string, idx: number) => (
+                {getI18nArray(city, 'paragraphs').map((p: string, idx: number) => (
                   <p key={idx}>{p}</p>
                 ))}
               </div>
@@ -212,18 +357,18 @@ export default function CityDetail() {
 
             {/* Weather / Info Card */}
             <div className="col-span-1 border border-white/10 bg-slate-900/60 backdrop-blur-md rounded-2xl p-6 text-white shadow-2xl">
-              <WeatherWidget cityName={city.name} enCityName={city.enName} isEn={isEn} />
+              <WeatherWidget cityName={city.name} enCityName={city.enName} language={language} />
 
               <div className="grid grid-cols-2 gap-4 border-t border-white/10 pt-5">
                 <div className="text-center">
                   <MapPin className="w-5 h-5 mx-auto text-white/50 mb-2" />
                   <div className="text-xs text-white/50">{t('city.weather.area')}</div>
-                  <div className="font-semibold text-lg">{city.info?.area || '-'}</div>
+                  <div className="font-semibold text-lg">{city.translations?.[language]?.info?.area || city.info?.area || '-'}</div>
                 </div>
                 <div className="text-center">
                   <Users className="w-5 h-5 mx-auto text-white/50 mb-2" />
                   <div className="text-xs text-white/50">{t('city.weather.population')}</div>
-                  <div className="font-semibold text-lg">{city.info?.population || '-'}</div>
+                  <div className="font-semibold text-lg">{city.translations?.[language]?.info?.population || city.info?.population || '-'}</div>
                 </div>
               </div>
             </div>
@@ -239,17 +384,17 @@ export default function CityDetail() {
             {/* Travel Time */}
               <div>
                 <h2 className="text-3xl font-bold text-gray-900 mb-8 tracking-tight text-center md:text-left">
-                  {getTranslatedValue(city.name, city.enName)}{t('city.bestTime.title')}
+                  {getCityName()}{t('city.bestTime.title')}
                 </h2>
                 <div className="bg-white rounded-2xl p-8 shadow-sm border border-gray-100 relative">
                   <div className="absolute top-0 left-8 -translate-y-1/2 text-6xl text-gray-100 font-serif leading-none">"</div>
                   <p className="text-lg text-gray-700 leading-relaxed font-medium mb-4 relative z-10">
-                    {t('city.bestTime.descPrefix')}{getTranslatedValue(city.name, city.enName)}{t('city.bestTime.descSuffix')}
+                    {t('city.bestTime.descPrefix')}{getCityName()}{t('city.bestTime.descSuffix')}
                     <strong className="text-gray-900 font-bold ml-1">
-                      {getTranslatedValue(city.bestTravelTime?.strongText || '...', city.bestTravelTime?.enStrongText || '...')}
+                      {getBestTravelTimeTranslation()?.strongText || city.bestTravelTime?.strongText || '...'}
                     </strong>.
                   </p>
-                  {(isEn && (city.bestTravelTime?.enParagraphs || []).length > 0 ? city.bestTravelTime.enParagraphs : (city.bestTravelTime?.paragraphs || [])).map((p: string, idx: number) => (
+                  {(getBestTravelTimeTranslation()?.paragraphs || city.bestTravelTime?.paragraphs || []).map((p: string, idx: number) => (
                     <p key={idx} className="text-gray-600 leading-relaxed mb-4 relative z-10">
                       {p}
                     </p>
@@ -261,15 +406,15 @@ export default function CityDetail() {
             {/* History */}
               <div>
                 <h2 className="text-3xl font-bold text-gray-900 mb-8 tracking-tight text-center md:text-left">
-                  {getTranslatedValue(city.name, city.enName)}{t('city.history.title')}
+                  {getCityName()}{t('city.history.title')}
                 </h2>
                 <div className="relative border-l-2 border-green-100 pl-8 space-y-8 pb-4">
-                  {(city.history || []).map((item: any, idx: number) => (
+                  {getI18nArrayItems('history').map((item: any, idx: number) => (
                     <div key={idx} className="relative">
                       <div className="absolute -left-[41px] bg-green-500 w-4 h-4 rounded-full border-4 border-white shadow-sm"></div>
-                      <div className="text-sm font-semibold text-green-600 mb-1">{getTranslatedValue(item.year, item.enYear)}</div>
-                      <h3 className="text-xl font-bold text-gray-900 mb-2">{getTranslatedValue(item.title, item.enTitle)}</h3>
-                      <p className="text-gray-600 text-sm leading-relaxed">{getTranslatedValue(item.desc, item.enDesc)}</p>
+                      <div className="text-sm font-semibold text-green-600 mb-1">{item.year || item.enYear || ''}</div>
+                      <h3 className="text-xl font-bold text-gray-900 mb-2">{item.title || item.enTitle || ''}</h3>
+                      <p className="text-gray-600 text-sm leading-relaxed">{item.desc || item.enDesc || ''}</p>
                     </div>
                   ))}
                 </div>
@@ -283,12 +428,12 @@ export default function CityDetail() {
       <div className="py-16 bg-white border-t border-gray-100">
         <div className="max-w-7xl mx-auto px-6">
           <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold text-gray-900 mb-3 tracking-tight">{getTranslatedValue(city.name, city.enName)}{t('city.attractions.title')}</h2>
+            <h2 className="text-3xl font-bold text-gray-900 mb-3 tracking-tight">{getCityName()}{t('city.attractions.title')}</h2>
             <p className="text-gray-500">{t('city.attractions.subtitle')}</p>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-            {(city.attractions || []).map((spot: any, idx: number) => (
+            {getI18nArrayItems('attractions').map((spot: any, idx: number) => (
               <div key={idx} className="bg-white border text-left border-gray-100 rounded-xl overflow-hidden hover:shadow-xl transition-all duration-300 group flex flex-col">
                 <div className="h-48 bg-gray-100 relative overflow-hidden flex items-center justify-center">
                   <div className="absolute inset-0 bg-[#e6f4ea] opacity-30"></div>
@@ -305,22 +450,22 @@ export default function CityDetail() {
                   )}
                 </div>
                 <div className="p-5 flex-grow flex flex-col">
-                  <h3 className="font-bold text-gray-900 text-lg mb-1">{isEn ? spot.enName : spot.name}</h3>
-                  {!isEn && <div className="text-xs text-gray-400 mb-3 truncate font-medium">{spot.enName}</div>}
-                  <p className="text-sm text-green-700 mb-5 line-clamp-2 leading-relaxed flex-grow">{getTranslatedValue(spot.desc, spot.enDesc)}</p>
+                  <h3 className="font-bold text-gray-900 text-lg mb-1">{spot.name || spot.enName || ''}</h3>
+                  <div className="text-xs text-gray-400 mb-3 truncate font-medium">{spot.enName || spot.name || ''}</div>
+                  <p className="text-base text-green-700 mb-5 line-clamp-2 leading-relaxed flex-grow">{spot.desc || spot.enDesc || ''}</p>
                   
                   <div className="space-y-2 text-xs text-gray-500 border-t border-gray-100 pt-4 font-medium">
                     <div className="flex items-center gap-2">
                       <Tag className="w-4 h-4 text-blue-500" />
-                      <span>{t('city.attractions.ticket')} {getTranslatedValue(spot.price, spot.enPrice)}</span>
+                      <span>{t('city.attractions.ticket')} {spot.price || spot.enPrice || ''}</span>
                     </div>
                     <div className="flex items-center gap-2">
                       <Calendar className="w-4 h-4 text-emerald-500" />
-                      <span>{t('city.attractions.season')}: {getTranslatedValue(spot.season, spot.enSeason)}</span>
+                      <span>{t('city.attractions.season')}: {spot.season || spot.enSeason || ''}</span>
                     </div>
                     <div className="flex items-center gap-2">
                       <Clock className="w-4 h-4 text-orange-500" />
-                      <span>{t('city.attractions.time')}: {getTranslatedValue(spot.time, spot.enTime)}</span>
+                      <span>{t('city.attractions.time')}: {spot.time || spot.enTime || ''}</span>
                     </div>
                   </div>
                 </div>
@@ -334,21 +479,21 @@ export default function CityDetail() {
         <div className="py-16 bg-white border-t border-gray-100">
           <div className="max-w-7xl mx-auto px-6 text-center">
             <div className="mb-12">
-              <h2 className="text-3xl font-bold text-gray-900 mb-3 tracking-tight">{getTranslatedValue(city.name, city.enName)}{t('city.heritage.world.title')}</h2>
+              <h2 className="text-3xl font-bold text-gray-900 mb-3 tracking-tight">{getCityName()}{t('city.heritage.world.title')}</h2>
               <p className="text-gray-500">{t('city.heritage.world.subtitle')}</p>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-              {(city.worldHeritage || []).length > 0 ? (city.worldHeritage || []).map((heritage: any, idx: number) => (
+              {getI18nArrayItems('worldHeritage').length > 0 ? getI18nArrayItems('worldHeritage').map((heritage: any, idx: number) => (
                 <div key={idx} className="relative h-64 rounded-xl overflow-hidden group cursor-pointer text-left">
                   <img src={heritage.imageUrl || `https://images.unsplash.com/photo-1599571234909-29ed5d1321d6?w=600&q=80&auto=format&fit=crop&random=${idx}`} alt={heritage.name} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" />
                   <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent"></div>
                   <div className="absolute top-4 right-4 bg-white/90 backdrop-blur-sm text-gray-900 text-xs font-bold px-2 py-1 rounded-full shadow-sm">
-                    {getTranslatedValue(heritage.year, heritage.enYear)}
+                    {heritage.year || heritage.enYear || ''}
                   </div>
                   <div className="absolute bottom-0 left-0 right-0 p-5">
-                    <h3 className="text-xl font-bold text-white mb-2">{getTranslatedValue(heritage.name, heritage.enName)}</h3>
-                    <p className="text-white/80 text-xs line-clamp-2 leading-relaxed opacity-0 group-hover:opacity-100 transition-opacity duration-300 translate-y-2 group-hover:translate-y-0">{getTranslatedValue(heritage.desc, heritage.enDesc)}</p>
+                    <h3 className="text-xl font-bold text-white mb-2">{heritage.name || heritage.enName || ''}</h3>
+                    <p className="text-white/80 text-xs line-clamp-2 leading-relaxed opacity-0 group-hover:opacity-100 transition-opacity duration-300 translate-y-2 group-hover:translate-y-0">{heritage.desc || heritage.enDesc || ''}</p>
                   </div>
                 </div>
               )) : (
@@ -362,21 +507,21 @@ export default function CityDetail() {
         <div className="py-16 bg-gray-50 border-t border-gray-100">
           <div className="max-w-5xl mx-auto px-6 text-center">
             <div className="mb-12">
-              <h2 className="text-3xl font-bold text-gray-900 mb-3 tracking-tight">{getTranslatedValue(city.name, city.enName)}{t('city.heritage.intangible.title')}</h2>
+              <h2 className="text-3xl font-bold text-gray-900 mb-3 tracking-tight">{getCityName()}{t('city.heritage.intangible.title')}</h2>
               <p className="text-gray-500">{t('city.heritage.intangible.subtitle')}</p>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8 text-left">
-              {(city.intangibleHeritage || []).length > 0 ? (city.intangibleHeritage || []).map((item: any, idx: number) => (
-                <div key={idx} className={`${idx === 2 && (city.intangibleHeritage || []).length === 3 ? 'md:col-span-2' : ''} bg-white rounded-2xl p-6 shadow-sm border border-gray-100 flex flex-col md:flex-row gap-6 hover:shadow-md transition-shadow`}>
-                  <div className={`w-full ${idx === 2 && (city.intangibleHeritage || []).length === 3 ? 'md:w-1/4' : 'md:w-1/3'} flex-shrink-0 h-40`}>
+              {getI18nArrayItems('intangibleHeritage').length > 0 ? getI18nArrayItems('intangibleHeritage').map((item: any, idx: number) => (
+                <div key={idx} className={`${idx === 2 && getI18nArrayItems('intangibleHeritage').length === 3 ? 'md:col-span-2' : ''} bg-white rounded-2xl p-6 shadow-sm border border-gray-100 flex flex-col md:flex-row gap-6 hover:shadow-md transition-shadow`}>
+                  <div className={`w-full ${idx === 2 && getI18nArrayItems('intangibleHeritage').length === 3 ? 'md:w-1/4' : 'md:w-1/3'} flex-shrink-0 h-40`}>
                     <img src={item.imageUrl || 'https://images.unsplash.com/photo-1544025162-811c75c82de1?w=400&q=80&auto=format&fit=crop'} alt={item.name} className="w-full h-full object-cover rounded-xl" />
                   </div>
                   <div className="flex-grow flex flex-col justify-center">
-                    <h3 className="text-xl font-bold text-gray-900 mb-1">{getTranslatedValue(item.name, item.enName)}</h3>
-                    <div className="text-xs text-gray-400 mb-3">{getTranslatedValue(item.year, item.enYear)}</div>
+                    <h3 className="text-xl font-bold text-gray-900 mb-1">{item.name || item.enName || ''}</h3>
+                    <div className="text-xs text-gray-400 mb-3">{item.year || item.enYear || ''}</div>
                     <p className="text-gray-600 text-sm leading-relaxed line-clamp-3">
-                      {getTranslatedValue(item.desc, item.enDesc)}
+                      {item.desc || item.enDesc || ''}
                     </p>
                   </div>
                 </div>
@@ -391,12 +536,12 @@ export default function CityDetail() {
       <div className="py-16 bg-white border-t border-gray-100 text-center">
         <div className="max-w-7xl mx-auto px-6">
           <div className="mb-12">
-            <h2 className="text-3xl font-bold text-gray-900 mb-3 tracking-tight">{getTranslatedValue(city.name, city.enName)}{t('city.transport.title')}</h2>
+            <h2 className="text-3xl font-bold text-gray-900 mb-3 tracking-tight">{getCityName()}{t('city.transport.title')}</h2>
             <p className="text-gray-500">{t('city.transport.subtitle')}</p>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 text-left">
-            {(city.transportation || []).map((item: any, idx: number) => {
+            {getI18nArrayItems('transportation').map((item: any, idx: number) => {
               const Icon = iconMap[item.iconName] || Navigation;
               return (
                 <div key={idx} className="bg-gray-50 rounded-xl p-6 border border-gray-100 hover:shadow-md transition-shadow">
@@ -404,10 +549,10 @@ export default function CityDetail() {
                     <div className="p-3 bg-blue-100 text-blue-600 rounded-lg">
                       <Icon className="w-6 h-6" />
                     </div>
-                    <h3 className="text-lg font-bold text-gray-900">{getTranslatedValue(item.title, item.enTitle)}</h3>
+                    <h3 className="text-lg font-bold text-gray-900">{item.title || item.enTitle || ''}</h3>
                   </div>
-                  <p className="text-sm text-gray-600 leading-relaxed mb-2">{getTranslatedValue(item.desc, item.enDesc)}</p>
-                  <p className="text-sm text-gray-500 font-medium">{getTranslatedValue(item.price, item.enPrice)}</p>
+                  <p className="text-sm text-gray-600 leading-relaxed mb-2">{item.desc || item.enDesc || ''}</p>
+                  <p className="text-sm text-gray-500 font-medium">{item.price || item.enPrice || ''}</p>
                 </div>
               );
             })}
@@ -419,12 +564,12 @@ export default function CityDetail() {
       <div className="py-16 bg-gray-50 border-t border-gray-100">
         <div className="max-w-7xl mx-auto px-6 text-center">
           <div className="mb-12">
-            <h2 className="text-3xl font-bold text-gray-900 mb-3 tracking-tight">{getTranslatedValue(city.name, city.enName)}{t('city.food.title')}</h2>
+            <h2 className="text-3xl font-bold text-gray-900 mb-3 tracking-tight">{getCityName()}{t('city.food.title')}</h2>
             <p className="text-gray-500">{t('city.food.subtitle')}</p>
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 text-left">
-            {(city.food || []).map((food: any, idx: number) => (
+            {getI18nArrayItems('food').map((food: any, idx: number) => (
               <div key={idx} className="bg-white rounded-xl p-5 shadow-sm border border-gray-100 flex gap-5 hover:shadow-md transition-shadow">
                 <div className="w-32 h-32 flex-shrink-0">
                   <img src={food.imageUrl || `https://images.unsplash.com/photo-1544025162-811c75c82de1?w=400&q=80&auto=format&fit=crop&random=${food.imageIdx}`} alt={food.name} className="w-full h-full object-cover rounded-lg" />
@@ -432,15 +577,15 @@ export default function CityDetail() {
                 <div className="flex-grow flex flex-col justify-center">
                   <div className="flex justify-between items-start mb-1">
                     <div>
-                      <h3 className="text-xl font-bold text-gray-900 inline-block mr-2">{getTranslatedValue(food.name, food.enName)}</h3>
+                      <h3 className="text-xl font-bold text-gray-900 inline-block mr-2">{food.name || food.enName || ''}</h3>
                       <span className="text-xs text-gray-400 font-serif italic">{food.pinyin}</span>
                     </div>
                     <span className="text-green-600 font-semibold">{food.price}</span>
                   </div>
-                  <p className="text-sm text-gray-600 leading-relaxed mb-3 line-clamp-2">{getTranslatedValue(food.desc, food.enDesc)}</p>
+                  <p className="text-sm text-gray-600 leading-relaxed mb-3 line-clamp-2">{food.desc || food.enDesc || ''}</p>
                   <div className="text-xs text-gray-500 mt-auto w-full border-t border-gray-50 pt-2">
                     <strong className="text-gray-700">{t('city.food.ingredients')}: </strong>
-                    <span className="line-clamp-1">{getTranslatedValue(food.ingredients, food.enIngredients)}</span>
+                    <span className="line-clamp-1">{food.ingredients || food.enIngredients || ''}</span>
                   </div>
                 </div>
               </div>

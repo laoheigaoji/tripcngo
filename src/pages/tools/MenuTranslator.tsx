@@ -4,6 +4,7 @@ import { Upload, Camera, ImageIcon, Languages, Wallet, MessageSquare, ChevronDow
 import { useLanguage } from '../../context/LanguageContext';
 import { GoogleGenAI } from '@google/genai';
 import { askDeepSeek } from '../../lib/deepseek';
+import SEO from '../../components/SEO';
 
 const MenuTranslator = () => {
     const { language, t } = useLanguage();
@@ -13,24 +14,15 @@ const MenuTranslator = () => {
     const [uploadedImage, setUploadedImage] = useState<string | null>(null);
     const [analysisResult, setAnalysisResult] = useState<any[]>([]);
 
-    const faqs = language === 'zh' ? [
-        { q: "ReadMenuAI如何生成菜品图片?", a: "我们的AI系统会解析菜单中的文字描述，结合海量美食数据库，通过生成式AI技术为您匹配或生成高度还原的菜品图片。" },
-        { q: "我可以用它识别非中文菜单吗?", a: "目前我们主要专注于中文到英文及其他语言的识别，但系统也支持多种主流语言的菜单翻译。" },
-        { q: "汇率换算是实时的吗?", a: "是的，我们接入了实时汇率API，能根据当日最新利率为您提供准确认的人民币与外币换算。" },
-        { q: "我可以保存我的菜单识别记录吗?", a: "注册用户可以在个人中心查看所有的识别历史，包括翻译结果和生成的菜品图。" },
-        { q: "为什么有些菜识别不出来或者有错误?", a: "对于过于艺术化的字体或手写体，识别率可能会有所下降。建议拍摄时光线充足并保持菜单平整。" },
-        { q: "下单一个菜单需要多长时间?", a: "通常在10-15秒内即可完成全菜单的扫描、翻译及图片生成过程。" },
-        { q: "我需要连接互联网才能使用吗?", a: "是的，AI解析和图片生成功能需要在云端运行，因此需要稳定的网络连接。" },
-        { q: "ReadMenuAI和普通的翻译软件有什么区别?", a: "我们不仅提供文字翻译，更致力于提供视觉化体验，让您能通过图片直观看到菜品模样，并带有价格换算。" }
-    ] : [
-        { q: "How does ReadMenuAI generate dish images?", a: "Our AI system analyzes the text description derived from the menu, cross-references it with a vast culinary database, and uses generative AI to match or create high-fidelity dish images for you." },
-        { q: "Can I use it for non-Chinese menus?", a: "Currently, we focus primarily on Chinese-to-English translation, but our system supports character recognition for multiple major languages." },
-        { q: "Is the currency conversion real-time?", a: "Yes, we integrate with a real-time exchange rate API to provide accurate conversion between CNY and major foreign currencies based on latest rates." },
-        { q: "Can I save my menu recognition records?", a: "Registered users can view their full recognition history, including translations and generated images, in their personal dashboard." },
-        { q: "Why are some dishes not recognized correctly?", a: "Artistic fonts or messy handwriting can reduce accuracy. For best results, ensure good lighting and keep the menu flat when capturing." },
-        { q: "How long does it take to process a menu?", a: "Typically, the entire process of scanning, translating, and image generation takes only 10-15 seconds." },
-        { q: "Do I need an internet connection?", a: "Yes, the AI processing and image generation run in the cloud, so a stable internet connection is required." },
-        { q: "How is ReadMenuAI different from standard translators?", a: "We go beyond text translation by providing a visual experience, allowing you to see what the dish looks like alongside currency conversions." }
+    const faqs = [
+        { q: t('tools.menu.faq.q1'), a: t('tools.menu.faq.a1') },
+        { q: t('tools.menu.faq.q2'), a: t('tools.menu.faq.a2') },
+        { q: t('tools.menu.faq.q3'), a: t('tools.menu.faq.a3') },
+        { q: t('tools.menu.faq.q4'), a: t('tools.menu.faq.a4') },
+        { q: t('tools.menu.faq.q5'), a: t('tools.menu.faq.a5') },
+        { q: t('tools.menu.faq.q6'), a: t('tools.menu.faq.a6') },
+        { q: t('tools.menu.faq.q7'), a: t('tools.menu.faq.a7') },
+        { q: t('tools.menu.faq.q8'), a: t('tools.menu.faq.a8') }
     ];
 
     const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -110,6 +102,16 @@ const MenuTranslator = () => {
     };
 
     return (
+        <>
+        <SEO 
+            title="Chinese Menu Translator - AI Food Translation"
+            titleZh="中文菜单翻译器 - AI菜品识别"
+            description="Upload menu photos to get AI-powered translations, ingredients analysis, prices in multiple currencies. Perfect for ordering in Chinese restaurants."
+            descriptionZh="上传菜单照片，获取AI驱动的翻译、食材分析和多货币价格。非常适合在中餐厅点餐。"
+            keywordsZh="菜单翻译, 中文菜单, 菜品识别, AI翻译, 餐厅点餐"
+            keywords="menu translator, Chinese menu, food translation, AI menu, restaurant ordering, Chinese food"
+            url="https://tripcngo.com/tools/menu-translator"
+        />
         <div className="bg-[#f8f9fa] min-h-screen font-sans text-gray-900 overflow-x-hidden pt-20">
             {/* Minimalist Header Area - Already handled by main layout Navbar */}
             
@@ -329,6 +331,7 @@ const MenuTranslator = () => {
                 )}
             </div>
         </div>
+        </>
     );
 };
 

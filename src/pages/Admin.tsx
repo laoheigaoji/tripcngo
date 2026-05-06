@@ -1,15 +1,36 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion } from 'motion/react';
-import { Trash2, Plus, LogOut, ChevronRight, Save, Image as ImageIcon, Filter, FileText, Languages, Building2 } from 'lucide-react';
+import { Trash2, Plus, LogOut, ChevronRight, Save, Image as ImageIcon, Filter, FileText, Languages, Building2, Globe, FileSignature, Plane } from 'lucide-react';
 import Markdown from 'react-markdown';
 import MDEditor from '@uiw/react-md-editor';
 import TurndownService from 'turndown';
 import { supabase } from '../lib/supabase';
+import { supabaseAdmin } from '../lib/supabaseAdmin';
 import { User } from '@supabase/supabase-js';
 import { CityData } from '../types/city';
 import { citiesData } from '../data/citiesData';
 import CityForm from '../components/CityForm';
 import { generateCityData, askDeepSeek } from '../lib/deepseek';
+import VisaManagement from '../components/admin/VisaManagement';
+import TranslationManagement from '../components/admin/TranslationManagement';
+import AppsManagement from '../components/admin/AppsManagement';
+import PageSectionsManagement from '../components/admin/PageSectionsManagement';
+
+// 支持的语言配置
+const SUPPORTED_LANGUAGES = [
+  { code: 'zh', label: '中文', nativeLabel: '中文内容' },
+  { code: 'en', label: 'English', nativeLabel: 'English Content' },
+  { code: 'ja', label: '日本語', nativeLabel: '日本語コンテンツ' },
+  { code: 'ko', label: '한국어', nativeLabel: '한국어 콘텐츠' },
+  { code: 'ru', label: 'Русский', nativeLabel: 'Русский контент' },
+  { code: 'fr', label: 'Français', nativeLabel: 'Contenu français' },
+  { code: 'es', label: 'Español', nativeLabel: 'Contenido español' },
+  { code: 'de', label: 'Deutsch', nativeLabel: 'Deutsch Inhalt' },
+  { code: 'tw', label: '繁體中文', nativeLabel: '繁體中文內容' },
+  { code: 'it', label: 'Italiano', nativeLabel: 'Contenuto italiano' },
+] as const;
+
+type LanguageCode = typeof SUPPORTED_LANGUAGES[number]['code'];
 // Keep handleFirestoreError for backward compatibility if needed, but we'll use Supabase
 
 const categoryMap: Record<string, string> = {
@@ -28,16 +49,41 @@ const filterCategoryMap: Record<string, string> = {
 };
 
 interface Article {
-  _id: string;
+  _id?: string;
   title: string;
-  titleEn?: string;
   subtitle: string;
-  subtitleEn?: string;
-  category: string;
-  createdAt: string;
   content: string;
-  contentEn?: string;
+  category: string;
+  createdAt?: string;
   thumbnail?: string;
+  // 多语言字段
+  titleEn?: string;
+  subtitleEn?: string;
+  contentEn?: string;
+  titleJa?: string;
+  subtitleJa?: string;
+  contentJa?: string;
+  titleKo?: string;
+  subtitleKo?: string;
+  contentKo?: string;
+  titleRu?: string;
+  subtitleRu?: string;
+  contentRu?: string;
+  titleFr?: string;
+  subtitleFr?: string;
+  contentFr?: string;
+  titleEs?: string;
+  subtitleEs?: string;
+  contentEs?: string;
+  titleDe?: string;
+  subtitleDe?: string;
+  contentDe?: string;
+  titleTw?: string;
+  subtitleTw?: string;
+  contentTw?: string;
+  titleIt?: string;
+  subtitleIt?: string;
+  contentIt?: string;
 }
 
 export default function Admin() {
@@ -46,23 +92,30 @@ export default function Admin() {
   const [cities, setCities] = useState<CityData[]>([]);
   const [loading, setLoading] = useState(false);
   const [uploadingImages, setUploadingImages] = useState(0);
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<Article>({
     title: '',
-    titleEn: '',
     subtitle: '',
-    subtitleEn: '',
     content: '',
-    contentEn: '',
     thumbnail: '',
-    category: 'National Policy'
+    category: 'National Policy',
+    // 多语言字段初始化
+    titleEn: '', subtitleEn: '', contentEn: '',
+    titleJa: '', subtitleJa: '', contentJa: '',
+    titleKo: '', subtitleKo: '', contentKo: '',
+    titleRu: '', subtitleRu: '', contentRu: '',
+    titleFr: '', subtitleFr: '', contentFr: '',
+    titleEs: '', subtitleEs: '', contentEs: '',
+    titleDe: '', subtitleDe: '', contentDe: '',
+    titleTw: '', subtitleTw: '', contentTw: '',
+    titleIt: '', subtitleIt: '', contentIt: '',
   });
   const [showForm, setShowForm] = useState(false);
   const [showCityForm, setShowCityForm] = useState(false);
   const [editingCity, setEditingCity] = useState<CityData | null>(null);
-  const [activeAdminView, setActiveAdminView] = useState<'articles' | 'cities'>('articles');
+  const [activeAdminView, setActiveAdminView] = useState<'articles' | 'cities' | 'visa' | 'translations' | 'apps' | 'pages'>('articles');
   const [editingId, setEditingId] = useState<string | null>(null);
   const [isPreview, setIsPreview] = useState(false);
-  const [activeTab, setActiveTab] = useState<'zh' | 'en'>('zh');
+  const [activeTab, setActiveTab] = useState<LanguageCode>('zh');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [citySearchTerm, setCitySearchTerm] = useState('');
@@ -162,7 +215,7 @@ export default function Admin() {
             const data = JSON.parse(cleanJSON(responseText || '{}'));
 
             // Using Supabase instead of Firebase
-            const { error: upsertError } = await supabase.from('cities').upsert({ 
+            const { error: upsertError } = await supabaseAdmin.from('cities').upsert({ 
               ...data, 
               // If data has no id, it will be generated by Supabase if id is primary key or we can use a slug
               id: data.id || data.name.toLowerCase().replace(/\s+/g, '-'), 
@@ -457,28 +510,60 @@ export default function Admin() {
     
     setLoading(true);
     try {
-      let titleEnExp = '';
-      let subtitleEnExp = '';
-      let contentEnExp = '';
+      // 要翻译的目标语言（跳过中文，因为中文是源语言）
+      const targetLanguages = SUPPORTED_LANGUAGES.filter(lang => lang.code !== 'zh');
+      
+      // 翻译结果
+      const translations: Partial<Article> = {};
 
-      if (formData.title) {
-        titleEnExp = await askDeepSeek(`Translate the following Chinese article title to English. Only output the translated text:\n\n${formData.title}`);
-      }
+      // 批量翻译所有语言
+      for (const lang of targetLanguages) {
+        const langCode = lang.code;
+        const langName = lang.label;
+        
+        // 翻译标题
+        if (formData.title) {
+          try {
+            const titleKey = `title${langCode.charAt(0).toUpperCase() + langCode.slice(1)}` as keyof Article;
+            translations[titleKey] = await askDeepSeek(
+              `Translate the following Chinese text to ${langName}. Only output the translated text, no explanations:\n\n${formData.title}`
+            );
+          } catch (e) {
+            console.warn(`Failed to translate title to ${langCode}:`, e);
+          }
+        }
 
-      if (formData.subtitle) {
-        subtitleEnExp = await askDeepSeek(`Translate the following Chinese article subtitle to English. Only output the translated text:\n\n${formData.subtitle}`);
-      }
+        // 翻译副标题
+        if (formData.subtitle) {
+          try {
+            const subtitleKey = `subtitle${langCode.charAt(0).toUpperCase() + langCode.slice(1)}` as keyof Article;
+            translations[subtitleKey] = await askDeepSeek(
+              `Translate the following Chinese text to ${langName}. Only output the translated text, no explanations:\n\n${formData.subtitle}`
+            );
+          } catch (e) {
+            console.warn(`Failed to translate subtitle to ${langCode}:`, e);
+          }
+        }
 
-      if (formData.content) {
-        contentEnExp = await askDeepSeek(`Translate the following Chinese markdown content to English. Preserve all markdown formatting, links, and image syntactic structures exactly as they are. Output only the translated markdown:\n\n${formData.content}`);
+        // 翻译正文内容
+        if (formData.content) {
+          try {
+            const contentKey = `content${langCode.charAt(0).toUpperCase() + langCode.slice(1)}` as keyof Article;
+            translations[contentKey] = await askDeepSeek(
+              `Translate the following Chinese markdown content to ${langName}. Preserve all markdown formatting, links, and image syntactic structures exactly as they are. Output only the translated markdown:\n\n${formData.content}`
+            );
+          } catch (e) {
+            console.warn(`Failed to translate content to ${langCode}:`, e);
+          }
+        }
       }
 
       setFormData(prev => ({
         ...prev,
-        titleEn: titleEnExp,
-        subtitleEn: subtitleEnExp,
-        contentEn: contentEnExp
+        ...translations
       }));
+
+      alert('全部翻译完成！');
 
     } catch (err) {
       console.error("Translation error", err);
@@ -536,7 +621,7 @@ export default function Admin() {
 
   const fetchArticles = async () => {
     try {
-      const { data, error } = await supabase
+      const { data, error } = await supabaseAdmin
         .from('articles')
         .select('*')
         .order('createdAt', { ascending: false });
@@ -556,7 +641,7 @@ export default function Admin() {
 
   const fetchCities = async () => {
     try {
-      const { data, error } = await supabase
+      const { data, error } = await supabaseAdmin
         .from('cities')
         .select('*')
         .order('name', { ascending: true });
@@ -573,40 +658,99 @@ export default function Admin() {
     e.preventDefault();
     setLoading(true);
     try {
-      const articleData = {
-        ...formData,
-        updatedAt: new Date().toISOString()
+      // 清理article数据，移除不需要的字段
+      const { _id, ...articleDataWithoutId } = formData;
+      
+      // 构建保存数据 - 直接使用与数据库字段名匹配的格式
+      // 数据库字段：title(中文), titleEn(英文), title_ja, title_ko 等
+      const articleData: Record<string, any> = {
+        updated_at: new Date().toISOString()
       };
+      
+      // 中文字段直接保存
+      articleData.title = formData.title || '';
+      articleData.subtitle = formData.subtitle || '';
+      articleData.content = formData.content || '';
+      
+      // 英文字段保存到 titleEn (驼峰命名)
+      articleData.titleEn = formData.titleEn || '';
+      articleData.subtitleEn = formData.subtitleEn || '';
+      articleData.contentEn = formData.contentEn || '';
+      
+      // 其他语言字段保存到蛇形命名
+      articleData.title_ja = formData.titleJa || '';
+      articleData.subtitle_ja = formData.subtitleJa || '';
+      articleData.content_ja = formData.contentJa || '';
+      
+      articleData.title_ko = formData.titleKo || '';
+      articleData.subtitle_ko = formData.subtitleKo || '';
+      articleData.content_ko = formData.contentKo || '';
+      
+      articleData.title_ru = formData.titleRu || '';
+      articleData.subtitle_ru = formData.subtitleRu || '';
+      articleData.content_ru = formData.contentRu || '';
+      
+      articleData.title_fr = formData.titleFr || '';
+      articleData.subtitle_fr = formData.subtitleFr || '';
+      articleData.content_fr = formData.contentFr || '';
+      
+      articleData.title_es = formData.titleEs || '';
+      articleData.subtitle_es = formData.subtitleEs || '';
+      articleData.content_es = formData.contentEs || '';
+      
+      articleData.title_de = formData.titleDe || '';
+      articleData.subtitle_de = formData.subtitleDe || '';
+      articleData.content_de = formData.contentDe || '';
+      
+      articleData.title_tw = formData.titleTw || '';
+      articleData.subtitle_tw = formData.subtitleTw || '';
+      articleData.content_tw = formData.contentTw || '';
+      
+      articleData.title_it = formData.titleIt || '';
+      articleData.subtitle_it = formData.subtitleIt || '';
+      articleData.content_it = formData.contentIt || '';
 
       if (editingId) {
-        const { error } = await supabase
+        const { error } = await supabaseAdmin
           .from('articles')
           .update(articleData)
           .eq('id', editingId);
         if (error) throw error;
       } else {
-        const { error } = await supabase
+        // Generate unique ID for new article
+        const newId = `article-${Date.now()}-${Math.random().toString(36).substring(2, 8)}`;
+        const { error } = await supabaseAdmin
           .from('articles')
           .insert([{
+            id: newId,
             ...articleData,
             createdAt: new Date().toISOString()
           }]);
         if (error) throw error;
       }
       
-      setFormData({ 
-        title: '', 
-        titleEn: '', 
-        subtitle: '', 
-        subtitleEn: '', 
-        content: '', 
-        contentEn: '', 
-        thumbnail: '', 
-        category: 'National Policy' 
+      // 重置表单为初始状态
+      setFormData({
+        title: '',
+        subtitle: '',
+        content: '',
+        thumbnail: '',
+        category: 'National Policy',
+        titleEn: '', subtitleEn: '', contentEn: '',
+        titleJa: '', subtitleJa: '', contentJa: '',
+        titleKo: '', subtitleKo: '', contentKo: '',
+        titleRu: '', subtitleRu: '', contentRu: '',
+        titleFr: '', subtitleFr: '', contentFr: '',
+        titleEs: '', subtitleEs: '', contentEs: '',
+        titleDe: '', subtitleDe: '', contentDe: '',
+        titleTw: '', subtitleTw: '', contentTw: '',
+        titleIt: '', subtitleIt: '', contentIt: '',
       });
       setShowForm(false);
       setEditingId(null);
+      setActiveTab('zh');
       fetchArticles();
+      alert('保存成功！');
     } catch (error: any) {
       console.error('Supabase Article Error:', error);
       alert('保存失败: ' + (error.message || String(error)));
@@ -618,7 +762,7 @@ export default function Admin() {
   const deleteArticle = async (id: string) => {
     if (!window.confirm('确定删除吗？')) return;
     try {
-      const { error } = await supabase
+      const { error } = await supabaseAdmin
         .from('articles')
         .delete()
         .eq('id', id);
@@ -651,17 +795,175 @@ export default function Admin() {
     const targetId = cityData.id || editingCity?.id || cityData.name.toLowerCase().replace(/\s+/g, '-');
     
     try {
-      const submitData = {
-        ...cityData,
+      // 只保留数据库中存在的字段
+      const dbFields = [
+        'id', 'name', 'enName', 'img', 'listCover', 'heroImage',
+        'tags', 'paragraphs', 'enParagraphs', 'stats', 'attractions',
+        'worldheritage', 'intangibleheritage', 'history', 'food',
+        'besttraveltime', 'bestTravelTime', 'transportation', 'info',
+        'worldHeritage', 'intangibleHeritage',
+      ];
+      
+      const submitData: Record<string, any> = {
         id: targetId,
-        updatedAt: new Date().toISOString()
+        updated_at: new Date().toISOString()
       };
-
+      
+      // 复制存在的字段
+      for (const field of dbFields) {
+        if ((cityData as any)[field] !== undefined) {
+          submitData[field] = (cityData as any)[field];
+        }
+      }
+      
+      // 提取多语言翻译内容到 translations 字段
+      const translations: Record<string, any> = {};
+      const langCodes = ['en', 'ja', 'ko', 'ru', 'fr', 'es', 'de', 'tw', 'it'];
+      
+      for (const langCode of langCodes) {
+        const langSuffix = langCode.charAt(0).toUpperCase() + langCode.slice(1);
+        const langTranslations: Record<string, any> = {};
+        
+        // 城市名称
+        const nameField = `name${langSuffix}`;
+        const enNameField = `enName${langSuffix}`;
+        if ((cityData as any)[nameField]) langTranslations.name = (cityData as any)[nameField];
+        if ((cityData as any)[enNameField]) langTranslations.enName = (cityData as any)[enNameField];
+        
+        // 简介段落
+        const paragraphsField = `paragraphs${langSuffix}`;
+        if ((cityData as any)[paragraphsField]?.length > 0) {
+          langTranslations.paragraphs = (cityData as any)[paragraphsField];
+        }
+        
+        // 最佳旅行时间 - 翻译保存在 cityData.bestTravelTime.strongTextKo 等
+        const bestTimeData = cityData.bestTravelTime as any;
+        if (bestTimeData) {
+          const strongTextField = `strongText${langSuffix}`;
+          const paragraphsField = `paragraphs${langSuffix}`;
+          const hasStrongText = bestTimeData[strongTextField] && bestTimeData[strongTextField] !== bestTimeData.strongText;
+          const hasParagraphs = bestTimeData[paragraphsField]?.length > 0;
+          
+          if (hasStrongText || hasParagraphs) {
+            langTranslations.bestTravelTime = {
+              strongText: hasStrongText ? bestTimeData[strongTextField] : bestTimeData.strongText,
+              paragraphs: hasParagraphs ? bestTimeData[paragraphsField] : (bestTimeData.paragraphs || [])
+            };
+          }
+        }
+        
+        // 景点
+        const attractionsWithLang = (cityData.attractions || []).map((attr: any) => {
+          const translated: any = {};
+          const nameF = `name${langSuffix}`;
+          const descF = `desc${langSuffix}`;
+          if (attr[nameF]) translated.name = attr[nameF];
+          if (attr[descF]) translated.desc = attr[descF];
+          if (Object.keys(translated).length > 0) return { ...translated, ...{ price: attr.price, season: attr.season, time: attr.time, imageUrl: attr.imageUrl } };
+          return null;
+        }).filter(Boolean);
+        if (attractionsWithLang.length > 0) {
+          langTranslations.attractions = attractionsWithLang;
+        }
+        
+        // 历史
+        const historyWithLang = (cityData.history || []).map((h: any) => {
+          const translated: any = {};
+          const titleF = `title${langSuffix}`;
+          const descF = `desc${langSuffix}`;
+          if (h[titleF]) translated.title = h[titleF];
+          if (h[descF]) translated.desc = h[descF];
+          if (Object.keys(translated).length > 0) return { ...translated, year: h.year };
+          return null;
+        }).filter(Boolean);
+        if (historyWithLang.length > 0) {
+          langTranslations.history = historyWithLang;
+        }
+        
+        // 世界遗产
+        const worldHeritageWithLang = (cityData.worldHeritage || []).map((wh: any) => {
+          const translated: any = {};
+          const nameF = `name${langSuffix}`;
+          const descF = `desc${langSuffix}`;
+          const yearF = `year${langSuffix}`;
+          if (wh[nameF]) translated.name = wh[nameF];
+          if (wh[descF]) translated.desc = wh[descF];
+          if (wh[yearF]) translated.year = wh[yearF];
+          if (Object.keys(translated).length > 0) return { ...translated, imageUrl: wh.imageUrl };
+          return null;
+        }).filter(Boolean);
+        if (worldHeritageWithLang.length > 0) {
+          langTranslations.worldHeritage = worldHeritageWithLang;
+        }
+        
+        // 非物质文化遗产
+        const intangibleHeritageWithLang = (cityData.intangibleHeritage || []).map((ih: any) => {
+          const translated: any = {};
+          const nameF = `name${langSuffix}`;
+          const descF = `desc${langSuffix}`;
+          const yearF = `year${langSuffix}`;
+          if (ih[nameF]) translated.name = ih[nameF];
+          if (ih[descF]) translated.desc = ih[descF];
+          if (ih[yearF]) translated.year = ih[yearF];
+          if (Object.keys(translated).length > 0) return { ...translated, imageUrl: ih.imageUrl };
+          return null;
+        }).filter(Boolean);
+        if (intangibleHeritageWithLang.length > 0) {
+          langTranslations.intangibleHeritage = intangibleHeritageWithLang;
+        }
+        
+        // 交通
+        const transportationWithLang = (cityData.transportation || []).map((t: any) => {
+          const translated: any = {};
+          const titleF = `title${langSuffix}`;
+          const descF = `desc${langSuffix}`;
+          if (t[titleF]) translated.title = t[titleF];
+          if (t[descF]) translated.desc = t[descF];
+          if (Object.keys(translated).length > 0) return { ...translated, iconName: t.iconName, price: t.price };
+          return null;
+        }).filter(Boolean);
+        if (transportationWithLang.length > 0) {
+          langTranslations.transportation = transportationWithLang;
+        }
+        
+        // 美食
+        const foodWithLang = (cityData.food || []).map((f: any) => {
+          const translated: any = {};
+          const nameF = `name${langSuffix}`;
+          const descF = `desc${langSuffix}`;
+          if (f[nameF]) translated.name = f[nameF];
+          if (f[descF]) translated.desc = f[descF];
+          if (Object.keys(translated).length > 0) return { ...translated, pinyin: f.pinyin, price: f.price, imageUrl: f.imageUrl };
+          return null;
+        }).filter(Boolean);
+        if (foodWithLang.length > 0) {
+          langTranslations.food = foodWithLang;
+        }
+        
+        // 标签
+        const tagsWithLang = (cityData.tags || []).map((tag: any) => {
+          const textF = `text${langSuffix}`;
+          if (tag[textF]) return { text: tag[textF], color: tag.color };
+          return null;
+        }).filter(Boolean);
+        if (tagsWithLang.length > 0) {
+          langTranslations.tags = tagsWithLang;
+        }
+        
+        // 如果这个语言有翻译内容，加入 translations
+        if (Object.keys(langTranslations).length > 0) {
+          translations[langCode] = langTranslations;
+        }
+      }
+      
+      // 添加 translations 字段
+      submitData.translations = translations;
+      
       if (!cityData.id && !editingCity?.id) {
-        (submitData as any).createdAt = new Date().toISOString();
+        submitData.created_at = new Date().toISOString();
       }
 
-      const { error } = await supabase
+      const { error } = await supabaseAdmin
         .from('cities')
         .upsert(submitData);
       
@@ -684,7 +986,7 @@ export default function Admin() {
     
     setLoading(true);
     try {
-      const { error } = await supabase
+      const { error } = await supabaseAdmin
         .from('cities')
         .delete()
         .eq('id', id);
@@ -719,15 +1021,53 @@ export default function Admin() {
   };
 
   const handleEdit = (article: Article) => {
+    // 读取数据时，同时检查驼峰命名和蛇形命名字段
+    // 数据库中英文字段可能是 titleEn 或 title_en，其他语言是 title_ja, title_ko 等
+    const getField = (article: any, ...fields: string[]): string => {
+      for (const field of fields) {
+        if (article[field] !== undefined && article[field] !== null) {
+          return article[field];
+        }
+      }
+      return '';
+    };
+
     setFormData({
+      _id: article._id,
       title: article.title || '',
-      titleEn: article.titleEn || '',
       subtitle: article.subtitle || '',
-      subtitleEn: article.subtitleEn || '',
       content: article.content || '',
-      contentEn: article.contentEn || '',
       thumbnail: article.thumbnail || '',
-      category: article.category || 'National Policy'
+      category: article.category || 'National Policy',
+      // 多语言字段 - 兼容驼峰和蛇形命名
+      titleEn: getField(article, 'titleEn', 'title_en'),
+      subtitleEn: getField(article, 'subtitleEn', 'subtitle_en'),
+      contentEn: getField(article, 'contentEn', 'content_en'),
+      titleJa: getField(article, 'titleJa', 'title_ja'),
+      subtitleJa: getField(article, 'subtitleJa', 'subtitle_ja'),
+      contentJa: getField(article, 'contentJa', 'content_ja'),
+      titleKo: getField(article, 'titleKo', 'title_ko'),
+      subtitleKo: getField(article, 'subtitleKo', 'subtitle_ko'),
+      contentKo: getField(article, 'contentKo', 'content_ko'),
+      titleRu: getField(article, 'titleRu', 'title_ru'),
+      subtitleRu: getField(article, 'subtitleRu', 'subtitle_ru'),
+      contentRu: getField(article, 'contentRu', 'content_ru'),
+      titleFr: getField(article, 'titleFr', 'title_fr'),
+      subtitleFr: getField(article, 'subtitleFr', 'subtitle_fr'),
+      contentFr: getField(article, 'contentFr', 'content_fr'),
+      titleEs: getField(article, 'titleEs', 'title_es'),
+      subtitleEs: getField(article, 'subtitleEs', 'subtitle_es'),
+      contentEs: getField(article, 'contentEs', 'content_es'),
+      titleDe: getField(article, 'titleDe', 'title_de'),
+      subtitleDe: getField(article, 'subtitleDe', 'subtitle_de'),
+      contentDe: getField(article, 'contentDe', 'content_de'),
+      titleTw: getField(article, 'titleTw', 'title_tw'),
+      subtitleTw: getField(article, 'subtitleTw', 'subtitle_tw'),
+      contentTw: getField(article, 'contentTw', 'content_tw'),
+      titleIt: getField(article, 'titleIt', 'title_it'),
+      subtitleIt: getField(article, 'subtitleIt', 'subtitle_it'),
+      contentIt: getField(article, 'contentIt', 'content_it'),
+      createdAt: article.createdAt || new Date().toISOString(),
     });
     setEditingId(article._id);
     setShowForm(true);
@@ -834,6 +1174,30 @@ export default function Admin() {
           >
             <Building2 className="w-5 h-5" /> 城市管理
           </button>
+          <button 
+            onClick={() => { setActiveAdminView('visa'); setShowForm(false); }}
+            className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-bold transition-all ${activeAdminView === 'visa' && !showForm ? 'bg-[#1b887a] text-white shadow-md' : 'text-gray-500 hover:bg-gray-50'}`}
+          >
+            <Globe className="w-5 h-5" /> 签证与签名
+          </button>
+          <button 
+            onClick={() => { setActiveAdminView('apps'); setShowForm(false); }}
+            className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-bold transition-all ${activeAdminView === 'apps' && !showForm ? 'bg-[#1b887a] text-white shadow-md' : 'text-gray-500 hover:bg-gray-50'}`}
+          >
+            <Plane className="w-5 h-5" /> 目录应用
+          </button>
+          <button 
+            onClick={() => { setActiveAdminView('pages'); setShowForm(false); }}
+            className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-bold transition-all ${activeAdminView === 'pages' && !showForm ? 'bg-[#1b887a] text-white shadow-md' : 'text-gray-500 hover:bg-gray-50'}`}
+          >
+            <FileText className="w-5 h-5" /> 静态页面
+          </button>
+          <button 
+            onClick={() => { setActiveAdminView('translations'); setShowForm(false); }}
+            className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-bold transition-all ${activeAdminView === 'translations' && !showForm ? 'bg-[#1b887a] text-white shadow-md' : 'text-gray-500 hover:bg-gray-50'}`}
+          >
+            <Languages className="w-5 h-5" /> 翻译管理
+          </button>
         </nav>
         <div className="p-4 border-t border-gray-100 pb-8">
           <button 
@@ -858,15 +1222,22 @@ export default function Admin() {
                   onClick={() => {
                     if (showForm) {
                       setEditingId(null);
-                      setFormData({ 
-                        title: '', 
-                        titleEn: '', 
-                        subtitle: '', 
-                        subtitleEn: '', 
-                        content: '', 
-                        contentEn: '', 
-                        thumbnail: '', 
-                        category: 'National Policy' 
+                      setActiveTab('zh');
+                      setFormData({
+                        title: '',
+                        subtitle: '',
+                        content: '',
+                        thumbnail: '',
+                        category: 'National Policy',
+                        titleEn: '', subtitleEn: '', contentEn: '',
+                        titleJa: '', subtitleJa: '', contentJa: '',
+                        titleKo: '', subtitleKo: '', contentKo: '',
+                        titleRu: '', subtitleRu: '', contentRu: '',
+                        titleFr: '', subtitleFr: '', contentFr: '',
+                        titleEs: '', subtitleEs: '', contentEs: '',
+                        titleDe: '', subtitleDe: '', contentDe: '',
+                        titleTw: '', subtitleTw: '', contentTw: '',
+                        titleIt: '', subtitleIt: '', contentIt: '',
                       });
                     }
                     setShowForm(!showForm);
@@ -899,160 +1270,128 @@ export default function Admin() {
               animate={{ opacity: 1, y: 0 }}
               className="bg-white rounded-3xl shadow-sm border border-gray-200 p-8"
             >
-              <div className="flex gap-4 mb-8 p-1 bg-gray-50 rounded-xl w-fit items-center">
-                 <button 
-                  type="button"
-                  onClick={() => setActiveTab('zh')}
-                  className={`px-6 py-2 rounded-lg font-bold transition-all text-sm ${activeTab === 'zh' ? 'bg-white text-[#1b887a] shadow-sm' : 'text-gray-400 hover:text-gray-600'}`}
-                 >
-                   中文内容
-                 </button>
-                 <button 
-                  type="button"
-                  onClick={() => setActiveTab('en')}
-                  className={`px-6 py-2 rounded-lg font-bold transition-all text-sm ${activeTab === 'en' ? 'bg-white text-[#1b887a] shadow-sm' : 'text-gray-400 hover:text-gray-600'}`}
-                 >
-                   English Content
-                 </button>
+              <div className="flex flex-wrap gap-2 mb-6 p-2 bg-gray-50 rounded-xl items-center">
+                 {/* 语言切换Tab */}
+                 <div className="flex flex-wrap gap-1">
+                   {SUPPORTED_LANGUAGES.map((lang) => (
+                     <button 
+                       key={lang.code}
+                       type="button"
+                       onClick={() => setActiveTab(lang.code)}
+                       className={`px-4 py-2 rounded-lg font-bold transition-all text-sm ${activeTab === lang.code ? 'bg-white text-[#1b887a] shadow-sm' : 'text-gray-400 hover:text-gray-600'}`}
+                     >
+                       {lang.nativeLabel}
+                     </button>
+                   ))}
+                 </div>
+                 {/* 自动翻译按钮 */}
                  <button
-                  type="button"
-                  onClick={handleAutoTranslate}
-                  disabled={loading}
-                  className="px-4 py-2 text-sm font-bold text-amber-600 hover:text-amber-700 bg-amber-50 hover:bg-amber-100 rounded-lg flex items-center gap-2 transition-colors ml-2"
+                   type="button"
+                   onClick={handleAutoTranslate}
+                   disabled={loading}
+                   className="px-4 py-2 text-sm font-bold text-amber-600 hover:text-amber-700 bg-amber-50 hover:bg-amber-100 rounded-lg flex items-center gap-2 transition-colors ml-auto"
                  >
-                   <Languages className="w-4 h-4" />自动翻译
+                   <Languages className="w-4 h-4" />{loading ? '翻译中...' : '自动翻译全部语言'}
                  </button>
               </div>
 
               <form onSubmit={handleSubmit} className="space-y-6">
-                 <div className={`space-y-6 animate-in fade-in duration-300 ${activeTab === 'zh' ? 'block' : 'hidden'}`}>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {/* 动态语言表单 */}
+                {SUPPORTED_LANGUAGES.map((lang) => {
+                  const isZh = lang.code === 'zh';
+                  const titleKey = isZh ? 'title' : `title${lang.code.charAt(0).toUpperCase() + lang.code.slice(1)}` as keyof Article;
+                  const subtitleKey = isZh ? 'subtitle' : `subtitle${lang.code.charAt(0).toUpperCase() + lang.code.slice(1)}` as keyof Article;
+                  const contentKey = isZh ? 'content' : `content${lang.code.charAt(0).toUpperCase() + lang.code.slice(1)}` as keyof Article;
+                  
+                  return (
+                    <div key={lang.code} className={`space-y-6 animate-in fade-in duration-300 ${activeTab === lang.code ? 'block' : 'hidden'}`}>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                          <label className="block text-sm font-bold text-gray-700 mb-2">{isZh ? '文章标题 (中文)' : `Title (${lang.label})`}</label>
+                          <input 
+                            type="text" 
+                            required={isZh}
+                            className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:bg-white focus:border-[#1b887a] focus:ring-4 focus:ring-[#1b887a]/10 outline-none transition-all"
+                            value={(formData[titleKey] as string) || ''}
+                            onChange={e => setFormData({...formData, [titleKey]: e.target.value})}
+                          />
+                        </div>
+                        {isZh && (
+                          <div>
+                            <label className="block text-sm font-bold text-gray-700 mb-2">分类</label>
+                            <select 
+                              className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:bg-white focus:border-[#1b887a] focus:ring-4 focus:ring-[#1b887a]/10 outline-none transition-all"
+                              value={formData.category}
+                              onChange={e => setFormData({...formData, category: e.target.value})}
+                            >
+                              {Object.entries(categoryMap).map(([value, label]) => (
+                                <option key={value} value={value}>{label}</option>
+                              ))}
+                            </select>
+                          </div>
+                        )}
+                        {!isZh && (
+                          <div>
+                            <label className="block text-sm font-bold text-gray-700 mb-2">Category</label>
+                            <input 
+                              disabled
+                              className="w-full px-4 py-3 bg-gray-100 border border-transparent rounded-xl text-gray-400 cursor-not-allowed"
+                              value={categoryMap[formData.category] || formData.category}
+                            />
+                          </div>
+                        )}
+                      </div>
                       <div>
-                        <label className="block text-sm font-bold text-gray-700 mb-2">文章标题 (中文)</label>
-                        <input 
-                          type="text" 
-                          required={activeTab === 'zh'}
+                        <label className="block text-sm font-bold text-gray-700 mb-2">{isZh ? '副标题 (简述)' : `Subtitle (${lang.label})`}</label>
+                        <textarea 
+                          rows={2}
                           className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:bg-white focus:border-[#1b887a] focus:ring-4 focus:ring-[#1b887a]/10 outline-none transition-all"
-                          value={formData.title}
-                          onChange={e => setFormData({...formData, title: e.target.value})}
+                          value={(formData[subtitleKey] as string) || ''}
+                          onChange={e => setFormData({...formData, [subtitleKey]: e.target.value})}
                         />
                       </div>
                       <div>
-                        <label className="block text-sm font-bold text-gray-700 mb-2">分类</label>
-                        <select 
-                          className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:bg-white focus:border-[#1b887a] focus:ring-4 focus:ring-[#1b887a]/10 outline-none transition-all"
-                          value={formData.category}
-                          onChange={e => setFormData({...formData, category: e.target.value})}
-                        >
-                          {Object.entries(categoryMap).map(([value, label]) => (
-                            <option key={value} value={value}>{label}</option>
-                          ))}
-                        </select>
-                      </div>
-                    </div>
-                    <div>
-                      <label className="block text-sm font-bold text-gray-700 mb-2">副标题 (简述)</label>
-                      <textarea 
-                        rows={2}
-                        className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:bg-white focus:border-[#1b887a] focus:ring-4 focus:ring-[#1b887a]/10 outline-none transition-all"
-                        value={formData.subtitle}
-                        onChange={e => setFormData({...formData, subtitle: e.target.value})}
-                      />
-                    </div>
-                    <div>
-                      <div className="flex justify-between items-center mb-2 px-1">
-                        <label className="block text-sm font-bold text-gray-700">正文内容 (Markdown 支持粘贴图片)</label>
-                        <div className="flex gap-2">
-                          <button 
-                            type="button" 
-                            onClick={() => fileInputRef.current?.click()} 
-                            className="text-xs flex items-center gap-1 bg-gray-100 hover:bg-gray-200 px-3 py-1.5 rounded-lg font-bold text-gray-600 transition-colors"
-                          >
-                            <ImageIcon className="w-3.5 h-3.5" /> 插入图片
-                          </button>
-                          <button 
-                            type="button" 
-                            onClick={handleHtmlPaste} 
-                            className="text-xs bg-gray-100 hover:bg-gray-200 px-3 py-1.5 rounded-lg font-bold text-gray-600 transition-colors"
-                          >
-                            从 HTML 导入
-                          </button>
+                        <div className="flex justify-between items-center mb-2 px-1">
+                          <label className="block text-sm font-bold text-gray-700">{isZh ? '正文内容 (Markdown 支持粘贴图片)' : `Content (${lang.label})`}</label>
+                          <div className="flex gap-2">
+                            {isZh && (
+                              <>
+                                <button 
+                                  type="button" 
+                                  onClick={() => fileInputRef.current?.click()} 
+                                  className="text-xs flex items-center gap-1 bg-gray-100 hover:bg-gray-200 px-3 py-1.5 rounded-lg font-bold text-gray-600 transition-colors"
+                                >
+                                  <ImageIcon className="w-3.5 h-3.5" /> 插入图片
+                                </button>
+                                <button 
+                                  type="button" 
+                                  onClick={handleHtmlPaste} 
+                                  className="text-xs bg-gray-100 hover:bg-gray-200 px-3 py-1.5 rounded-lg font-bold text-gray-600 transition-colors"
+                                >
+                                  从 HTML 导入
+                                </button>
+                              </>
+                            )}
+                          </div>
+                        </div>
+                        <div data-color-mode="light">
+                          <MDEditor
+                            value={(formData[contentKey] as string) || ''}
+                            onChange={(val) => setFormData({...formData, [contentKey]: val || ''})}
+                            height={500}
+                            style={{ borderRadius: '1rem', overflow: 'hidden', border: '1px solid #e5e7eb', boxShadow: 'none' }}
+                            textareaProps={{
+                              placeholder: isZh ? '请在此输入正文内容...' : `Enter content in ${lang.label}...`,
+                              onPaste: isZh ? (e) => handlePaste(e, 'content') : undefined
+                            }}
+                          />
                         </div>
                       </div>
-                      <div data-color-mode="light">
-                        <MDEditor
-                          value={formData.content}
-                          onChange={(val) => setFormData({...formData, content: val || ''})}
-                          height={500}
-                          style={{ borderRadius: '1rem', overflow: 'hidden', border: '1px solid #e5e7eb', boxShadow: 'none' }}
-                          textareaProps={{
-                            placeholder: '请在此输入正文内容...',
-                            onPaste: (e) => handlePaste(e, 'content')
-                          }}
-                        />
-                      </div>
                     </div>
-                 </div>
+                  );
+                })}
 
-                 <div className={`space-y-6 animate-in fade-in duration-300 ${activeTab === 'en' ? 'block' : 'hidden'}`}>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                      <div>
-                        <label className="block text-sm font-bold text-gray-700 mb-2">Title (English)</label>
-                        <input 
-                          type="text" 
-                          required={activeTab === 'en'}
-                          className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:bg-white focus:border-[#1b887a] focus:ring-4 focus:ring-[#1b887a]/10 outline-none transition-all"
-                          value={formData.titleEn}
-                          onChange={e => setFormData({...formData, titleEn: e.target.value})}
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-sm font-bold text-gray-700 mb-2">Category</label>
-                        <input 
-                          disabled
-                          className="w-full px-4 py-3 bg-gray-100 border border-transparent rounded-xl text-gray-400 cursor-not-allowed"
-                          value={categoryMap[formData.category] || formData.category}
-                        />
-                      </div>
-                    </div>
-                    <div>
-                      <label className="block text-sm font-bold text-gray-700 mb-2">Subtitle (Brief)</label>
-                      <textarea 
-                        rows={2}
-                        className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:bg-white focus:border-[#1b887a] focus:ring-4 focus:ring-[#1b887a]/10 outline-none transition-all"
-                        value={formData.subtitleEn}
-                        onChange={e => setFormData({...formData, subtitleEn: e.target.value})}
-                      />
-                    </div>
-                    <div>
-                      <div className="flex justify-between items-center mb-2 px-1">
-                        <label className="block text-sm font-bold text-gray-700">Content (Markdown)</label>
-                        <div className="flex gap-2">
-                          <button 
-                            type="button" 
-                            onClick={() => { setActiveTab('en'); fileInputRef.current?.click(); }} 
-                            className="text-xs flex items-center gap-1 bg-gray-100 hover:bg-gray-200 px-3 py-1.5 rounded-lg font-bold text-gray-600 transition-colors"
-                          >
-                            <ImageIcon className="w-3.5 h-3.5" /> 插入图片
-                          </button>
-                        </div>
-                      </div>
-                      <div data-color-mode="light">
-                        <MDEditor
-                          value={formData.contentEn}
-                          onChange={(val) => setFormData({...formData, contentEn: val || ''})}
-                          height={500}
-                          style={{ borderRadius: '1rem', overflow: 'hidden', border: '1px solid #e5e7eb', boxShadow: 'none' }}
-                          textareaProps={{
-                            placeholder: 'Type content here...',
-                            onPaste: (e) => handlePaste(e, 'contentEn')
-                          }}
-                        />
-                      </div>
-                    </div>
-                 </div>
-
-                 <div className="pt-6 border-t border-gray-100">
+                <div className="pt-6 border-t border-gray-100">
                     <label className="block text-sm font-bold text-gray-700 mb-2">共享封面图 URL</label>
                     <div className="flex gap-4">
                       <input 
@@ -1153,7 +1492,7 @@ export default function Admin() {
                     )}
                   </div>
                 </>
-              ) : (
+              ) : activeAdminView === 'cities' ? (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                   <div className="col-span-full space-y-4 mb-6">
                     <div className="p-4 bg-white rounded-xl border border-gray-200">
@@ -1215,7 +1554,15 @@ export default function Admin() {
                      />
                   )}
                 </div>
-              )}
+              ) : activeAdminView === 'visa' ? (
+                <VisaManagement />
+              ) : activeAdminView === 'apps' ? (
+                <AppsManagement />
+              ) : activeAdminView === 'pages' ? (
+                <PageSectionsManagement />
+              ) : activeAdminView === 'translations' ? (
+                <TranslationManagement />
+              ) : null}
             </>
           )}
         </div>

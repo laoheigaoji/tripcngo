@@ -1,8 +1,9 @@
-/// <reference types="vite/client" />
+
 import React, { useState } from 'react';
 import { askDeepSeek } from '../../lib/deepseek';
-import { ChevronDown, ChevronUp, BookOpen, Search, Languages } from 'lucide-react';
+import { ChevronDown, ChevronUp } from 'lucide-react';
 import { useLanguage } from '../../context/LanguageContext';
+import SEO from '../../components/SEO';
 
 export default function NameGenerator() {
   const { t, language } = useLanguage();
@@ -11,7 +12,7 @@ export default function NameGenerator() {
   const [loading, setLoading] = useState(false);
   const [expandedFaq, setExpandedFaq] = useState<number | null>(null);
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setLoading(true);
     try {
@@ -27,7 +28,17 @@ export default function NameGenerator() {
   };
 
   return (
-    <div className="bg-[#f7f7f7] min-h-screen">
+    <>
+      <SEO 
+        title="AI Chinese Name Generator"
+        titleZh="AI中文名取名大师"
+        description="Use AI to generate meaningful Chinese names based on your information. Perfect for career development, making friends, travel or living in China."
+        descriptionZh="使用AI根据您的信息生成有意义的中文名。适合在中国职业发展、交友、旅游或生活。"
+        keywordsZh="AI取名, 中文名, 中文名生成器, 起名, 中国名字"
+        keywords="AI name generator, Chinese name, Chinese name generator, China name, Mandarin name"
+        url="https://tripcngo.com/tools/name-generator"
+      />
+      <div className="bg-[#f7f7f7] min-h-screen">
       
       {/* Hero Section */}
       <div 
@@ -41,7 +52,7 @@ export default function NameGenerator() {
         <div className="absolute inset-0 bg-black/40"></div>
         <div className="relative z-10 w-full max-w-7xl mx-auto px-6 text-white">
           <h1 className="text-4xl md:text-5xl font-bold mb-4">{t('tools.name.title')}</h1>
-          <p className="text-lg text-white/90">{language === 'zh' ? '使用深度推理AI模型，为您生成适合在中国职业发展、旅游和生活的多个名字供您选择。' : 'Use deep inference AI model to generate multiple Chinese names suitable for your career development, travel, and life in China.'}</p>
+          <p className="text-lg text-white/90">{t('tools.name.subtitle')}</p>
         </div>
       </div>
       
@@ -49,108 +60,235 @@ export default function NameGenerator() {
       <div className="max-w-4xl mx-auto py-12 px-4 space-y-12 mt-10 relative z-20">
         
         {/* Generator Form */}
-        <div className="bg-white border rounded-lg p-6 shadow-sm">
-            <form onSubmit={handleSubmit}>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
-                  <div>
-                    <label className="block text-sm font-medium mb-1">{language === 'zh' ? '您的全名' : 'Your Full Name'}</label>
-                    <input type="text" className="w-full border rounded p-2" value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} placeholder={language === 'zh' ? '例如: John Doe' : 'e.g. John Doe'} required />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium mb-1">{language === 'zh' ? '性别' : 'Gender'}</label>
-                    <select className="w-full border rounded p-2" value={formData.sex} onChange={e => setFormData({...formData, sex: e.target.value})}>
-                      <option value="男">{language === 'zh' ? '男' : 'Male'}</option>
-                      <option value="女">{language === 'zh' ? '女' : 'Female'}</option>
-                    </select>
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium mb-1">{language === 'zh' ? '出生日期与时间' : 'Date of Birth'}</label>
-                    <input type="date" className="w-full border rounded p-2" value={formData.dob} onChange={e => setFormData({...formData, dob: e.target.value})} required />
-                  </div>
-              </div>
-              <div className="mb-4">
-                <label className="block text-sm font-medium mb-1">{language === 'zh' ? '其他信息 (选填)' : 'Other Info (Optional)'}</label>
-                <textarea className="w-full border rounded p-2" rows={4} value={formData.info} onChange={e => setFormData({...formData, info: e.target.value})} placeholder={language === 'zh' ? '以描述您的学历、职业、性格、或者对名字的喜好...' : 'Describe your background, profession, personality, or name preferences...'}></textarea>
-              </div>
-              <button type="submit" className="w-full bg-[#1b887a] text-white rounded p-3 font-bold" disabled={loading}>
-                {loading ? (language === 'zh' ? '正在生成...' : 'Generating...') : (language === 'zh' ? '生成我的中文名' : 'Generate My Chinese Name')}
-              </button>
-            </form>
+        <div className="bg-white border rounded-2xl p-6 shadow-sm">
+          <div className="text-center mb-6">
+            <h2 className="text-xl font-bold text-gray-900">{t('tools.name.formTitle')}</h2>
+            <p className="text-gray-500 text-sm mt-1">{t('tools.name.formSubtitle')}</p>
+          </div>
+          
+          <form onSubmit={handleSubmit}>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                <div>
+                  <label className="flex items-center gap-1.5 text-sm font-medium text-gray-700 mb-1.5">
+                    <svg className="w-4 h-4 text-[#1b887a]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                    </svg>
+                    {t('tools.name.label.name')}
+                  </label>
+                  <input type="text" className="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm focus:ring-2 focus:ring-[#1b887a] focus:border-transparent outline-none transition" value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} placeholder={t('tools.name.label.namePlaceholder')} required />
+                </div>
+                <div>
+                  <label className="flex items-center gap-1.5 text-sm font-medium text-gray-700 mb-1.5">
+                    <svg className="w-4 h-4 text-[#1b887a]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4a4 4 0 100 8 4 4 0 000-8z" />
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 14v7m-3-3h6" />
+                    </svg>
+                    {t('tools.name.label.gender')}
+                  </label>
+                  <select className="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm focus:ring-2 focus:ring-[#1b887a] focus:border-transparent outline-none transition bg-white" value={formData.sex} onChange={e => setFormData({...formData, sex: e.target.value})}>
+                    <option value="">{t('tools.name.label.genderSelect')}</option>
+                    <option value="男">{t('tools.name.label.genderMale')}</option>
+                    <option value="女">{t('tools.name.label.genderFemale')}</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="flex items-center gap-1.5 text-sm font-medium text-gray-700 mb-1.5">
+                    <svg className="w-4 h-4 text-[#1b887a]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                    </svg>
+                    {t('tools.name.label.dob')}
+                  </label>
+                  <input type="date" className="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm focus:ring-2 focus:ring-[#1b887a] focus:border-transparent outline-none transition" value={formData.dob} onChange={e => setFormData({...formData, dob: e.target.value})} />
+                </div>
+            </div>
+            <div className="mb-4">
+              <label className="flex items-center gap-1.5 text-sm font-medium text-gray-700 mb-1.5">
+                <svg className="w-4 h-4 text-[#1b887a]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                </svg>
+                {t('tools.name.label.info')}
+              </label>
+              <textarea className="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm focus:ring-2 focus:ring-[#1b887a] focus:border-transparent outline-none transition resize-none" rows={3} value={formData.info} onChange={e => setFormData({...formData, info: e.target.value})} placeholder={t('tools.name.label.infoPlaceholder')}></textarea>
+            </div>
+            <button type="submit" className="w-full bg-[#1b887a] hover:bg-[#167a6a] text-white rounded-lg py-3.5 font-bold text-base transition flex items-center justify-center gap-2" disabled={loading}>
+              {loading ? (
+                <>
+                  <svg className="animate-spin w-5 h-5" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                  </svg>
+                  {t('tools.name.buttonLoading')}
+                </>
+              ) : (
+                <>
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" />
+                  </svg>
+                  {t('tools.name.button')}
+                </>
+              )}
+            </button>
+          </form>
             {generatedName && (
                 <div className="mt-6 p-4 bg-green-50 rounded text-xl text-[#1b887a] font-bold border border-green-200">
-                    <p>{language === 'zh' ? '为您生成的中文名是:' : 'Your generated Chinese name is:'}</p>
+                    <p>{t('tools.name.resultPrefix')}</p>
                     <p className="text-2xl mt-2">{generatedName}</p>
                 </div>
             )}
         </div>
         
         {/* Why */}
-        <section>
-          <h2 className="text-2xl font-bold mb-6 text-center">{language === 'zh' ? '为什么您需要一个真正的中文名' : 'Why you need a true Chinese name'}</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-            <div className="bg-white p-6 rounded shadow-sm border">
-                <h3 className="font-bold mb-2">{language === 'zh' ? '基本原则' : 'Basic Principles'}</h3>
-                <p className="text-gray-600">{language === 'zh' ? '一个好的中文名字，不仅仅只是长得像，还要符合中国人取名字的习惯。中国人给孩子取名字时，往往遵守着几个基本原则：音律和谐，要好听好念，念起来顺口；寓意要好，蕴含美好的愿望和期许；姓和名搭配和谐，避免不雅谐音。' : 'A good Chinese name is not just about looks; it must follow Chinese naming conventions. When Chinese parents name their children, they usually follow basic principles: harmonious sound, meaningful wishes, and avoiding unpleasant homophones.'}</p>
+        <section className="mb-12">
+          <h2 className="text-2xl font-bold text-gray-900 text-center mb-8">{t('tools.name.whyTitle')}</h2>
+          
+          <div className="grid md:grid-cols-3 gap-4">
+            {/* Left Column: Basic Principles + Beyond Translation */}
+            <div className="md:col-span-2 space-y-4">
+              {/* Basic Principles */}
+              <div className="bg-white rounded-xl p-5 border border-gray-100">
+                <h3 className="font-bold text-gray-900 mb-2">{t('tools.name.whyBasicTitle')}</h3>
+                <p className="text-sm text-gray-600 mb-3">{t('tools.name.whyBasicDesc')}</p>
+                <ul className="space-y-2">
+                  {[
+                    t('tools.name.whyBasic1'),
+                    t('tools.name.whyBasic2'),
+                    t('tools.name.whyBasic3')
+                  ].map((item, i) => (
+                    <li key={i} className="flex items-start gap-2 text-sm text-gray-600">
+                      <svg className="w-4 h-4 text-[#1b887a] mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                      </svg>
+                      {item}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+              
+              {/* Beyond Translation */}
+              <div className="bg-white rounded-xl p-5 border border-gray-100">
+                <h3 className="font-bold text-gray-900 mb-2">{t('tools.name.whyBeyondTitle')}</h3>
+                <p className="text-sm text-gray-600 mb-3">{t('tools.name.whyBeyondDesc')}</p>
+                <ul className="space-y-2">
+                  {[
+                    t('tools.name.whyBeyond1'),
+                    t('tools.name.whyBeyond2'),
+                    t('tools.name.whyBeyond3')
+                  ].map((item, i) => (
+                    <li key={i} className="flex items-start gap-2 text-sm text-gray-600">
+                      <svg className="w-4 h-4 text-[#1b887a] mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                      </svg>
+                      {item}
+                    </li>
+                  ))}
+                </ul>
+              </div>
             </div>
-             <div className="bg-white p-6 rounded shadow-sm border">
-                <h3 className="font-bold mb-2">{language === 'zh' ? '超越翻译' : 'Beyond Translation'}</h3>
-                <p className="text-gray-600">{language === 'zh' ? '我们希望给您一个地道的中文名字，而不是千篇一律的音译产物，这个名字要和您产生联系，更要突出您的特点和喜好，不管在商务还是社交场合，都能让您更加自信和专业。' : 'We want to give you an authentic Chinese name, not a generic transliteration. The name should connect with you, highlight your characteristics and preferences, and make you more confident and professional in both business and social settings.'}</p>
-            </div>
-          </div>
-          <div className="bg-white p-6 rounded shadow-sm border mt-8">
-            <h3 className="font-bold mb-2">{language === 'zh' ? '中文名的构成' : 'Structure of Chinese Names'}</h3>
-            <p className="text-gray-600">{language === 'zh' ? '中文名字由姓和名组成，姓氏通常是家族的传承，整个名字长度一般为2-4个字。例如："张三 zhāng sān"，"张"为姓氏，"三"为名字。' : 'Chinese names consist of a surname and a given name. The surname is usually hereditary, and the total name length is generally 2-4 characters. e.g. "Zhang San", "Zhang" is the surname, "San" is the given name.'}</p>
-            <div className="grid grid-cols-2 gap-4 mt-4">
-              <div><p className="font-bold">{language === 'zh' ? '姓氏（姓）' : 'Surname'}</p><p className="text-sm text-gray-500">{language === 'zh' ? '放在前面，通常是从传统家族姓氏中选择的一个字符，中国现已收录的姓氏有500+之多。' : 'Placed at the front, usually selected from traditional family surnames, with over 500 recorded in China.'}</p></div>
-              <div><p className="font-bold">{language === 'zh' ? '名字（名）' : 'Given Name'}</p><p className="text-sm text-gray-500">{language === 'zh' ? '一个或两个字符，根据其含义、声音和平衡来选择。' : 'One or two characters chosen based on meaning, sound, and balance.'}</p></div>
+            
+            {/* Right Column: Structure of Chinese Names */}
+            <div className="bg-white rounded-xl p-5 border border-gray-100">
+              <h3 className="font-bold text-gray-900 mb-2">{t('tools.name.structureTitle')}</h3>
+              <p className="text-sm text-gray-600 mb-4">{t('tools.name.structureDesc')}</p>
+              
+              <div className="space-y-4">
+                <div className="flex items-start gap-3">
+                  <div className="w-10 h-10 bg-[#1b887a]/10 rounded-lg flex items-center justify-center flex-shrink-0">
+                    <svg className="w-5 h-5 text-[#1b887a]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                    </svg>
+                  </div>
+                  <div>
+                    <p className="font-bold text-gray-900">{t('tools.name.structure.surname')}</p>
+                    <p className="text-xs text-gray-500">{t('tools.name.structure.surnameDesc')}</p>
+                  </div>
+                </div>
+                
+                <div className="flex items-start gap-3">
+                  <div className="w-10 h-10 bg-[#1b887a]/10 rounded-lg flex items-center justify-center flex-shrink-0">
+                    <svg className="w-5 h-5 text-[#1b887a]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" />
+                    </svg>
+                  </div>
+                  <div>
+                    <p className="font-bold text-gray-900">{t('tools.name.structure.givenName')}</p>
+                    <p className="text-xs text-gray-500">{t('tools.name.structure.givenNameDesc')}</p>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         </section>
 
         {/* How it works */}
-        <section className="bg-white p-8 rounded shadow-sm border">
-            <h2 className="text-2xl font-bold mb-6 text-center">{language === 'zh' ? '使用方法' : 'How it works'}</h2>
-            <div className="grid grid-cols-3 gap-4 text-center">
-                <div className="p-4"><div className="bg-gray-100 p-4 rounded-full inline-block mb-3"><Languages size={24}/></div><p className="font-bold">{language === 'zh' ? '1. 输入您的信息' : '1. Enter Info'}</p></div>
-                <div className="p-4"><div className="bg-gray-100 p-4 rounded-full inline-block mb-3"><Search size={24}/></div><p className="font-bold">{language === 'zh' ? '2. 定义您的身份' : '2. Define Identity'}</p></div>
-                <div className="p-4"><div className="bg-gray-100 p-4 rounded-full inline-block mb-3"><BookOpen size={24}/></div><p className="font-bold">{language === 'zh' ? '3. 生成中文名片' : '3. Generate Name Card'}</p></div>
+        <section className="mb-12">
+          <h2 className="text-2xl font-bold text-gray-900 text-center mb-2">{t('tools.name.howTitle')}</h2>
+          <p className="text-gray-500 text-center mb-8">{t('tools.name.howSubtitle')}</p>
+          <div className="grid md:grid-cols-3 gap-6">
+            <div className="bg-white rounded-xl p-6 border border-gray-100 text-center">
+              <div className="w-12 h-12 bg-[#1b887a]/10 rounded-full flex items-center justify-center mx-auto mb-4">
+                <svg className="w-6 h-6 text-[#1b887a]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                </svg>
+              </div>
+              <h3 className="font-bold text-gray-900 mb-2">{t('tools.name.howStep1Title')}</h3>
+              <p className="text-sm text-gray-500">{t('tools.name.howStep1Desc')}</p>
             </div>
+            <div className="bg-white rounded-xl p-6 border border-gray-100 text-center">
+              <div className="w-12 h-12 bg-[#1b887a]/10 rounded-full flex items-center justify-center mx-auto mb-4">
+                <svg className="w-6 h-6 text-[#1b887a]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                </svg>
+              </div>
+              <h3 className="font-bold text-gray-900 mb-2">{t('tools.name.howStep2Title')}</h3>
+              <p className="text-sm text-gray-500">{t('tools.name.howStep2Desc')}</p>
+            </div>
+            <div className="bg-white rounded-xl p-6 border border-gray-100 text-center">
+              <div className="w-12 h-12 bg-[#1b887a]/10 rounded-full flex items-center justify-center mx-auto mb-4">
+                <svg className="w-6 h-6 text-[#1b887a]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V8a2 2 0 00-2-2h-5m-4 0V5a2 2 0 114 0v1m-4 0a2 2 0 104 0m-5 8a2 2 0 100-4 2 2 0 000 4zm0 0c1.306 0 2.417.835 2.83 2M9 14a3.001 3.001 0 00-2.83 2M15 11h3m-3 4h2" />
+                </svg>
+              </div>
+              <h3 className="font-bold text-gray-900 mb-2">{t('tools.name.howStep3Title')}</h3>
+              <p className="text-sm text-gray-500">{t('tools.name.howStep3Desc')}</p>
+            </div>
+          </div>
         </section>
 
         {/* FAQ */}
         <section>
-            <h2 className="text-2xl font-bold mb-6 text-center">{language === 'zh' ? '常见问题' : 'FAQ'}</h2>
+            <h2 className="text-2xl font-bold mb-6 text-center">{t('tools.name.faqTitle')}</h2>
             <div className="bg-white p-6 rounded shadow-sm border space-y-4">
-                {expandedFaq === 0 && <p className="text-gray-600 text-sm mb-2">{language === 'zh' ? '不是的，我们的AI模型会根据您的个人信息、职业、性格偏好生成真正适合您的名字。' : 'No, our AI model generates names that truly suit you based on your personal info, profession, personality, and preferences.'}</p>}
+                {expandedFaq === 0 && <p className="text-gray-600 text-sm mb-2">{t('tools.name.faq.a1')}</p>}
                 <button className="w-full text-left flex justify-between items-center border-b pb-2" onClick={() => setExpandedFaq(expandedFaq === 0 ? null : 0)}>
-                    {language === 'zh' ? '这只是一些名字的直接翻译吗？' : 'Is this just a direct translation of my name?'} {expandedFaq === 0 ? <ChevronUp size={16}/> : <ChevronDown size={16}/>}
+                    {t('tools.name.faq.q1')} {expandedFaq === 0 ? <ChevronUp size={16}/> : <ChevronDown size={16}/>}
                 </button>
                 
-                {expandedFaq === 1 && <p className="text-gray-600 text-sm mb-2">{language === 'zh' ? '可以的，但建议您在正式使用前与您的中国同事或朋友核实一下。' : 'Yes, but we recommend double-checking with Chinese colleagues or friends before official use.'}</p>}
+                {expandedFaq === 1 && <p className="text-gray-600 text-sm mb-2">{t('tools.name.faq.a2')}</p>}
                 <button className="w-full text-left flex justify-between items-center border-b pb-2" onClick={() => setExpandedFaq(expandedFaq === 1 ? null : 1)}>
-                   {language === 'zh' ? '我可以在正式文件上使用这个名字吗？' : 'Can I use this name on official documents?'} {expandedFaq === 1 ? <ChevronUp size={16}/> : <ChevronDown size={16}/>}
+                   {t('tools.name.faq.q2')} {expandedFaq === 1 ? <ChevronUp size={16}/> : <ChevronDown size={16}/>}
                 </button>
 
-                {expandedFaq === 2 && <p className="text-gray-600 text-sm mb-2">{language === 'zh' ? '您将获得汉字、昵称、拼音（发音）、每个字符含义的详细解释，以及为什么它适合您。同时还会包含您的生肖、五行、幸运数字等信息，方便您在社交场合使用。' : 'You will receive Chinese characters, pinyin (pronunciation), detailed meaning of each character, and why it suits you. It will also include your Chinese zodiac, five elements, lucky numbers, etc.'}</p>}
+                {expandedFaq === 2 && <p className="text-gray-600 text-sm mb-2">{t('tools.name.faq.a3')}</p>}
                 <button className="w-full text-left flex justify-between items-center border-b pb-2" onClick={() => setExpandedFaq(expandedFaq === 2 ? null : 2)}>
-                   {language === 'zh' ? '姓名卡片里包含什么内容？' : 'What is included in the name card?'} {expandedFaq === 2 ? <ChevronUp size={16}/> : <ChevronDown size={16}/>}
+                   {t('tools.name.faq.q3')} {expandedFaq === 2 ? <ChevronUp size={16}/> : <ChevronDown size={16}/>}
                 </button>
 
-                {expandedFaq === 3 && <p className="text-gray-600 text-sm mb-2">{language === 'zh' ? '是的，我们目前免费提供此服务。' : 'Yes, this service is currently free.'}</p>}
+                {expandedFaq === 3 && <p className="text-gray-600 text-sm mb-2">{t('tools.name.faq.a4')}</p>}
                 <button className="w-full text-left flex justify-between items-center border-b pb-2" onClick={() => setExpandedFaq(expandedFaq === 3 ? null : 3)}>
-                   {language === 'zh' ? '这个工具是免费的吗？' : 'Is this tool free?'} {expandedFaq === 3 ? <ChevronUp size={16}/> : <ChevronDown size={16}/>}
+                   {t('tools.name.faq.q4')} {expandedFaq === 3 ? <ChevronUp size={16}/> : <ChevronDown size={16}/>}
                 </button>
                 
-                {expandedFaq === 4 && <p className="text-gray-600 text-sm mb-2">{language === 'zh' ? '这取决于您的姓氏和个人喜好，通常两字名是目前的主流。' : 'It depends on your surname and personal preference; two-character names are mainstream nowadays.'}</p>}
+                {expandedFaq === 4 && <p className="text-gray-600 text-sm mb-2">{t('tools.name.faq.a5')}</p>}
                 <button className="w-full text-left flex justify-between items-center border-b pb-2" onClick={() => setExpandedFaq(expandedFaq === 4 ? null : 4)}>
-                   {language === 'zh' ? '中文名字，一个字还是两个字好？' : 'Are one or two-character names better?'} {expandedFaq === 4 ? <ChevronUp size={16}/> : <ChevronDown size={16}/>}
+                   {t('tools.name.faq.q5')} {expandedFaq === 4 ? <ChevronUp size={16}/> : <ChevronDown size={16}/>}
                 </button>
             </div>
         </section>
 
         {/* Case Studies */}
         <section>
-           <h2 className="text-2xl font-bold mb-6 text-center">{language === 'zh' ? '优选用户案例' : 'User Case Studies'}</h2>
+           <h2 className="text-2xl font-bold text-gray-900 text-center mb-2">{t('tools.name.caseTitle')}</h2>
+           <p className="text-gray-500 text-center mb-8">{t('tools.name.caseSubtitle')}</p>
            <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
               {[
                 { name: "진나래", cn: "金芮琳", py: "Jīn Ruì Lín" },
@@ -164,38 +302,70 @@ export default function NameGenerator() {
                 { name: "Mulberry Rain", cn: "祁雨琳", py: "Qí Yǔ Lín" },
                 { name: "Aurora Klesh E. Barrios", cn: "柏若曦", py: "Bǎi Ruò Xī" }
               ].map((item, i) => (
-                <div key={i} className="bg-white p-4 rounded shadow-sm border text-center">
-                    <p className="text-xs text-gray-400 truncate">{item.name}</p>
-                    <p className="font-bold text-lg">{item.cn}</p>
-                    <p className="text-xs text-gray-500">{item.py}</p>
+                <div key={i} className="bg-white rounded-xl p-4 border border-gray-100">
+                    <p className="text-xs text-gray-400 truncate mb-1">{item.name}</p>
+                    <div className="flex items-center justify-center gap-1.5 mb-1">
+                      <span className="w-1.5 h-1.5 bg-[#1b887a] rounded-full"></span>
+                      <p className="font-bold text-lg text-gray-900">{item.cn}</p>
+                    </div>
+                    <p className="text-xs text-gray-400">{item.py}</p>
                 </div>
               ))}
            </div>
         </section>
 
         {/* More Tools */}
-        <section>
-            <h2 className="text-2xl font-bold mb-6 text-center">{language === 'zh' ? '更多工具' : 'More Tools'}</h2>
-            <div className="grid grid-cols-2 gap-4">
-                <div className="bg-white p-6 rounded shadow-sm border">{language === 'zh' ? '中文转拼音' : 'Pinyin Converter'}</div>
-                <div className="bg-white p-6 rounded shadow-sm border">{language === 'zh' ? '中文笔画计算器' : 'Stroke Counter'}</div>
+        <section className="mb-12">
+          <h2 className="text-2xl font-bold text-gray-900 mb-2">{t('tools.name.moreTitle')}</h2>
+          <p className="text-gray-500 mb-8">{t('tools.name.moreSubtitle')}</p>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="bg-white rounded-xl p-6 border border-gray-100 hover:shadow-md transition-shadow cursor-pointer">
+              <div className="w-10 h-10 bg-[#1b887a]/10 rounded-lg flex items-center justify-center mb-4">
+                <svg className="w-5 h-5 text-[#1b887a]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5h12M9 3v2m1.048 9.5A18.022 18.022 0 016.412 9m6.088 9h7M11 21l5-10 5 10M12.751 5C11.783 10.77 8.07 15.61 3 18.129" />
+                </svg>
+              </div>
+              <h3 className="font-bold text-gray-900 mb-1">{language === 'zh' ? '中文转拼音' : 'Pinyin Converter'}</h3>
+              <p className="text-sm text-gray-500">{language === 'zh' ? '可将任何中文转换为标准拼音，查看每个字的笔画和分词。' : 'Convert any Chinese to standard pinyin, view strokes and segmentation.'}</p>
             </div>
+            <div className="bg-white rounded-xl p-6 border border-gray-100 hover:shadow-md transition-shadow cursor-pointer">
+              <div className="w-10 h-10 bg-[#1b887a]/10 rounded-lg flex items-center justify-center mb-4">
+                <svg className="w-5 h-5 text-[#1b887a]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 20l4-16m2 16l4-16M6 9h14M4 15h14" />
+                </svg>
+              </div>
+              <h3 className="font-bold text-gray-900 mb-1">{language === 'zh' ? '中文字符计数器' : 'Chinese Character Counter'}</h3>
+              <p className="text-sm text-gray-500">{language === 'zh' ? '精确统计汉字、英文、数字、标点、行数与总字符数。' : 'Accurately count Chinese characters, English, numbers, punctuation, lines and total characters.'}</p>
+            </div>
+          </div>
         </section>
 
         {/* Articles */}
         <section>
-            <h2 className="text-2xl font-bold mb-6 text-center">{language === 'zh' ? '中文传统文化文章推荐' : 'Recommended Articles'}</h2>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                {[1,2,3].map(i => (
-                    <div key={i} className="bg-white rounded shadow-sm border overflow-hidden">
-                        <div className="h-40 bg-gray-200"></div>
-                        <div className="p-4"><h3 className="font-bold">{language === 'zh' ? '文章标题' : 'Article Title'} {i}</h3><p className="text-sm text-gray-500">{language === 'zh' ? '简要介绍...' : 'Brief intro...'}</p></div>
-                    </div>
-                ))}
-            </div>
+          <div className="flex items-center justify-between mb-2">
+            <h2 className="text-2xl font-bold text-gray-900">{t('tools.name.articleTitle')}</h2>
+            <a href="#" className="text-[#1b887a] text-sm hover:underline">{t('tools.name.articleMore')}</a>
+          </div>
+          <p className="text-gray-500 mb-8">{t('tools.name.articleDesc')}</p>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {[
+              { title: language === 'zh' ? '中国复姓大盘点：探秘十大顶级复姓的起源和故事，深度解读中国复姓文化' : 'Top 10 Chinese Compound Surnames', desc: language === 'zh' ? '中国不仅有百家姓，更有底蕴深厚的复姓文化。本文深度解读欧阳、诸葛、上官、司马等十大顶级复姓的起源故事、历史名人及文化内涵。文中不仅涵盖了按官职、封地分类的复姓演变，还提供了现存复姓省份分布，是您了...' : 'Explore the profound compound surname culture of China, including the origins of Ouyang, Zhuge, Shangguan, Sima and more.' },
+              { title: language === 'zh' ? '中国孩子取名趋势大盘点：男孩名霸气，女孩名温柔？当代父母如何给自己的孩子取名？' : 'Chinese Baby Naming Trends', desc: language === 'zh' ? '揭秘中国名字的时代变迁：从60年代的"建国"到20年代的"瑞泽""沐瑶"。了解中国父母的命名趋势，如何从《诗经》、古籍中为孩子取一个既有文化底蕴、又不过时、不重名的好中文名字（含10个男孩名和10个女孩名推荐）。' : 'Discover the evolution of Chinese names from the 1960s to 2020s, and learn naming trends from the Book of Songs.' },
+              { title: language === 'zh' ? '有趣的中文名：揭秘欧美明星在中国的外号从何而来？' : 'Interesting Chinese Names: How Western Celebrities Got Their Chinese Nicknames', desc: language === 'zh' ? '探索中国网民如何用谐音、直译和幕后故事为国际明星创造幽默且亲昵的中文昵称。了解Taylor Swift、Ed Sheeran等名字背后的语言学和文化趣事。' : 'Explore how Chinese netizens create humorous and affectionate Chinese nicknames for international stars.' }
+            ].map((item, i) => (
+              <div key={i} className="bg-white rounded-xl border border-gray-100 overflow-hidden hover:shadow-md transition-shadow cursor-pointer">
+                <div className="h-40 bg-gradient-to-br from-[#1b887a] to-[#2a9d8f]"></div>
+                <div className="p-4">
+                  <h3 className="font-bold text-gray-900 text-sm mb-2 line-clamp-2">{item.title}</h3>
+                  <p className="text-xs text-gray-500 line-clamp-3 mb-3">{item.desc}</p>
+                  <a href="#" className="text-[#1b887a] text-xs hover:underline">{t('tools.name.articleMoreLink')}</a>
+                </div>
+              </div>
+            ))}
+          </div>
         </section>
       </div>
-
-    </div>
+      </div>
+    </>
   );
 }

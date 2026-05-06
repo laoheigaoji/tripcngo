@@ -35,11 +35,40 @@ interface Article {
 export default function GuideDetail() {
   const { id } = useParams();
   const { language, t } = useLanguage();
-  const isEn = language === 'en';
-  const getTranslatedValue = (zh: any, en: any) => {
-    if (isEn && en) return en;
-    return zh;
+  const langField = language === 'zh' ? '' : `_${language}`;
+  
+  // 获取翻译文本（兼容文章和城市数据，同时支持蛇形和驼峰命名）
+  const getI18n = (item: any, baseField: string) => {
+    if (!item) return '';
+    
+    // 城市数据使用 name/enName 格式
+    if (baseField === 'name') {
+      // 支持驼峰格式: nameKo, nameTw 等
+      const camelField = `${baseField}${language.charAt(0).toUpperCase() + language.slice(1)}`;
+      const snakeField = `${baseField}_${language}`;
+      return language === 'zh' 
+        ? (item.name || item.nameZh || item.enName || '')
+        : (item[snakeField] || item[camelField] || item.enName || item.name || '');
+    }
+    
+    // 中文：直接返回 baseField（如 title, subtitle, content）
+    if (language === 'zh') {
+      return item[baseField] || item.title || item.subtitle || item.content || '';
+    }
+    
+    // 蛇形命名格式（如 title_ko, title_tw）和驼峰格式（如 titleKo, titleTw）
+    const snakeFieldName = `${baseField}_${language}`;
+    const camelFieldName = `${baseField}${language.charAt(0).toUpperCase() + language.slice(1)}`;
+    
+    return item[snakeFieldName] || item[camelFieldName] || item[`${baseField}En`] || item[`${baseField}_en`] || item[baseField] || '';
   };
+
+  // 获取数组字段的翻译版本
+  const getI18nArray = (item: any, baseField: string) => {
+    const translated = getI18n(item, baseField);
+    return Array.isArray(translated) ? translated : [];
+  };
+
   const [article, setArticle] = useState<Article | null>(null);
   const [recommendedArticles, setRecommendedArticles] = useState<Article[]>([]);
   const [recommendedCities, setRecommendedCities] = useState<any[]>([]);
@@ -49,9 +78,10 @@ export default function GuideDetail() {
   const [error, setError] = useState<string | null>(null);
   const langPrefix = language === 'zh' ? 'cn' : 'en';
 
-  const displayTitle = (article && language === 'en' && article.titleEn) ? article.titleEn : (article?.title || '');
-  const displaySubtitle = (article && language === 'en' && article.subtitleEn) ? article.subtitleEn : (article?.subtitle || '');
-  const displayContent = (article && language === 'en' && article.contentEn) ? article.contentEn : (article?.content || '');
+  // 获取文章的多语言标题
+  const displayTitle = article ? (getI18n(article, 'title') || article.title || '') : '';
+  const displaySubtitle = article ? (getI18n(article, 'subtitle') || article.subtitle || '') : '';
+  const displayContent = article ? (getI18n(article, 'content') || article.content || '') : '';
 
   const [commentName, setCommentName] = useState('');
   const [commentText, setCommentText] = useState('');
@@ -221,7 +251,7 @@ export default function GuideDetail() {
       fetchArticle();
       fetchComments();
     }
-  }, [id, language]);
+  }, [id]); // 只在 id 变化时重新获取
 
   const handleLike = async () => {
     if (!article || !id) return;
@@ -452,7 +482,7 @@ export default function GuideDetail() {
                     <div className="flex flex-col">
                       <span className="text-[10px] uppercase font-bold text-gray-400 mb-1">{language === 'zh' ? '上一篇' : 'Previous'}</span>
                       <h4 className="font-bold text-gray-900 line-clamp-2">
-                        {(language === 'en' && prevArticle.titleEn) ? prevArticle.titleEn : prevArticle.title}
+                        {getI18n(prevArticle, 'title') || prevArticle.title || prevArticle.titleEn || ''}
                       </h4>
                     </div>
                   </Link>
@@ -462,7 +492,7 @@ export default function GuideDetail() {
                     <div className="flex flex-col text-right">
                       <span className="text-[10px] uppercase font-bold text-gray-400 mb-1">{language === 'zh' ? '下一篇' : 'Next'}</span>
                       <h4 className="font-bold text-gray-900 line-clamp-2">
-                        {(language === 'en' && nextArticle.titleEn) ? nextArticle.titleEn : nextArticle.title}
+                        {getI18n(nextArticle, 'title') || nextArticle.title || nextArticle.titleEn || ''}
                       </h4>
                     </div>
                     {nextArticle.thumbnail && <img src={nextArticle.thumbnail} alt="" className="w-16 h-16 rounded-lg object-cover" />}
@@ -492,7 +522,7 @@ export default function GuideDetail() {
                            />
                            <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent flex items-end p-5">
                               <h4 className="text-white font-bold text-sm leading-tight text-center w-full">
-                                 {(language === 'en' && item.titleEn) ? item.titleEn : item.title}
+                                 {getI18n(item, 'title') || item.title || item.titleEn || ''}
                               </h4>
                            </div>
                           </div>
@@ -514,11 +544,11 @@ export default function GuideDetail() {
                         <Link key={city.id} to={`/${langPrefix}/cities/${city.id}`} className="flex items-center justify-between group cursor-pointer p-2 hover:bg-gray-50 rounded-xl transition-all">
                           <div className="flex items-center gap-3">
                              <div className="w-11 h-11 rounded-lg overflow-hidden bg-gray-100 grayscale-[0.5] group-hover:grayscale-0 transition-all border border-gray-100">
-                                <img src={city.listCover || city.heroImage} alt={getTranslatedValue(city.name, city.enName)} className="w-full h-full object-cover" />
+                                <img src={city.listCover || city.heroImage} alt={getI18n(city, 'name')} className="w-full h-full object-cover" />
                              </div>
                              <div>
-                                <h4 className="text-sm font-bold text-gray-700 leading-none mb-1">{getTranslatedValue(city.name, city.enName)}</h4>
-                                <span className="text-[10px] text-gray-400 uppercase tracking-wider">{getTranslatedValue(city.enName, city.name)}</span>
+                                <h4 className="text-sm font-bold text-gray-700 leading-none mb-1">{getI18n(city, 'name')}</h4>
+                                <span className="text-[10px] text-gray-400 uppercase tracking-wider">{language === 'zh' ? city.enName : city.name}</span>
                              </div>
                           </div>
                           <span className="text-[10px] font-bold text-gray-300 bg-gray-50 px-2 py-1 rounded-full">{city.stats?.recommended || 0} {t('city.stats.recommended')}</span>

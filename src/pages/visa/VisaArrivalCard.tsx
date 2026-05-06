@@ -1,56 +1,89 @@
 import React from 'react';
 import VisaLayout from '../../components/visa/VisaLayout';
 import { useLanguage } from '../../context/LanguageContext';
+import SEO from '../../components/SEO';
 
 export default function VisaArrivalCard() {
   const { language, t } = useLanguage();
 
+  const isZh = language === 'zh';
+  const getLocalizedText = (zh: string, en: string) => isZh ? zh : en;
+
+  // 翻译键
+  const tr = {
+    pageTitle: t('visa.menu.entryCard', 'Entry Card Guide'),
+    step1Title: t('visa.page.card.step1Title', 'Step 1 - Visit Website'),
+    step1Desc: t('visa.page.card.step1Desc', 'Search for "Foreigner Arrival Card" and access the website. Links vary by city; please select the corresponding link for your port of entry.'),
+    step2Title: t('visa.page.card.step2Title', 'Step 2 - Select Arrival Card'),
+    step2Desc: t('visa.page.card.step2Desc', 'Click on "Foreigner Arrival Card" or "24/240-hour visa-free transit".'),
+    step3Title: t('visa.page.card.step3Title', 'Step 3 - Select Language'),
+    step3Desc: t('visa.page.card.step3Desc', 'Select language (English, Japanese, Korean, etc.), and fill in basic information such as name, gender, nationality, and document number.'),
+    step4Title: t('visa.page.card.step4Title', 'Step 4 - Fill Information'),
+    step4Desc: t('visa.page.card.step4Desc', 'Fill in relevant information such as flight number, contact phone number, purpose of entry, and address.'),
+    step5Title: t('visa.page.card.step5Title', 'Step 5 - Submit & Save QR Code'),
+    step5Desc: t('visa.page.card.step5Desc', 'After completion, save the QR code to your phone for convenience during entry.'),
+    step6Title: t('visa.page.card.step6Title', 'Final Step - Print Arrival Card'),
+    step6Desc: t('visa.page.card.step6Desc', 'Scan the QR code at the self-service machine to print the arrival card, submit it to immigration, complete entry procedures, and you can enter after fingerprint scanning!'),
+    shanghai: t('visa.page.card.shanghai', 'Shanghai'),
+    zhejiang: t('visa.page.card.zhejiang', 'Zhejiang'),
+  };
+
   const steps = [
     {
       num: 1,
-      title: language === 'zh' ? '第一步 - 访问网站' : 'Step 1 - Visit Website',
-      desc: language === 'zh' ? '搜索“外国人入境卡”，进入网站，不同城市的链接不尽相同，请根据入境口岸选择对应的链接' : 'Search for "Foreigner Arrival Card" and access the website. Links vary by city; please select the corresponding link for your port of entry.',
+      title: tr.step1Title,
+      desc: tr.step1Desc,
       links: [
-        { name: '上海', url: 'https://www.singlewindow.sh.cn/hj/' },
-        { name: '浙江', url: 'https://zj.singlewindow.cn/nia/' },
+        { name: tr.shanghai, url: 'https://www.singlewindow.sh.cn/hj/' },
+        { name: tr.zhejiang, url: 'https://zj.singlewindow.cn/nia/' },
       ],
       image: 'https://static.tripcngo.com/ing/buzhou1.png'
     },
     {
       num: 2,
-      title: language === 'zh' ? '第二步 - 选择入境卡' : 'Step 2 - Select Arrival Card',
-      desc: language === 'zh' ? '点击“外国人入境卡”或者“24/240小时过境免签”' : 'Click on "Foreigner Arrival Card" or "24/240-hour visa-free transit".',
+      title: tr.step2Title,
+      desc: tr.step2Desc,
       image: 'https://static.tripcngo.com/ing/buzhou2.png'
     },
     {
       num: 3,
-      title: language === 'zh' ? '第三步 - 选择语言' : 'Step 3 - Select Language',
-      desc: language === 'zh' ? '选择语言（英语、日语、韩语等），填写姓名、性别、国籍、证件号码等基础信息' : 'Select language (English, Japanese, Korean, etc.), and fill in basic information such as name, gender, nationality, and document number.',
+      title: tr.step3Title,
+      desc: tr.step3Desc,
       image: 'https://static.tripcngo.com/ing/buzhou3.png'
     },
     {
       num: 4,
-      title: language === 'zh' ? '第四步 - 填写信息' : 'Step 4 - Fill Information',
-      desc: language === 'zh' ? '填写航班号、联系电话、入境目的和住址等相关信息' : 'Fill in relevant information such as flight number, contact phone number, purpose of entry, and address.',
+      title: tr.step4Title,
+      desc: tr.step4Desc,
       image: 'https://static.tripcngo.com/ing/buzhou4.png'
     },
     {
       num: 5,
-      title: language === 'zh' ? '第五步 - 提交保存二维码' : 'Step 5 - Submit & Save QR Code',
-      desc: language === 'zh' ? '填写完成之后，将二维码保存到手机内，以方便入境时使用' : 'After completion, save the QR code to your phone for convenience during entry.',
+      title: tr.step5Title,
+      desc: tr.step5Desc,
       image: 'https://static.tripcngo.com/ing/buzhou5.png'
     },
     {
       num: 6,
-      title: language === 'zh' ? '最后一步 - 打印入境卡' : 'Final Step - Print Arrival Card',
-      desc: language === 'zh' ? '在自助机扫描二维码打印入境卡，递交给移民局并完成入境手续，采集指纹后就可以入境啦！' : 'Scan the QR code at the self-service machine to print the arrival card, submit it to immigration, complete entry procedures, and you can enter after fingerprint scanning!',
+      title: tr.step6Title,
+      desc: tr.step6Desc,
       image: 'https://static.tripcngo.com/ing/buzhou6.png'
     }
   ];
 
   return (
-    <VisaLayout breadcrumbTitle={t('visa.menu.entryCard')}>
-      <h2 className="text-2xl font-bold text-center mb-10 text-gray-900">{t('visa.menu.entryCard')}</h2>
+    <>
+      <SEO 
+        title="China Arrival Card Guide"
+        titleZh="中国入境卡填写指南"
+        description="Step-by-step guide to filling out the China arrival card (entry declaration form) for foreigners. Learn what to declare and common questions."
+        descriptionZh="外国人填写中国入境卡（入境申报表）的分步指南。了解需要申报什么和常见问题。"
+        keywordsZh="入境卡, 中国入境卡, 入境申报表, 外国人入境, 海关申报"
+        keywords="China arrival card, entry card, arrival declaration, foreigner entry China, customs declaration"
+        url="https://tripcngo.com/visa/arrival-card"
+      />
+      <VisaLayout breadcrumbTitle={tr.pageTitle}>
+        <h2 className="text-2xl font-bold text-center mb-10 text-gray-900">{tr.pageTitle}</h2>
       <div className="space-y-12">
         {steps.map((step) => (
           <div key={step.num} className="grid grid-cols-1 md:grid-cols-2 gap-8 items-start pb-10 border-b border-gray-100 last:border-0 last:pb-0">
@@ -72,12 +105,12 @@ export default function VisaArrivalCard() {
               )}
             </div>
             <div className="bg-gray-100 rounded-lg flex items-center justify-center text-gray-400">
-               {/* Replace with actual screenshots in production */}
                <img src={step.image} alt={step.title} className="rounded-lg w-full h-auto object-contain" />
             </div>
           </div>
         ))}
       </div>
     </VisaLayout>
+    </>
   );
 }

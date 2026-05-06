@@ -1,8 +1,24 @@
 import React, { useState, useRef } from 'react';
 import { CityData } from '../types/city';
-import { X, Loader2, Sparkles, Save, ChevronDown, ChevronUp, Image as ImageIcon } from 'lucide-react';
+import { X, Loader2, Sparkles, Save, ChevronDown, ChevronUp, Image as ImageIcon, Languages } from 'lucide-react';
 import { supabase } from '../lib/supabase';
-import { generateCityData } from '../lib/deepseek';
+import { generateCityData, askDeepSeek } from '../lib/deepseek';
+
+// 支持的语言配置
+const SUPPORTED_LANGUAGES = [
+  { code: 'zh', label: '中文', nativeLabel: '中文内容' },
+  { code: 'en', label: 'English', nativeLabel: 'English Content' },
+  { code: 'ja', label: '日本語', nativeLabel: '日本語コンテンツ' },
+  { code: 'ko', label: '한국어', nativeLabel: '한국어 콘텐츠' },
+  { code: 'ru', label: 'Русский', nativeLabel: 'Русский контент' },
+  { code: 'fr', label: 'Français', nativeLabel: 'Contenu français' },
+  { code: 'es', label: 'Español', nativeLabel: 'Contenido español' },
+  { code: 'de', label: 'Deutsch', nativeLabel: 'Deutsch Inhalt' },
+  { code: 'tw', label: '繁體中文', nativeLabel: '繁體中文內容' },
+  { code: 'it', label: 'Italiano', nativeLabel: 'Contenuto italiano' },
+] as const;
+
+type LanguageCode = typeof SUPPORTED_LANGUAGES[number]['code'];
 
 interface CityFormProps {
   city?: CityData | null;
@@ -46,7 +62,10 @@ export default function CityForm({ city, onClose, onSave }: CityFormProps) {
     };
   });
   const [isGenerating, setIsGenerating] = useState(false);
+  const [isTranslating, setIsTranslating] = useState(false);
+  const [translateProgress, setTranslateProgress] = useState('');
   const [activeTab, setActiveTab] = useState('basic');
+  const [activeLangTab, setActiveLangTab] = useState<LanguageCode>('zh');
   const fileInputRef = useRef<HTMLInputElement>(null);
   const listCoverInputRef = useRef<HTMLInputElement>(null);
   const [uploading, setUploading] = useState(false);
@@ -101,6 +120,426 @@ export default function CityForm({ city, onClose, onSave }: CityFormProps) {
       } catch (e2) {
         return url; 
       }
+    }
+  };
+
+  // 获取指定语言的字段名
+  const getLangField = (baseField: string, langCode: string) => {
+    if (langCode === 'zh') return baseField;
+    return `${baseField}${langCode.charAt(0).toUpperCase() + langCode.slice(1)}`;
+  };
+
+  // 自动翻译全部语言
+  const handleAutoTranslate = async () => {
+    if (!formData.name && !formData.paragraphs.length) {
+      alert('请先填写中文城市名称或简介');
+      return;
+    }
+    
+    setIsTranslating(true);
+    setTranslateProgress('准备翻译...');
+    try {
+      const targetLanguages = SUPPORTED_LANGUAGES.filter(lang => lang.code !== 'zh');
+      const newData = { ...formData };
+      
+      // 计算总任务数
+      let totalTasks = 0;
+      let completedTasks = 0;
+      
+      // 统计总任务数
+      for (const lang of targetLanguages) {
+        const langCode = lang.code;
+        if (formData.name) totalTasks++;
+        if (formData.paragraphs.length > 0) totalTasks += formData.paragraphs.length;
+        if (formData.bestTravelTime.strongText) totalTasks++;
+        if (formData.bestTravelTime.paragraphs.length > 0) totalTasks += formData.bestTravelTime.paragraphs.length;
+        // 新增：tags翻译任务
+        if (formData.tags.length > 0) totalTasks += formData.tags.length;
+        // 新增：城市信息翻译任务
+        if (formData.info.area) totalTasks++;
+        if (formData.info.population) totalTasks++;
+        if (formData.attractions.length > 0) totalTasks += formData.attractions.length * 5; // name, desc, price, season, time
+        if (formData.history.length > 0) totalTasks += formData.history.length * 2;
+        // 新增：世界遗产翻译任务
+        if (formData.worldHeritage && formData.worldHeritage.length > 0) totalTasks += formData.worldHeritage.length * 2;
+        // 新增：非遗传承翻译任务
+        if (formData.intangibleHeritage && formData.intangibleHeritage.length > 0) totalTasks += formData.intangibleHeritage.length * 2;
+        // 新增：交通信息翻译任务
+        if (formData.transportation.length > 0) totalTasks += formData.transportation.length * 3;
+        if (formData.food.length > 0) totalTasks += formData.food.length * 2;
+      }
+      
+      const updateProgress = (langName: string, taskName: string) => {
+        completedTasks++;
+        const percent = Math.round((completedTasks / totalTasks) * 100);
+        setTranslateProgress(`翻译中 ${percent}% - ${langName} - ${taskName}`);
+      };
+      
+      // 翻译基础信息
+      for (const lang of targetLanguages) {
+        const langCode = lang.code;
+        const langName = lang.label;
+        
+        // 翻译城市名称
+        if (formData.name && !newData[getLangField('enName', langCode) as keyof CityData]) {
+          try {
+            const nameKey = getLangField('enName', langCode);
+            (newData as any)[nameKey] = await askDeepSeek(
+              `Translate the following Chinese city name to ${langName}. Only output the translated text, no explanations:\n\n${formData.name}`
+            );
+            updateProgress(langName, '城市名称');
+          } catch (e) {
+            console.warn(`Failed to translate name to ${langCode}:`, e);
+          }
+        }
+        
+        // 翻译简介段落
+        if (formData.paragraphs.length > 0) {
+          try {
+            const paragraphsKey = getLangField('paragraphs', langCode);
+            const translatedParagraphs = [];
+            for (const para of formData.paragraphs) {
+              const translated = await askDeepSeek(
+                `Translate the following Chinese text to ${langName}. Only output the translated text, no explanations:\n\n${para}`
+              );
+              translatedParagraphs.push(translated);
+              updateProgress(langName, '简介段落');
+            }
+            (newData as any)[paragraphsKey] = translatedParagraphs;
+          } catch (e) {
+            console.warn(`Failed to translate paragraphs to ${langCode}:`, e);
+          }
+        }
+        
+        // 翻译最佳旅行时间
+        if (formData.bestTravelTime.strongText) {
+          try {
+            const strongTextKey = getLangField('bestTravelTime.strongText', langCode);
+            (newData as any)[strongTextKey] = await askDeepSeek(
+              `Translate the following Chinese text to ${langName}. Only output the translated text, no explanations:\n\n${formData.bestTravelTime.strongText}`
+            );
+            updateProgress(langName, '最佳旅行时间');
+          } catch (e) {
+            console.warn(`Failed to translate strongText to ${langCode}:`, e);
+          }
+        }
+        
+        if (formData.bestTravelTime.paragraphs.length > 0) {
+          try {
+            const bestTimeParasKey = getLangField('bestTravelTime.paragraphs', langCode);
+            const translatedParagraphs = [];
+            for (const para of formData.bestTravelTime.paragraphs) {
+              const translated = await askDeepSeek(
+                `Translate the following Chinese text to ${langName}. Only output the translated text, no explanations:\n\n${para}`
+              );
+              translatedParagraphs.push(translated);
+              updateProgress(langName, '旅行时间段落');
+            }
+            (newData as any)[bestTimeParasKey] = translatedParagraphs;
+          } catch (e) {
+            console.warn(`Failed to translate bestTravelTime paragraphs to ${langCode}:`, e);
+          }
+        }
+        
+        // ========== 新增：翻译标签 ==========
+        if (formData.tags.length > 0) {
+          const newTags = [...newData.tags];
+          for (let i = 0; i < formData.tags.length; i++) {
+            const tag = formData.tags[i];
+            if (tag.text) {
+              try {
+                const textKey = getLangField('text', langCode);
+                (newTags[i] as any)[textKey] = await askDeepSeek(
+                  `Translate the following Chinese text to ${langName}. Only output the translated text, no explanations:\n\n${tag.text}`
+                );
+                updateProgress(langName, `标签 ${i + 1}/${formData.tags.length}`);
+              } catch (e) {
+                console.warn(`Failed to translate tag to ${langCode}:`, e);
+              }
+            }
+          }
+          newData.tags = newTags;
+        }
+        
+        // ========== 新增：翻译城市信息 ==========
+        if (formData.info.area) {
+          try {
+            const areaKey = getLangField('info.area', langCode);
+            (newData as any)[areaKey] = await askDeepSeek(
+              `Translate the following Chinese text to ${langName}. Only output the translated text, no explanations:\n\n${formData.info.area}`
+            );
+            updateProgress(langName, '城市面积');
+          } catch (e) {
+            console.warn(`Failed to translate area to ${langCode}:`, e);
+          }
+        }
+        
+        if (formData.info.population) {
+          try {
+            const popKey = getLangField('info.population', langCode);
+            (newData as any)[popKey] = await askDeepSeek(
+              `Translate the following Chinese text to ${langName}. Only output the translated text, no explanations:\n\n${formData.info.population}`
+            );
+            updateProgress(langName, '城市人口');
+          } catch (e) {
+            console.warn(`Failed to translate population to ${langCode}:`, e);
+          }
+        }
+        
+        // 翻译景点
+        if (formData.attractions.length > 0) {
+          const newAttractions = [...newData.attractions];
+          for (let i = 0; i < formData.attractions.length; i++) {
+            const attr = formData.attractions[i];
+            
+            if (attr.name) {
+              try {
+                const nameKey = getLangField('name', langCode);
+                (newAttractions[i] as any)[nameKey] = await askDeepSeek(
+                  `Translate the following Chinese text to ${langName}. Only output the translated text, no explanations:\n\n${attr.name}`
+                );
+                updateProgress(langName, `景点名称 ${i + 1}/${formData.attractions.length}`);
+              } catch (e) {
+                console.warn(`Failed to translate attraction name to ${langCode}:`, e);
+              }
+            }
+            
+            if (attr.desc) {
+              try {
+                const descKey = getLangField('desc', langCode);
+                (newAttractions[i] as any)[descKey] = await askDeepSeek(
+                  `Translate the following Chinese text to ${langName}. Only output the translated text, no explanations:\n\n${attr.desc}`
+                );
+                updateProgress(langName, `景点描述 ${i + 1}/${formData.attractions.length}`);
+              } catch (e) {
+                console.warn(`Failed to translate attraction desc to ${langCode}:`, e);
+              }
+            }
+            
+            if (attr.price) {
+              try {
+                const priceKey = getLangField('price', langCode);
+                (newAttractions[i] as any)[priceKey] = await askDeepSeek(
+                  `Translate the following Chinese text to ${langName}. Only output the translated text, no explanations:\n\n${attr.price}`
+                );
+                updateProgress(langName, `景点票价 ${i + 1}/${formData.attractions.length}`);
+              } catch (e) {
+                console.warn(`Failed to translate attraction price to ${langCode}:`, e);
+              }
+            }
+            
+            if (attr.season) {
+              try {
+                const seasonKey = getLangField('season', langCode);
+                (newAttractions[i] as any)[seasonKey] = await askDeepSeek(
+                  `Translate the following Chinese text to ${langName}. Only output the translated text, no explanations:\n\n${attr.season}`
+                );
+                updateProgress(langName, `最佳季节 ${i + 1}/${formData.attractions.length}`);
+              } catch (e) {
+                console.warn(`Failed to translate attraction season to ${langCode}:`, e);
+              }
+            }
+            
+            if (attr.time) {
+              try {
+                const timeKey = getLangField('time', langCode);
+                (newAttractions[i] as any)[timeKey] = await askDeepSeek(
+                  `Translate the following Chinese text to ${langName}. Only output the translated text, no explanations:\n\n${attr.time}`
+                );
+                updateProgress(langName, `建议时长 ${i + 1}/${formData.attractions.length}`);
+              } catch (e) {
+                console.warn(`Failed to translate attraction time to ${langCode}:`, e);
+              }
+            }
+          }
+          newData.attractions = newAttractions;
+        }
+        
+        // 翻译历史
+        if (formData.history.length > 0) {
+          const newHistory = [...newData.history];
+          for (let i = 0; i < formData.history.length; i++) {
+            const h = formData.history[i];
+            
+            if (h.year) {
+              try {
+                const yearKey = getLangField('year', langCode);
+                (newHistory[i] as any)[yearKey] = h.year; // 年份通常保持不变
+              } catch (e) {}
+            }
+            
+            if (h.title) {
+              try {
+                const titleKey = getLangField('title', langCode);
+                (newHistory[i] as any)[titleKey] = await askDeepSeek(
+                  `Translate the following Chinese text to ${langName}. Only output the translated text, no explanations:\n\n${h.title}`
+                );
+                updateProgress(langName, `历史标题 ${i + 1}/${formData.history.length}`);
+              } catch (e) {}
+            }
+            
+            if (h.desc) {
+              try {
+                const descKey = getLangField('desc', langCode);
+                (newHistory[i] as any)[descKey] = await askDeepSeek(
+                  `Translate the following Chinese text to ${langName}. Only output the translated text, no explanations:\n\n${h.desc}`
+                );
+                updateProgress(langName, `历史描述 ${i + 1}/${formData.history.length}`);
+              } catch (e) {}
+            }
+          }
+          newData.history = newHistory;
+        }
+        
+        // ========== 新增：翻译世界遗产 ==========
+        if (formData.worldHeritage && formData.worldHeritage.length > 0) {
+          const newHeritage = [...(newData.worldHeritage || [])];
+          for (let i = 0; i < formData.worldHeritage.length; i++) {
+            const wh = formData.worldHeritage[i];
+            
+            if (wh.name) {
+              try {
+                const nameKey = getLangField('name', langCode);
+                (newHeritage[i] as any)[nameKey] = await askDeepSeek(
+                  `Translate the following Chinese text to ${langName}. Only output the translated text, no explanations:\n\n${wh.name}`
+                );
+                updateProgress(langName, `世界遗产名称 ${i + 1}/${formData.worldHeritage.length}`);
+              } catch (e) {
+                console.warn(`Failed to translate worldHeritage name to ${langCode}:`, e);
+              }
+            }
+            
+            if (wh.desc) {
+              try {
+                const descKey = getLangField('desc', langCode);
+                (newHeritage[i] as any)[descKey] = await askDeepSeek(
+                  `Translate the following Chinese text to ${langName}. Only output the translated text, no explanations:\n\n${wh.desc}`
+                );
+                updateProgress(langName, `世界遗产描述 ${i + 1}/${formData.worldHeritage.length}`);
+              } catch (e) {
+                console.warn(`Failed to translate worldHeritage desc to ${langCode}:`, e);
+              }
+            }
+          }
+          newData.worldHeritage = newHeritage;
+        }
+        
+        // ========== 新增：翻译非遗传承 ==========
+        if (formData.intangibleHeritage && formData.intangibleHeritage.length > 0) {
+          const newIntangible = [...(newData.intangibleHeritage || [])];
+          for (let i = 0; i < formData.intangibleHeritage.length; i++) {
+            const ih = formData.intangibleHeritage[i];
+            
+            if (ih.name) {
+              try {
+                const nameKey = getLangField('name', langCode);
+                (newIntangible[i] as any)[nameKey] = await askDeepSeek(
+                  `Translate the following Chinese text to ${langName}. Only output the translated text, no explanations:\n\n${ih.name}`
+                );
+                updateProgress(langName, `非遗名称 ${i + 1}/${formData.intangibleHeritage.length}`);
+              } catch (e) {
+                console.warn(`Failed to translate intangibleHeritage name to ${langCode}:`, e);
+              }
+            }
+            
+            if (ih.desc) {
+              try {
+                const descKey = getLangField('desc', langCode);
+                (newIntangible[i] as any)[descKey] = await askDeepSeek(
+                  `Translate the following Chinese text to ${langName}. Only output the translated text, no explanations:\n\n${ih.desc}`
+                );
+                updateProgress(langName, `非遗描述 ${i + 1}/${formData.intangibleHeritage.length}`);
+              } catch (e) {
+                console.warn(`Failed to translate intangibleHeritage desc to ${langCode}:`, e);
+              }
+            }
+          }
+          newData.intangibleHeritage = newIntangible;
+        }
+        
+        // ========== 新增：翻译交通信息 ==========
+        if (formData.transportation.length > 0) {
+          const newTransport = [...newData.transportation];
+          for (let i = 0; i < formData.transportation.length; i++) {
+            const t = formData.transportation[i];
+            
+            if (t.title) {
+              try {
+                const titleKey = getLangField('title', langCode);
+                (newTransport[i] as any)[titleKey] = await askDeepSeek(
+                  `Translate the following Chinese text to ${langName}. Only output the translated text, no explanations:\n\n${t.title}`
+                );
+                updateProgress(langName, `交通标题 ${i + 1}/${formData.transportation.length}`);
+              } catch (e) {
+                console.warn(`Failed to translate transportation title to ${langCode}:`, e);
+              }
+            }
+            
+            if (t.desc) {
+              try {
+                const descKey = getLangField('desc', langCode);
+                (newTransport[i] as any)[descKey] = await askDeepSeek(
+                  `Translate the following Chinese text to ${langName}. Only output the translated text, no explanations:\n\n${t.desc}`
+                );
+                updateProgress(langName, `交通描述 ${i + 1}/${formData.transportation.length}`);
+              } catch (e) {
+                console.warn(`Failed to translate transportation desc to ${langCode}:`, e);
+              }
+            }
+            
+            if (t.price) {
+              try {
+                const priceKey = getLangField('price', langCode);
+                (newTransport[i] as any)[priceKey] = await askDeepSeek(
+                  `Translate the following Chinese text to ${langName}. Only output the translated text, no explanations:\n\n${t.price}`
+                );
+                updateProgress(langName, `交通价格 ${i + 1}/${formData.transportation.length}`);
+              } catch (e) {
+                console.warn(`Failed to translate transportation price to ${langCode}:`, e);
+              }
+            }
+          }
+          newData.transportation = newTransport;
+        }
+        
+        // 翻译美食
+        if (formData.food.length > 0) {
+          const newFood = [...newData.food];
+          for (let i = 0; i < formData.food.length; i++) {
+            const f = formData.food[i];
+            
+            if (f.name) {
+              try {
+                const nameKey = getLangField('name', langCode);
+                (newFood[i] as any)[nameKey] = await askDeepSeek(
+                  `Translate the following Chinese text to ${langName}. Only output the translated text, no explanations:\n\n${f.name}`
+                );
+                updateProgress(langName, `美食名称 ${i + 1}/${formData.food.length}`);
+              } catch (e) {}
+            }
+            
+            if (f.desc) {
+              try {
+                const descKey = getLangField('desc', langCode);
+                (newFood[i] as any)[descKey] = await askDeepSeek(
+                  `Translate the following Chinese text to ${langName}. Only output the translated text, no explanations:\n\n${f.desc}`
+                );
+                updateProgress(langName, `美食描述 ${i + 1}/${formData.food.length}`);
+              } catch (e) {}
+            }
+          }
+          newData.food = newFood;
+        }
+      }
+      
+      setFormData(newData);
+      setTranslateProgress('翻译完成！');
+      alert('全部翻译完成！');
+    } catch (err) {
+      console.error("Translation error:", err);
+      alert('翻译失败：' + (err instanceof Error ? err.message : String(err)));
+    } finally {
+      setIsTranslating(false);
     }
   };
 
@@ -188,22 +627,56 @@ export default function CityForm({ city, onClose, onSave }: CityFormProps) {
     setFormData(prev => ({ ...prev, [key]: value }));
   };
 
+  // 获取当前语言的字段值
+  const getFieldValue = (fieldName: string, defaultValue: any) => {
+    if (activeLangTab === 'zh') return defaultValue;
+    const langField = `${fieldName}${activeLangTab.charAt(0).toUpperCase() + activeLangTab.slice(1)}`;
+    return (formData as any)[langField] || defaultValue;
+  };
+
+  // 设置当前语言的字段值
+  const setFieldValue = (fieldName: string, value: any) => {
+    if (activeLangTab === 'zh') {
+      updateFormData(fieldName as keyof CityData, value);
+    } else {
+      const langField = `${fieldName}${activeLangTab.charAt(0).toUpperCase() + activeLangTab.slice(1)}`;
+      setFormData(prev => ({ ...prev, [langField]: value }));
+    }
+  };
+
   const renderSection = () => {
+    const isZh = activeLangTab === 'zh';
+    const currentLang = SUPPORTED_LANGUAGES.find(l => l.code === activeLangTab);
+    
+    // 获取当前语言的字段名
+    const getNameField = () => isZh ? 'name' : `name${activeLangTab.charAt(0).toUpperCase() + activeLangTab.slice(1)}`;
+    const getEnNameField = () => isZh ? 'enName' : `enName${activeLangTab.charAt(0).toUpperCase() + activeLangTab.slice(1)}`;
+    
     switch (activeTab) {
       case 'basic':
         return (
           <div className="space-y-4">
-            <input value={formData.name} onChange={e => updateFormData('name', e.target.value)} placeholder="中文名称" className="w-full p-2 border rounded" />
-            <input value={formData.enName} onChange={e => updateFormData('enName', e.target.value)} placeholder="英文名称" className="w-full p-2 border rounded" />
+            <input 
+              value={(formData as any)[getNameField()] || ''} 
+              onChange={e => setFieldValue(getNameField(), e.target.value)} 
+              placeholder={isZh ? "中文名称" : `${currentLang?.label} 名称`} 
+              className="w-full p-2 border rounded" 
+            />
+            <input 
+              value={(formData as any)[getEnNameField()] || ''} 
+              onChange={e => setFieldValue(getEnNameField(), e.target.value)} 
+              placeholder={isZh ? "英文名称" : `${currentLang?.label} 英文名`} 
+              className="w-full p-2 border rounded" 
+            />
             <div className="flex gap-2">
-               <input value={formData.heroImage} onChange={e => updateFormData('heroImage', e.target.value)} placeholder="详情页主图 (Detail Hero)" className="w-full p-2 border rounded" />
+               <input value={formData.heroImage} onChange={e => updateFormData('heroImage', e.target.value)} placeholder="详情页主图 (所有语言共用)" className="w-full p-2 border rounded" />
                <button type="button" onClick={() => fileInputRef.current?.click()} className="p-2 border rounded bg-gray-100">
                  {uploading ? <Loader2 className="animate-spin" /> : <ImageIcon />}
                </button>
                <input type="file" ref={fileInputRef} onChange={handleHeroImageUpload} className="hidden" accept="image/*" />
             </div>
             <div className="flex gap-2">
-               <input value={formData.listCover || ''} onChange={e => updateFormData('listCover', e.target.value)} placeholder="列表页封面 (List Cover)" className="w-full p-2 border rounded" />
+               <input value={formData.listCover || ''} onChange={e => updateFormData('listCover', e.target.value)} placeholder="列表页封面 (所有语言共用)" className="w-full p-2 border rounded" />
                <button type="button" onClick={() => listCoverInputRef.current?.click()} className="p-2 border rounded bg-gray-100">
                  {uploading ? <Loader2 className="animate-spin" /> : <ImageIcon />}
                </button>
@@ -214,17 +687,58 @@ export default function CityForm({ city, onClose, onSave }: CityFormProps) {
       case 'text':
         return (
           <div className="space-y-4">
-             <textarea value={formData.paragraphs.join('\n')} onChange={e => updateFormData('paragraphs', e.target.value.split('\n'))} placeholder="简介 (每行一个段落)" className="w-full p-2 border rounded h-32" />
-             <textarea value={formData.enParagraphs?.join('\n')} onChange={e => updateFormData('enParagraphs', e.target.value.split('\n'))} placeholder="EN Intro (one paragraph per line)" className="w-full p-2 border rounded h-32" />
+             <textarea 
+               value={(() => {
+                 if (isZh) return formData.paragraphs.join('\n');
+                 const langParagraphs = (formData as any)[`paragraphs${activeLangTab.charAt(0).toUpperCase() + activeLangTab.slice(1)}`];
+                 return langParagraphs?.join('\n') || formData.paragraphs.join('\n');
+               })()} 
+               onChange={e => {
+                 const key = isZh ? 'paragraphs' : `paragraphs${activeLangTab.charAt(0).toUpperCase() + activeLangTab.slice(1)}`;
+                 setFieldValue(key, e.target.value.split('\n'));
+               }} 
+               placeholder={isZh ? "简介 (每行一个段落)" : `简介 (${currentLang?.label}, 每行一段)`} 
+               className="w-full p-2 border rounded h-32" 
+             />
           </div>
         );
       case 'bestTime':
         return (
           <div className="space-y-4">
-             <input value={formData.bestTravelTime.strongText} onChange={e => setFormData({...formData, bestTravelTime: {...formData.bestTravelTime, strongText: e.target.value}})} placeholder="最佳旅行时间重点" className="w-full p-2 border rounded" />
-             <input value={formData.bestTravelTime.enStrongText || ''} onChange={e => setFormData({...formData, bestTravelTime: {...formData.bestTravelTime, enStrongText: e.target.value}})} placeholder="Best Travel Time Focus (EN)" className="w-full p-2 border rounded" />
-             <textarea value={formData.bestTravelTime.paragraphs.join('\n')} onChange={e => setFormData({...formData, bestTravelTime: {...formData.bestTravelTime, paragraphs: e.target.value.split('\n')}})} placeholder="最佳时间说明 (每行段落)" className="w-full p-2 border rounded h-24" />
-             <textarea value={formData.bestTravelTime.enParagraphs?.join('\n')} onChange={e => setFormData({...formData, bestTravelTime: {...formData.bestTravelTime, enParagraphs: e.target.value.split('\n')}})} placeholder="Best Time Description (EN, one paragraph per line)" className="w-full p-2 border rounded h-24" />
+             <input 
+               value={(() => {
+                 if (isZh) return formData.bestTravelTime.strongText || '';
+                 const langStrongText = (formData.bestTravelTime as any)[`strongText${activeLangTab.charAt(0).toUpperCase() + activeLangTab.slice(1)}`];
+                 return langStrongText || formData.bestTravelTime.strongText || '';
+               })()} 
+               onChange={e => {
+                 if (isZh) {
+                   setFormData(prev => ({ ...prev, bestTravelTime: { ...prev.bestTravelTime, strongText: e.target.value } }));
+                 } else {
+                   const key = `strongText${activeLangTab.charAt(0).toUpperCase() + activeLangTab.slice(1)}`;
+                   setFormData(prev => ({ ...prev, bestTravelTime: { ...prev.bestTravelTime, [key]: e.target.value } }));
+                 }
+               }} 
+               placeholder={isZh ? "最佳旅行时间重点" : `Best Travel Time (${currentLang?.label})`} 
+               className="w-full p-2 border rounded" 
+             />
+             <textarea 
+               value={(() => {
+                 if (isZh) return formData.bestTravelTime.paragraphs.join('\n');
+                 const langParagraphs = (formData.bestTravelTime as any)[`paragraphs${activeLangTab.charAt(0).toUpperCase() + activeLangTab.slice(1)}`];
+                 return langParagraphs?.join('\n') || formData.bestTravelTime.paragraphs.join('\n');
+               })()} 
+               onChange={e => {
+                 if (isZh) {
+                   setFormData(prev => ({ ...prev, bestTravelTime: { ...prev.bestTravelTime, paragraphs: e.target.value.split('\n') } }));
+                 } else {
+                   const key = `paragraphs${activeLangTab.charAt(0).toUpperCase() + activeLangTab.slice(1)}`;
+                   setFormData(prev => ({ ...prev, bestTravelTime: { ...prev.bestTravelTime, [key]: e.target.value.split('\n') } }));
+                 }
+               }} 
+               placeholder={isZh ? "最佳时间说明 (每行段落)" : `Travel Tips (${currentLang?.label})`} 
+               className="w-full p-2 border rounded h-24" 
+             />
           </div>
         );
       case 'attractions':
@@ -243,7 +757,10 @@ export default function CityForm({ city, onClose, onSave }: CityFormProps) {
                  + 添加景点
                </button>
              </div>
-             {formData.attractions.map((attr, idx) => (
+             {formData.attractions.map((attr, idx) => {
+               const nameField = isZh ? 'name' : `name${activeLangTab.charAt(0).toUpperCase() + activeLangTab.slice(1)}`;
+               const descField = isZh ? 'desc' : `desc${activeLangTab.charAt(0).toUpperCase() + activeLangTab.slice(1)}`;
+               return (
                 <div key={idx} className="p-4 border rounded space-y-2 relative group-item">
                    <button 
                      type="button"
@@ -252,34 +769,32 @@ export default function CityForm({ city, onClose, onSave }: CityFormProps) {
                    >
                      <X className="w-4 h-4" />
                    </button>
-                   <div className="grid grid-cols-2 gap-2">
-                     <input value={attr.name} onChange={e => {
+                   <input 
+                     value={(attr as any)[nameField] || ''} 
+                     onChange={e => {
                        const newAttractions = [...formData.attractions];
-                       newAttractions[idx].name = e.target.value;
+                       (newAttractions[idx] as any)[nameField] = e.target.value;
                        updateFormData('attractions', newAttractions);
-                     }} placeholder="景点名称 (CN)" className="w-full p-2 border rounded" />
-                     <input value={attr.enName} onChange={e => {
+                     }} 
+                     placeholder={`景点名称 ${currentLang?.label}`} 
+                     className="w-full p-2 border rounded" 
+                   />
+                   <textarea 
+                     value={(attr as any)[descField] || ''} 
+                     onChange={e => {
                        const newAttractions = [...formData.attractions];
-                       newAttractions[idx].enName = e.target.value;
+                       (newAttractions[idx] as any)[descField] = e.target.value;
                        updateFormData('attractions', newAttractions);
-                     }} placeholder="景点名称 (EN)" className="w-full p-2 border rounded" />
-                   </div>
-                   <textarea value={attr.desc} onChange={e => {
-                     const newAttractions = [...formData.attractions];
-                     newAttractions[idx].desc = e.target.value;
-                     updateFormData('attractions', newAttractions);
-                   }} placeholder="景点描述 (CN)" className="w-full p-2 border rounded h-20" />
-                   <textarea value={attr.enDesc} onChange={e => {
-                     const newAttractions = [...formData.attractions];
-                     newAttractions[idx].enDesc = e.target.value;
-                     updateFormData('attractions', newAttractions);
-                   }} placeholder="景点描述 (EN)" className="w-full p-2 border rounded h-20" />
+                     }} 
+                     placeholder={`景点描述 ${currentLang?.label}`} 
+                     className="w-full p-2 border rounded h-20" 
+                   />
                    <div className="flex gap-2">
                        <input value={attr.imageUrl || ''} onChange={e => {
                          const newAttractions = [...formData.attractions];
                          newAttractions[idx].imageUrl = e.target.value;
                          updateFormData('attractions', newAttractions);
-                       }} placeholder="景点图片链接" className="w-full p-2 border rounded" />
+                       }} placeholder="景点图片链接 (所有语言共用)" className="w-full p-2 border rounded" />
                        <input type="file" onChange={async (e) => {
                            const file = e.target.files?.[0];
                            if(file) {
@@ -296,7 +811,8 @@ export default function CityForm({ city, onClose, onSave }: CityFormProps) {
                        </label>
                    </div>
                 </div>
-             ))}
+               );
+             })}
            </div>
         );
       case 'history':
@@ -315,7 +831,10 @@ export default function CityForm({ city, onClose, onSave }: CityFormProps) {
                  + 添加历史节点
                </button>
              </div>
-             {formData.history.map((h, idx) => (
+             {formData.history.map((h, idx) => {
+               const titleField = isZh ? 'title' : `title${activeLangTab.charAt(0).toUpperCase() + activeLangTab.slice(1)}`;
+               const descField = isZh ? 'desc' : `desc${activeLangTab.charAt(0).toUpperCase() + activeLangTab.slice(1)}`;
+               return (
                 <div key={idx} className="p-4 border rounded space-y-2 relative">
                    <button 
                      type="button"
@@ -329,37 +848,21 @@ export default function CityForm({ city, onClose, onSave }: CityFormProps) {
                        const newHistory = [...formData.history];
                        newHistory[idx].year = e.target.value;
                        updateFormData('history', newHistory);
-                     }} placeholder="年份 (如 1949)" className="w-full p-2 border rounded" />
-                     <input value={h.enYear} onChange={e => {
+                     }} placeholder="年份" className="w-full p-2 border rounded" />
+                     <input value={(h as any)[titleField] || ''} onChange={e => {
                        const newHistory = [...formData.history];
-                       newHistory[idx].enYear = e.target.value;
+                       (newHistory[idx] as any)[titleField] = e.target.value;
                        updateFormData('history', newHistory);
-                     }} placeholder="Year (e.g. 1949)" className="w-full p-2 border rounded" />
+                     }} placeholder={`标题 (${currentLang?.label})`} className="w-full p-2 border rounded" />
                    </div>
-                   <div className="grid grid-cols-2 gap-2">
-                     <input value={h.title} onChange={e => {
-                       const newHistory = [...formData.history];
-                       newHistory[idx].title = e.target.value;
-                       updateFormData('history', newHistory);
-                     }} placeholder="标题 (CN)" className="w-full p-2 border rounded" />
-                     <input value={h.enTitle} onChange={e => {
-                       const newHistory = [...formData.history];
-                       newHistory[idx].enTitle = e.target.value;
-                       updateFormData('history', newHistory);
-                     }} placeholder="Title (EN)" className="w-full p-2 border rounded" />
-                   </div>
-                   <textarea value={h.desc} onChange={e => {
+                   <textarea value={(h as any)[descField] || ''} onChange={e => {
                      const newHistory = [...formData.history];
-                     newHistory[idx].desc = e.target.value;
+                     (newHistory[idx] as any)[descField] = e.target.value;
                      updateFormData('history', newHistory);
-                   }} placeholder="历史描述 (CN)" className="w-full p-2 border rounded h-20" />
-                   <textarea value={h.enDesc} onChange={e => {
-                     const newHistory = [...formData.history];
-                     newHistory[idx].enDesc = e.target.value;
-                     updateFormData('history', newHistory);
-                   }} placeholder="History Description (EN)" className="w-full p-2 border rounded h-20" />
+                   }} placeholder={`历史描述 (${currentLang?.label})`} className="w-full p-2 border rounded h-20" />
                 </div>
-             ))}
+               );
+             })}
            </div>
         );
       case 'food':
@@ -378,7 +881,10 @@ export default function CityForm({ city, onClose, onSave }: CityFormProps) {
                   + 添加美食
                 </button>
               </div>
-              {formData.food.map((f, idx) => (
+              {formData.food.map((f, idx) => {
+                const nameField = isZh ? 'name' : `name${activeLangTab.charAt(0).toUpperCase() + activeLangTab.slice(1)}`;
+                const descField = isZh ? 'desc' : `desc${activeLangTab.charAt(0).toUpperCase() + activeLangTab.slice(1)}`;
+                return (
                  <div key={idx} className="p-4 border rounded space-y-2 relative">
                     <button 
                       type="button"
@@ -387,39 +893,29 @@ export default function CityForm({ city, onClose, onSave }: CityFormProps) {
                     >
                       <X className="w-4 h-4" />
                     </button>
-                    <div className="grid grid-cols-3 gap-2">
-                      <input value={f.name} onChange={e => {
+                    <div className="grid grid-cols-2 gap-2">
+                      <input value={(f as any)[nameField] || ''} onChange={e => {
                         const newFood = [...formData.food];
-                        newFood[idx].name = e.target.value;
+                        (newFood[idx] as any)[nameField] = e.target.value;
                         updateFormData('food', newFood);
-                      }} placeholder="美食名称" className="w-full p-2 border rounded" />
-                      <input value={f.enName} onChange={e => {
-                        const newFood = [...formData.food];
-                        newFood[idx].enName = e.target.value;
-                        updateFormData('food', newFood);
-                      }} placeholder="English Name" className="w-full p-2 border rounded" />
+                      }} placeholder={`美食名称 (${currentLang?.label})`} className="w-full p-2 border rounded" />
                       <input value={f.pinyin} onChange={e => {
                         const newFood = [...formData.food];
                         newFood[idx].pinyin = e.target.value;
                         updateFormData('food', newFood);
-                      }} placeholder="Pinyin" className="w-full p-2 border rounded" />
+                      }} placeholder="拼音" className="w-full p-2 border rounded" />
                     </div>
-                    <textarea value={f.desc} onChange={e => {
+                    <textarea value={(f as any)[descField] || ''} onChange={e => {
                       const newFood = [...formData.food];
-                      newFood[idx].desc = e.target.value;
+                      (newFood[idx] as any)[descField] = e.target.value;
                       updateFormData('food', newFood);
-                    }} placeholder="美食介绍 (CN)" className="w-full p-2 border rounded h-20" />
-                    <textarea value={f.enDesc} onChange={e => {
-                      const newFood = [...formData.food];
-                      newFood[idx].enDesc = e.target.value;
-                      updateFormData('food', newFood);
-                    }} placeholder="Description (EN)" className="w-full p-2 border rounded h-20" />
+                    }} placeholder={`美食介绍 (${currentLang?.label})`} className="w-full p-2 border rounded h-20" />
                     <div className="flex gap-2">
                       <input value={f.imageUrl || ''} onChange={e => {
                         const newFood = [...formData.food];
                         newFood[idx].imageUrl = e.target.value;
                         updateFormData('food', newFood);
-                      }} placeholder="美食图片链接" className="w-full p-2 border rounded" />
+                      }} placeholder="美食图片链接 (所有语言共用)" className="w-full p-2 border rounded" />
                       <input type="file" onChange={async (e) => {
                           const file = e.target.files?.[0];
                           if(file) {
@@ -436,7 +932,8 @@ export default function CityForm({ city, onClose, onSave }: CityFormProps) {
                       </label>
                     </div>
                  </div>
-              ))}
+                );
+              })}
             </div>
          );
       default:
@@ -452,6 +949,41 @@ export default function CityForm({ city, onClose, onSave }: CityFormProps) {
           <button onClick={onClose}><X /></button>
         </div>
         
+        <div className="flex flex-wrap gap-2 mb-4 p-2 bg-gray-50 rounded-xl items-center">
+           {/* 语言切换Tab */}
+           <div className="flex flex-wrap gap-1">
+             {SUPPORTED_LANGUAGES.map((lang) => (
+               <button 
+                 key={lang.code}
+                 type="button"
+                 onClick={() => setActiveLangTab(lang.code)}
+                 className={`px-3 py-1.5 rounded-lg font-bold transition-all text-xs ${activeLangTab === lang.code ? 'bg-white text-[#1b887a] shadow-sm' : 'text-gray-400 hover:text-gray-600'}`}
+               >
+                 {lang.nativeLabel}
+               </button>
+             ))}
+           </div>
+           {/* 自动翻译按钮 */}
+           <button
+             type="button"
+             onClick={handleAutoTranslate}
+             disabled={isTranslating}
+             className="px-3 py-1.5 text-xs font-bold text-amber-600 hover:text-amber-700 bg-amber-50 hover:bg-amber-100 rounded-lg flex items-center gap-1.5 transition-colors ml-auto"
+           >
+             <Languages className="w-3.5 h-3.5" />
+             {isTranslating ? '翻译中...' : '自动翻译全部语言'}
+           </button>
+        </div>
+        {/* 翻译进度显示 */}
+        {isTranslating && translateProgress && (
+          <div className="mt-2 p-2 bg-amber-50 rounded-lg border border-amber-200">
+            <div className="flex items-center gap-2 text-xs text-amber-700">
+              <Loader2 className="w-3.5 h-3.5 animate-spin" />
+              <span>{translateProgress}</span>
+            </div>
+          </div>
+        )}
+
         <div className="flex gap-2 mb-4 overflow-x-auto pb-2">
            {[
              { id: 'basic', label: '基础信息' },

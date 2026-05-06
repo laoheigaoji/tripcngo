@@ -1,11 +1,11 @@
 import React, { useState } from 'react';
 import { Phone, ChevronDown, ChevronUp, FileText, Download, Camera, FileEdit, CreditCard, PenTool, ExternalLink } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import { useLanguage } from '../context/LanguageContext';
+import { useVisaTranslation } from '../hooks/useVisaTranslation';
 import SEO from '../components/SEO';
 
 export default function Visa() {
-  const { language, t } = useLanguage();
+  const { language, t } = useVisaTranslation();
   const [openFAQ, setOpenFAQ] = useState<number | null>(0);
 
   const MENU = [
@@ -18,104 +18,36 @@ export default function Visa() {
   ];
 
   const FAQS = [
-    { 
-      q: language === 'zh' ? '这240小时是从什么时候开始计算的?' : 'When does the 240 hours start counting?', 
-      a: language === 'zh' ? '240小时从入境当天的次日零时起计算，出境当天的24时止。例如：12月1日入境，则10天免签期限为12月2日0时至12月11日24时，必须在12月11日24时前出境。' : 'The 240 hours are calculated from 00:00 on the day following the day of entry until 24:00 on the day of exit. For example: if you enter on December 1st, the 10-day visa-free period is from 00:00 on December 2nd to 24:00 on December 11th, and you must exit before 24:00 on December 11th.' 
-    },
-    { 
-      q: language === 'zh' ? '可以跨省旅游吗?' : 'Can I travel across provinces?', 
-      a: language === 'zh' ? '是的，可以在10天内在免签政策覆盖的省份内自由旅行。' : 'Yes, you can travel freely within the provinces covered by the visa-free policy within the 10 days.' 
-    },
-    { 
-      q: language === 'zh' ? '根据官方政策，我可以从香港进入大陆内地吗?' : 'Can I enter mainland China from Hong Kong according to the official policy?', 
-      a: language === 'zh' ? '不可以，根据政策规定，从香港、澳门、台湾地区入境的外国人不适用于240小时过境免签政策，您需要提前申请相应签证。' : 'No, according to the policy, foreigners entering from Hong Kong, Macau, and Taiwan are not eligible for the 240-hour transit visa-free policy. You need to apply for the corresponding visa in advance.' 
-    },
-    { 
-      q: language === 'zh' ? '可否入境后再购买出境机票？' : 'Can I buy the outbound ticket after entry?', 
-      a: language === 'zh' ? '不可以，必须提前持有确定日期和座位的联程票' : 'No, you must hold a confirmed onward ticket with a fixed date and seat in advance.' 
-    },
-    { 
-      q: language === 'zh' ? '从广州入境上海出境是否允许？' : 'Is it allowed to enter via Guangzhou and exit via Shanghai?', 
-      a: language === 'zh' ? '允许，支持不同口岸出入境' : 'Yes, entry and exit through different ports are supported.' 
-    },
-    { 
-      q: language === 'zh' ? '如何办理临时入境许可？' : 'How to apply for a temporary entry permit?', 
-      a: language === 'zh' ? '在指定口岸（如北京首都机场T3航站楼）设有专门柜台，需现场填写《临时入境外国人入境卡》，提交护照+联程机票，经边检审核后发放许可。' : 'Special counters are set up at designated ports (e.g., Beijing Capital Airport T3). You need to fill out the \'Arrival Card for Temporary Entry Foreigners\' on-site, submit your passport and onward ticket, and the permit will be issued after border inspection approval.' 
-    },
-    { 
-      q: language === 'zh' ? '从香港/澳门转机是否适用？' : 'Is transiting through Hong Kong/Macau applicable?', 
-      a: language === 'zh' ? '允许。例如美国→广州→香港西九龙，凭高铁票可申请免签；加拿大→珠海→澳门，凭船票同样适用。' : 'Yes. For example, USA → Guangzhou → Hong Kong West Kowloon, you can apply with a high-speed rail ticket; Canada → Zhuhai → Macau, applicable with a ferry ticket.' 
-    },
-    { 
-      q: language === 'zh' ? '联程票可否包含陆路交通？' : 'Can the onward ticket include land transportation?', 
-      a: language === 'zh' ? '允许。如持有广州→香港高铁票、珠海→澳门船票等跨境陆海空联运票据均符合要求。' : 'Yes. Cross-border land, sea, and air transport tickets such as Guangzhou → Hong Kong high-speed rail tickets, Zhuhai → Macau ferry tickets all meet the requirements.' 
-    },
-    { 
-      q: language === 'zh' ? '证件丢失怎么办？' : 'What should I do if I lose my documents?', 
-      a: language === 'zh' ? '立即向停留地公安机关报案，凭《护照报失证明》到出入境管理部门申请停留证件，同时联系本国使领馆补办旅行证件。' : 'Immediately report to the public security organ in your place of stay, apply for a stay permit at the exit-entry administration department with the \'Passport Loss Report Certificate\', and contact your country\'s embassy or consulate to reissue travel documents.' 
-    },
-    { 
-      q: language === 'zh' ? '与互免签证如何选择？' : 'How to choose between mutual visa exemption and transit visa exemption?', 
-      a: language === 'zh' ? '如属新加坡等互免国公民，建议直接使用30天免签（更灵活）；若仅过境则选240小时免签（无需签证费）。' : 'If you are a citizen of a mutual visa exemption country like Singapore, it\'s recommended to use the 30-day visa exemption (more flexible); if merely transiting, the 240-hour visa exemption (no visa fee) can be chosen.' 
-    },
-    { 
-      q: language === 'zh' ? '超期停留会怎样？' : 'What happens if I overstay?', 
-      a: language === 'zh' ? '每日处罚款500元，最高可处10日拘留并限期离境，且5年内不得申请过境免签。' : 'A fine of 500 RMB per day, up to 10 days of detention, and ordered to leave within a time limit. Moreover, you are not allowed to apply for transit visa exemption for 5 years.' 
-    },
-    { 
-      q: language === 'zh' ? '如何查询实时政策？' : 'How to inquire about real-time policies?', 
-      a: language === 'zh' ? '微信搜索"国家移民管理局"小程序，或拨打12367热线（支持英/日/韩等8语种服务）。' : 'Search for the \'National Immigration Administration\' mini-program on WeChat, or dial the 12367 hotline (supports 8 languages including English, Japanese, and Korean).' 
-    },
-    { 
-      q: language === 'zh' ? '哪些行为会被视为非法就业？' : 'What behaviors are considered illegal employment?', 
-      a: language === 'zh' ? '包括商业拍摄、网络直播获利、临时授课等，即使未签订劳动合同也可能被认定违法。' : 'Including commercial photography, profiting from live streaming, temporary teaching, etc. Even if no labor contract is signed, it could be deemed illegal.' 
-    },
-    { 
-      q: language === 'zh' ? '北京首都机场办理流程有何特殊安排？' : 'Are there any special arrangements for the procedure at Beijing Capital Airport?', 
-      a: language === 'zh' ? 'T3航站楼设立"过境免签快速通道"，配备英/日/韩三语服务专员，办理时间缩短至15分钟内。需注意每日22:00-6:00时段需前往24小时应急窗口办理。' : 'Terminal 3 has a \'Transit Visa-Free Fast Channel\' equipped with trilingual service staff (English/Japanese/Korean), shortening processing time to within 15 minutes. Note that from 22:00 to 6:00 daily, you must go to the 24-hour emergency window.' 
-    },
-    { 
-      q: language === 'zh' ? '上海浦东机场转机如何衔接？' : 'How to connect transit at Shanghai Pudong Airport?', 
-      a: language === 'zh' ? '提供"空铁联运"服务，持高铁票可在卫星厅直接办理过境手续。例如：巴黎→上海→杭州东站的高铁联程票，可在隔离区内完成所有手续。' : 'Provides \'Air-Rail Intermodal Transport\' service. Passengers with high-speed rail tickets can directly handle transit procedures in the satellite hall. For example: a Paris → Shanghai → Hangzhou East onward high-speed rail ticket allows completing all procedures in the isolated area.' 
-    },
-    { 
-      q: language === 'zh' ? '摄影爱好者有哪些限制？' : 'What restrictions exist for photography enthusiasts?', 
-      a: language === 'zh' ? '商业拍摄需申请工作签证，但个人旅游拍摄允许。禁飞区（如军事设施周边500米）严禁无人机航拍，违者最高罚款2万元。' : 'Commercial photography requires a work visa, but personal travel photography is allowed. Drone aerial photography is strictly prohibited in no-fly zones (like within 500m of military facilities), with violators facing fines up to 20,000 RMB.' 
-    },
-    { 
-      q: language === 'zh' ? '联程票改签如何处理？' : 'How to handle onward ticket rescheduling?', 
-      a: language === 'zh' ? '允许免费改签1次，需在停留期第7天前完成。例如原定D10香港航班改签至D11，需在D7前持新机票到入境口岸边检站备案。' : 'One free date change is allowed, and must be completed before the 7th day of the stay period. For example, changing a D10 Hong Kong-bound flight to D11 requires filing the new ticket with the entry port border inspection station before D7.' 
-    },
-    { 
-      q: language === 'zh' ? '跨境高铁票是否认可？' : 'Are cross-border high-speed rail tickets recognized?', 
-      a: language === 'zh' ? '中老铁路（昆明→万象）、中越铁路（南宁→河内）等国际班次车票均被认可，需提供纸质票与电子客票号双验证。' : 'International train tickets like the China-Laos Railway (Kunming → Vientiane) and China-Vietnam Railway (Nanning → Hanoi) are recognized. Dual verification with both physical ticket and electronic ticket number is required.' 
-    },
-    { 
-      q: language === 'zh' ? '如何通过微信办理预审？' : 'How to handle pre-approval via WeChat?', 
-      a: language === 'zh' ? '在"移民局"小程序提交护照首页+电子机票，AI系统10分钟生成《过境预审码》，可减少口岸办理时间50%。' : 'Submit the passport bio page + electronic ticket in the \'Immigration Administration\' mini-program. The AI system generates a \'Transit Pre-Approval Code\' in 10 minutes, reducing port processing time by 50%.' 
-    },
-    { 
-      q: language === 'zh' ? '哪些行为可能引发误会？' : 'What behaviors might cause misunderstandings?', 
-      a: language === 'zh' ? '避免在政府机关门前比"V"手势拍照、未经许可拍摄少数民族服饰者。宗教场所需注意着装要求（如寺庙不穿短裤入内）。' : 'Avoid making \'V\' gestures for photos in front of government organs, or photographing ethnic minority clothing wearers without permission. Religious places have dress codes (e.g., no shorts inside temples).' 
-    },
-    { 
-      q: language === 'zh' ? '突发疾病如何就医？' : 'How to seek medical care in case of sudden illness?', 
-      a: language === 'zh' ? '持护照可在二级以上医院挂急诊，推荐北京协和/上海瑞金等53家涉外医院。保留医疗票据可申请停留延期。' : 'You can visit the emergency room at Class II or above hospitals with your passport. 53 foreign-related hospitals like Beijing Union Medical College Hospital/Shanghai Ruijin are recommended. Keep medical receipts to apply for a stay extension.' 
-    },
-    { 
-      q: language === 'zh' ? '突发疾病如何延期？' : 'How to extend stay due to sudden illness?', 
-      a: language === 'zh' ? '需提供医院诊断证明，在停留期满前3个工作日向所在地市级公安局出入境管理处申请，最长可延期30天。' : 'You must provide a hospital diagnosis certificate and apply to the municipal public security bureau exit-entry administration office 3 working days before your stay period expires. The maximum extension is 30 days.' 
-    }
+    { q: t('visa.faq.q1'), a: t('visa.faq.a1') },
+    { q: t('visa.faq.q2'), a: t('visa.faq.a2') },
+    { q: t('visa.faq.q3'), a: t('visa.faq.a3') },
+    { q: t('visa.faq.q4'), a: t('visa.faq.a4') },
+    { q: t('visa.faq.q5'), a: t('visa.faq.a5') },
+    { q: t('visa.faq.q6'), a: t('visa.faq.a6') },
+    { q: t('visa.faq.q7'), a: t('visa.faq.a7') },
+    { q: t('visa.faq.q8'), a: t('visa.faq.a8') },
+    { q: t('visa.faq.q9'), a: t('visa.faq.a9') },
+    { q: t('visa.faq.q10'), a: t('visa.faq.a10') },
+    { q: t('visa.faq.q11'), a: t('visa.faq.a11') },
+    { q: t('visa.faq.q12'), a: t('visa.faq.a12') },
+    { q: t('visa.faq.q13'), a: t('visa.faq.a13') },
+    { q: t('visa.faq.q14'), a: t('visa.faq.a14') },
+    { q: t('visa.faq.q15'), a: t('visa.faq.a15') },
+    { q: t('visa.faq.q16'), a: t('visa.faq.a16') },
+    { q: t('visa.faq.q17'), a: t('visa.faq.a17') },
+    { q: t('visa.faq.q18'), a: t('visa.faq.a18') },
+    { q: t('visa.faq.q19'), a: t('visa.faq.a19') },
+    { q: t('visa.faq.q20'), a: t('visa.faq.a20') },
+    { q: t('visa.faq.q21'), a: t('visa.faq.a21') },
+    { q: t('visa.faq.q22'), a: t('visa.faq.a22') },
   ];
 
   return (
     <div className="w-full bg-[#f7f7f7] pb-20">
       <SEO 
-        title={language === 'zh' ? '签证与免签政策' : 'Visa & Visa-Free Policy'}
-        description={language === 'zh' 
-          ? '了解中国最新的144/240小时过境免签政策、单方面免签国家名单、口岸详情及入境注意事项。' 
-          : 'Learn about China\'s latest 144/240-hour transit visa-free policies, list of unilateral visa-free countries, port details, and entry requirements.'}
-        keywords={language === 'zh' ? '中国签证, 144小时免签, 240小时免签, 过境免签, 中国入境政策' : 'China visa, 144h visa free, 240h visa free, transit visa free, China entry policy'}
+        title={t('visa.seo.title')}
+        description={t('visa.seo.description')}
+        keywords={t('visa.seo.keywords')}
       />
       {/* Hero Map Section */}
       <section className="relative h-[650px] w-full bg-[#759dd1] overflow-hidden flex items-center justify-center">
@@ -181,33 +113,25 @@ export default function Visa() {
                   <div>
                     <h4 className="font-bold text-gray-900 mb-2">{t('visa.transit.europe')}</h4>
                     <p className="text-gray-600 text-sm leading-relaxed">
-                      {language === 'zh' 
-                        ? '阿尔巴尼亚、安道尔、奥地利、白俄罗斯、比利时、波黑、保加利亚、克罗地亚、塞浦路斯、捷克、丹麦、爱沙尼亚、芬兰、法国、德国、希腊、匈牙利、冰岛、爱尔兰、意大利、拉脱维亚、列支敦士登、立陶宛、卢森堡、马耳他、摩纳哥、荷兰、北马其顿、挪威、波兰、葡萄牙、罗马尼亚、俄罗斯、塞尔维亚、斯洛伐克、斯洛文尼亚、西班牙、瑞典、瑞士、英国、乌克兰、圣马力诺、黑山、梵蒂冈'
-                        : 'Albania, Andorra, Austria, Belarus, Belgium, Bosnia and Herzegovina, Bulgaria, Croatia, Cyprus, Czech Republic, Denmark, Estonia, Finland, France, Germany, Greece, Hungary, Iceland, Ireland, Italy, Latvia, Liechtenstein, Lithuania, Luxembourg, Malta, Monaco, Netherlands, North Macedonia, Norway, Poland, Portugal, Romania, Russia, Serbia, Slovakia, Slovenia, Spain, Sweden, Switzerland, UK, Ukraine, San Marino, Montenegro, Vatican City'}
+                      {t('visa.countries.europe')}
                     </p>
                   </div>
                   <div>
                     <h4 className="font-bold text-gray-900 mb-2">{t('visa.transit.americas')}</h4>
                     <p className="text-gray-600 text-sm leading-relaxed">
-                      {language === 'zh' 
-                        ? '阿根廷、巴西、智利、墨西哥、美国、加拿大'
-                        : 'Argentina, Brazil, Chile, Mexico, USA, Canada'}
+                      {t('visa.countries.americas')}
                     </p>
                   </div>
                   <div>
                     <h4 className="font-bold text-gray-900 mb-2">{t('visa.transit.oceania')}</h4>
                     <p className="text-gray-600 text-sm leading-relaxed">
-                      {language === 'zh' 
-                        ? '澳大利亚、新西兰'
-                        : 'Australia, New Zealand'}
+                      {t('visa.countries.oceania')}
                     </p>
                   </div>
                   <div>
                     <h4 className="font-bold text-gray-900 mb-2">{t('visa.transit.asia')}</h4>
                     <p className="text-gray-600 text-sm leading-relaxed">
-                      {language === 'zh' 
-                        ? '文莱、日本、韩国、新加坡、阿联酋、卡塔尔'
-                        : 'Brunei, Japan, South Korea, Singapore, UAE, Qatar'}
+                      {t('visa.countries.asia')}
                     </p>
                   </div>
                 </div>
