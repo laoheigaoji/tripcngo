@@ -514,8 +514,13 @@ export default function CityDetail() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8 text-left">
               {getI18nArrayItems('intangibleHeritage').length > 0 ? getI18nArrayItems('intangibleHeritage').map((item: any, idx: number) => (
                 <div key={idx} className={`${idx === 2 && getI18nArrayItems('intangibleHeritage').length === 3 ? 'md:col-span-2' : ''} bg-white rounded-2xl p-6 shadow-sm border border-gray-100 flex flex-col md:flex-row gap-6 hover:shadow-md transition-shadow`}>
-                  <div className={`w-full ${idx === 2 && getI18nArrayItems('intangibleHeritage').length === 3 ? 'md:w-1/4' : 'md:w-1/3'} flex-shrink-0 h-40`}>
-                    <img src={item.imageUrl || 'https://images.unsplash.com/photo-1544025162-811c75c82de1?w=400&q=80&auto=format&fit=crop'} alt={item.name} className="w-full h-full object-cover rounded-xl" />
+                  <div className={`w-full ${idx === 2 && getI18nArrayItems('intangibleHeritage').length === 3 ? 'md:w-1/4' : 'md:w-1/3'} flex-shrink-0 h-40 relative overflow-hidden flex items-center justify-center`}>
+                    <div className="absolute inset-0 bg-[#e6f4ea] opacity-30"></div>
+                    <img src={item.imageUrl || `https://images.unsplash.com/photo-1544025162-811c75c82de1?w=400&q=80&auto=format&fit=crop&random=${idx}`} alt={item.name} className="w-full h-full object-cover mix-blend-overlay opacity-80" />
+                    <div className="absolute z-10 font-bold text-gray-300/80 text-xs tracking-wider flex items-center gap-1">
+                      <span className="text-green-700/60">tripcngo</span>
+                      <span className="text-gray-500/60">.com</span>
+                    </div>
                   </div>
                   <div className="flex-grow flex flex-col justify-center">
                     <h3 className="text-xl font-bold text-gray-900 mb-1">{item.name || item.enName || ''}</h3>
@@ -571,8 +576,13 @@ export default function CityDetail() {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 text-left">
             {getI18nArrayItems('food').map((food: any, idx: number) => (
               <div key={idx} className="bg-white rounded-xl p-5 shadow-sm border border-gray-100 flex gap-5 hover:shadow-md transition-shadow">
-                <div className="w-32 h-32 flex-shrink-0">
-                  <img src={food.imageUrl || `https://images.unsplash.com/photo-1544025162-811c75c82de1?w=400&q=80&auto=format&fit=crop&random=${food.imageIdx}`} alt={food.name} className="w-full h-full object-cover rounded-lg" />
+                <div className="w-32 h-32 flex-shrink-0 relative overflow-hidden flex items-center justify-center">
+                  <div className="absolute inset-0 bg-[#e6f4ea] opacity-30"></div>
+                  <img src={food.imageUrl || `https://images.unsplash.com/photo-1544025162-811c75c82de1?w=400&q=80&auto=format&fit=crop&random=${food.imageIdx || idx}`} alt={food.name} className="w-full h-full object-cover mix-blend-overlay opacity-80 rounded-lg" />
+                  <div className="absolute z-10 font-bold text-gray-300/80 text-xs tracking-wider flex items-center gap-1">
+                    <span className="text-green-700/60">tripcngo</span>
+                    <span className="text-gray-500/60">.com</span>
+                  </div>
                 </div>
                 <div className="flex-grow flex flex-col justify-center">
                   <div className="flex justify-between items-start mb-1">

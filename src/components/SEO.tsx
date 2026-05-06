@@ -48,9 +48,12 @@ const SEO: React.FC<SEOProps> = ({
   const { language } = useLanguage();
   
   const currentTitle = language === 'zh' ? titleZh : title;
-  const siteTitleZh = 'tripcngo.com - 你的终极中国旅游指南，旅行中国出发';
-  const siteTitleEn = 'tripcngo.com - Your ultimate China travel guide, travel China departure';
+  const siteTitleZh = '中国旅行指南 | tripcngo.com';
+  const siteTitleEn = 'China Travel Guide | tripcngo.com';
   const siteTitle = language === 'zh' ? siteTitleZh : siteTitleEn;
+  const suffixZh = '中国旅行指南';
+  const suffixEn = 'China Travel Guide';
+  const suffix = language === 'zh' ? suffixZh : suffixEn;
   
   const currentDescription = language === 'zh' ? descriptionZh : description;
   const defaultDescriptionZh = '您的中国旅行终极指南。提供最新的免签政策、签证指引、交通攻略和目的地深度报告。';
@@ -62,7 +65,7 @@ const SEO: React.FC<SEOProps> = ({
   const defaultKeywordsEn = 'China travel, visa free China, 144h transit visa free, 240h transit visa, China visa, China cities, China travel guide, China entry guide';
   const metaKeywords = currentKeywords || (language === 'zh' ? defaultKeywordsZh : defaultKeywordsEn);
   
-  const fullTitle = currentTitle ? `${currentTitle} - tripcngo.com` : (isHome ? siteTitle : siteTitle);
+  const fullTitle = currentTitle ? `${currentTitle} | tripcngo.com | ${suffix}` : (isHome ? siteTitle : siteTitle);
   
   const hreflangTags = Object.entries(languageMap).map(([lang, config]) => ({
     lang: config.hreflang,
