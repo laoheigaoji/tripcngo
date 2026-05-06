@@ -10,6 +10,7 @@ export default function Navbar() {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isLangDropdownOpen, setIsLangDropdownOpen] = useState(false);
+  const [mobileExpandedMenu, setMobileExpandedMenu] = useState<string | null>(null);
   const [showLangBanner, setShowLangBanner] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
@@ -409,33 +410,145 @@ export default function Navbar() {
             transition={{ type: 'tween', duration: 0.3 }}
             className="fixed inset-0 bg-[#1a1a1a] z-50 p-6 flex flex-col text-white h-screen overflow-y-auto"
           >
-            <div className="flex justify-between items-center mb-10">
+            <div className="flex justify-between items-center mb-8">
               <div className="flex flex-col">
                 <span className="text-xl font-bold tracking-tight">tripcngo.com</span>
                 <span className="text-[10px] text-gray-400 tracking-wider -mt-1">{t('nav.slogan')}</span>
               </div>
               <button 
                 className="p-2 hover:bg-white/10 rounded-md"
-                onClick={() => setIsMobileMenuOpen(false)}
+                onClick={() => { setIsMobileMenuOpen(false); setMobileExpandedMenu(null); }}
               >
                 <X className="w-6 h-6" />
               </button>
             </div>
             
-            <nav className="flex flex-col gap-6">
-              {navLinks.map((item) => (
-                <Link 
-                  key={item.name} 
-                  to={item.path}
-                  className="text-2xl font-medium hover:text-green-400 transition-colors"
-                  onClick={() => setIsMobileMenuOpen(false)}
+            <nav className="flex flex-col gap-1">
+              {/* 首页 */}
+              <Link 
+                to={`/${langPrefix}`}
+                className="text-xl font-medium hover:text-green-400 transition-colors"
+                onClick={() => { setIsMobileMenuOpen(false); setMobileExpandedMenu(null); }}
+              >
+                <div className="flex items-center justify-between border-b border-white/10 py-4">
+                  {t('nav.home')}
+                </div>
+              </Link>
+
+              {/* 签证 - 可展开 */}
+              <div className="border-b border-white/10">
+                <button 
+                  onClick={() => setMobileExpandedMenu(mobileExpandedMenu === 'visa' ? null : 'visa')}
+                  className="w-full flex items-center justify-between py-4 text-xl font-medium hover:text-green-400 transition-colors"
                 >
-                  <div className="flex items-center justify-between border-b border-white/10 pb-4">
-                    {item.name}
-                    {item.hasDropdown && <ChevronDown className="w-5 h-5 text-gray-400" />}
-                  </div>
-                </Link>
-              ))}
+                  <span>{t('nav.visa')}</span>
+                  {mobileExpandedMenu === 'visa' ? <ChevronDown className="w-5 h-5 text-green-400" /> : <ChevronDown className="w-5 h-5 text-gray-400" />}
+                </button>
+                <AnimatePresence>
+                  {mobileExpandedMenu === 'visa' && (
+                    <motion.div
+                      initial={{ height: 0, opacity: 0 }}
+                      animate={{ height: 'auto', opacity: 1 }}
+                      exit={{ height: 0, opacity: 0 }}
+                      transition={{ duration: 0.2 }}
+                      className="overflow-hidden"
+                    >
+                      <div className="pl-4 pb-4 space-y-3">
+                        <Link to={`/${langPrefix}/visa`} onClick={() => { setIsMobileMenuOpen(false); setMobileExpandedMenu(null); }} className="block text-gray-300 hover:text-green-400 text-base py-1">{t('visa.mega.title')}</Link>
+                        <Link to={`/${langPrefix}/visa/types`} onClick={() => { setIsMobileMenuOpen(false); setMobileExpandedMenu(null); }} className="block text-gray-300 hover:text-green-400 text-base py-1">{t('visa.types')}</Link>
+                        <Link to={`/${langPrefix}/visa/photo`} onClick={() => { setIsMobileMenuOpen(false); setMobileExpandedMenu(null); }} className="block text-gray-300 hover:text-green-400 text-base py-1">{t('visa.photo')}</Link>
+                        <Link to={`/${langPrefix}/visa/fees`} onClick={() => { setIsMobileMenuOpen(false); setMobileExpandedMenu(null); }} className="block text-gray-300 hover:text-green-400 text-base py-1">{t('visa.fee')}</Link>
+                        <Link to={`/${langPrefix}/visa/form`} onClick={() => { setIsMobileMenuOpen(false); setMobileExpandedMenu(null); }} className="block text-gray-300 hover:text-green-400 text-base py-1">{t('visa.form')}</Link>
+                        <Link to={`/${langPrefix}/visa/arrival-card`} onClick={() => { setIsMobileMenuOpen(false); setMobileExpandedMenu(null); }} className="block text-gray-300 hover:text-green-400 text-base py-1">{t('visa.card')}</Link>
+                        <Link to={`/${langPrefix}/visa/downloads`} onClick={() => { setIsMobileMenuOpen(false); setMobileExpandedMenu(null); }} className="block text-gray-300 hover:text-green-400 text-base py-1">{t('visa.menu.download')}</Link>
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
+
+              {/* 发现 - 可展开 */}
+              <div className="border-b border-white/10">
+                <button 
+                  onClick={() => setMobileExpandedMenu(mobileExpandedMenu === 'discover' ? null : 'discover')}
+                  className="w-full flex items-center justify-between py-4 text-xl font-medium hover:text-green-400 transition-colors"
+                >
+                  <span>{t('nav.discover')}</span>
+                  {mobileExpandedMenu === 'discover' ? <ChevronDown className="w-5 h-5 text-green-400" /> : <ChevronDown className="w-5 h-5 text-gray-400" />}
+                </button>
+                <AnimatePresence>
+                  {mobileExpandedMenu === 'discover' && (
+                    <motion.div
+                      initial={{ height: 0, opacity: 0 }}
+                      animate={{ height: 'auto', opacity: 1 }}
+                      exit={{ height: 0, opacity: 0 }}
+                      transition={{ duration: 0.2 }}
+                      className="overflow-hidden"
+                    >
+                      <div className="pl-4 pb-4 space-y-3">
+                        <div className="text-green-400 text-sm font-bold mb-2 mt-2">{t('discover.hotCities')}</div>
+                        <Link to={`/${langPrefix}/cities/beijing`} onClick={() => { setIsMobileMenuOpen(false); setMobileExpandedMenu(null); }} className="block text-gray-300 hover:text-green-400 text-base py-1">{t('city.beijing')}</Link>
+                        <Link to={`/${langPrefix}/cities/shanghai`} onClick={() => { setIsMobileMenuOpen(false); setMobileExpandedMenu(null); }} className="block text-gray-300 hover:text-green-400 text-base py-1">{t('city.shanghai')}</Link>
+                        <Link to={`/${langPrefix}/cities/LZ1r5Fsq3bOUHUeKVgIv`} onClick={() => { setIsMobileMenuOpen(false); setMobileExpandedMenu(null); }} className="block text-gray-300 hover:text-green-400 text-base py-1">{t('city.guangzhou')}</Link>
+                        <Link to={`/${langPrefix}/cities/oNIvYqn2fcHSUN6mpv7G`} onClick={() => { setIsMobileMenuOpen(false); setMobileExpandedMenu(null); }} className="block text-gray-300 hover:text-green-400 text-base py-1">{t('city.shenzhen')}</Link>
+                        <Link to={`/${langPrefix}/cities/XxxHqxEftFPTAfw09w37`} onClick={() => { setIsMobileMenuOpen(false); setMobileExpandedMenu(null); }} className="block text-gray-300 hover:text-green-400 text-base py-1">{t('city.hangzhou')}</Link>
+                        <Link to={`/${langPrefix}/cities/eVvE8j6wkETbi3jgn2Kc`} onClick={() => { setIsMobileMenuOpen(false); setMobileExpandedMenu(null); }} className="block text-gray-300 hover:text-green-400 text-base py-1">{t('city.chongqing')}</Link>
+                        <Link to={`/${langPrefix}/cities/lOvgtPfMDTaEi3jIre9D`} onClick={() => { setIsMobileMenuOpen(false); setMobileExpandedMenu(null); }} className="block text-gray-300 hover:text-green-400 text-base py-1">{t('city.chengdu')}</Link>
+                        <Link to={`/${langPrefix}/cities/AM4LKEQcsclFhG1LuSKn`} onClick={() => { setIsMobileMenuOpen(false); setMobileExpandedMenu(null); }} className="block text-gray-300 hover:text-green-400 text-base py-1">{t('city.xian')}</Link>
+                        <Link to={`/${langPrefix}/cities/YF8WzVigZrymgqJJLanF`} onClick={() => { setIsMobileMenuOpen(false); setMobileExpandedMenu(null); }} className="block text-gray-300 hover:text-green-400 text-base py-1">{t('city.changsha')}</Link>
+                        <Link to={`/${langPrefix}/cities/KI6GE4ovZK6fmWTqUx5q`} onClick={() => { setIsMobileMenuOpen(false); setMobileExpandedMenu(null); }} className="block text-gray-300 hover:text-green-400 text-base py-1">{t('city.xiamen')}</Link>
+                        <Link to={`/${langPrefix}/cities`} onClick={() => { setIsMobileMenuOpen(false); setMobileExpandedMenu(null); }} className="block text-green-400 hover:text-green-300 text-sm font-medium py-2">{t('discover.moreCities')} &gt;&gt;</Link>
+                        <div className="border-t border-white/10 pt-3 mt-3">
+                          <div className="text-green-400 text-sm font-bold mb-2">{t('discover.guides')}</div>
+                          <Link to={`/${langPrefix}/articles`} onClick={() => { setIsMobileMenuOpen(false); setMobileExpandedMenu(null); }} className="block text-gray-300 hover:text-green-400 text-base py-1">{t('discover.guides')}</Link>
+                          <Link to={`/${langPrefix}/guide`} onClick={() => { setIsMobileMenuOpen(false); setMobileExpandedMenu(null); }} className="block text-gray-300 hover:text-green-400 text-base py-1">{t('discover.pocket')}</Link>
+                        </div>
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
+
+              {/* 工具 - 可展开 */}
+              <div className="border-b border-white/10">
+                <button 
+                  onClick={() => setMobileExpandedMenu(mobileExpandedMenu === 'tools' ? null : 'tools')}
+                  className="w-full flex items-center justify-between py-4 text-xl font-medium hover:text-green-400 transition-colors"
+                >
+                  <span>{t('nav.tools')}</span>
+                  {mobileExpandedMenu === 'tools' ? <ChevronDown className="w-5 h-5 text-green-400" /> : <ChevronDown className="w-5 h-5 text-gray-400" />}
+                </button>
+                <AnimatePresence>
+                  {mobileExpandedMenu === 'tools' && (
+                    <motion.div
+                      initial={{ height: 0, opacity: 0 }}
+                      animate={{ height: 'auto', opacity: 1 }}
+                      exit={{ height: 0, opacity: 0 }}
+                      transition={{ duration: 0.2 }}
+                      className="overflow-hidden"
+                    >
+                      <div className="pl-4 pb-4 space-y-3">
+                        <Link to={`/${langPrefix}/tools/menu`} onClick={() => { setIsMobileMenuOpen(false); setMobileExpandedMenu(null); }} className="block text-gray-300 hover:text-green-400 text-base py-1">{t('tools.menu')}</Link>
+                        <Link to={`/${langPrefix}/tools/name`} onClick={() => { setIsMobileMenuOpen(false); setMobileExpandedMenu(null); }} className="block text-gray-300 hover:text-green-400 text-base py-1">{t('tools.name')}</Link>
+                        <Link to={`/${langPrefix}/tools/pinyin`} onClick={() => { setIsMobileMenuOpen(false); setMobileExpandedMenu(null); }} className="block text-gray-300 hover:text-green-400 text-base py-1">{t('tools.pinyin')}</Link>
+                        <Link to={`/${langPrefix}/tools/counter`} onClick={() => { setIsMobileMenuOpen(false); setMobileExpandedMenu(null); }} className="block text-gray-300 hover:text-green-400 text-base py-1">{t('tools.counter')}</Link>
+                        <Link to={`/${langPrefix}/tools/zodiac`} onClick={() => { setIsMobileMenuOpen(false); setMobileExpandedMenu(null); }} className="block text-gray-300 hover:text-green-400 text-base py-1">{t('tools.zodiac')}</Link>
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
+
+              {/* 目录应用 */}
+              <Link 
+                to={`/${langPrefix}/apps`}
+                className="text-xl font-medium hover:text-green-400 transition-colors border-b border-white/10"
+                onClick={() => { setIsMobileMenuOpen(false); setMobileExpandedMenu(null); }}
+              >
+                <div className="flex items-center justify-between py-4">
+                  {t('nav.catalog')}
+                </div>
+              </Link>
             </nav>
           </motion.div>
         )}

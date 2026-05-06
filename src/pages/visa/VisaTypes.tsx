@@ -219,6 +219,29 @@ export default function VisaTypes() {
     const translationKey = visaCodeToTranslationKey[item.code];
     return getLocalizedText(item.description, item.description_en, translationKey ? `type.${translationKey}.desc` : undefined);
   };
+  // 特殊文档链接映射（用于覆盖数据库中的链接）
+  const specialDocLinks: Record<string, string> = {
+    photo: 'https://static.tripcngo.com/ing/zhphoto.jpg',
+    照片要求: 'https://static.tripcngo.com/ing/zhphoto.jpg',
+    'photo requirements': 'https://static.tripcngo.com/ing/zhphoto.jpg',
+  };
+
+  // 获取文档链接（优先使用特殊映射）
+  const getDocLink = (doc: VisaDocument): string | null => {
+    const docTitleEn = doc.doc_title_en?.toLowerCase() || '';
+    const docTitle = doc.doc_title || '';
+    
+    // 检查特殊映射
+    for (const [key, url] of Object.entries(specialDocLinks)) {
+      if (docTitleEn.includes(key) || docTitle.includes(key)) {
+        return url;
+      }
+    }
+    
+    // 回退到数据库链接
+    return doc.link_url || null;
+  };
+
   const getDocTitle = (doc: VisaDocument) => {
     const keys = getDocTranslationKey(doc);
     return getLocalizedText(doc.doc_title, doc.doc_title_en, keys.title || undefined);
@@ -354,21 +377,24 @@ export default function VisaTypes() {
                             )}
                           </div>
                           <div className="text-xs text-gray-600 mt-0.5">
-                            {doc.link_url ? (
-                              <>
-                                {getDocDesc(doc)}
-                                <a 
-                                  href={doc.link_url} 
-                                  target="_blank" 
-                                  rel="noopener noreferrer" 
-                                  className="text-[#1b887a] hover:underline ml-1"
-                                >
-                                  {tr.clickToView}
-                                </a>
-                              </>
-                            ) : (
-                              getDocDesc(doc)
-                            )}
+                            {(() => {
+                              const docLink = getDocLink(doc);
+                              return docLink ? (
+                                <>
+                                  {getDocDesc(doc)}
+                                  <a 
+                                    href={docLink} 
+                                    target="_blank" 
+                                    rel="noopener noreferrer" 
+                                    className="text-[#1b887a] hover:underline ml-1"
+                                  >
+                                    {tr.clickToView}
+                                  </a>
+                                </>
+                              ) : (
+                                getDocDesc(doc)
+                              );
+                            })()}
                           </div>
                         </div>
                       </div>
@@ -400,21 +426,24 @@ export default function VisaTypes() {
                             )}
                           </div>
                           <div className="text-xs text-gray-600 mt-0.5">
-                            {doc.link_url ? (
-                              <>
-                                {getDocDesc(doc)}
-                                <a 
-                                  href={doc.link_url} 
-                                  target="_blank" 
-                                  rel="noopener noreferrer" 
-                                  className="text-[#1b887a] hover:underline ml-1"
-                                >
-                                  {tr.clickToView}
-                                </a>
-                              </>
-                            ) : (
-                              getDocDesc(doc)
-                            )}
+                            {(() => {
+                              const docLink = getDocLink(doc);
+                              return docLink ? (
+                                <>
+                                  {getDocDesc(doc)}
+                                  <a 
+                                    href={docLink} 
+                                    target="_blank" 
+                                    rel="noopener noreferrer" 
+                                    className="text-[#1b887a] hover:underline ml-1"
+                                  >
+                                    {tr.clickToView}
+                                  </a>
+                                </>
+                              ) : (
+                                getDocDesc(doc)
+                              );
+                            })()}
                           </div>
                         </div>
                       </div>

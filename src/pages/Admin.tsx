@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { motion } from 'motion/react';
-import { Trash2, Plus, LogOut, ChevronRight, Save, Image as ImageIcon, Filter, FileText, Languages, Building2, Globe, FileSignature, Plane } from 'lucide-react';
+import { motion, AnimatePresence } from 'motion/react';
+import { Trash2, Plus, LogOut, ChevronRight, ChevronDown, ChevronUp, Save, Image as ImageIcon, Filter, FileText, Languages, Building2, Globe, FileSignature, Plane, Menu, X } from 'lucide-react';
 import Markdown from 'react-markdown';
 import MDEditor from '@uiw/react-md-editor';
 import TurndownService from 'turndown';
@@ -124,6 +124,8 @@ export default function Admin() {
   const [cityBatchInput, setCityBatchInput] = useState('');
   const [cityBatchStatus, setCityBatchStatus] = useState('');
   const [isBatchGenerating, setIsBatchGenerating] = useState(false);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [mobileMenuExpanded, setMobileMenuExpanded] = useState<string | null>(null);
 
   const cleanJSON = (text: string) => {
     let jsonString = text.replace(/```json\s*/g, '').replace(/```\s*/g, '');
@@ -1152,7 +1154,275 @@ export default function Admin() {
 
   return (
     <div className="min-h-screen bg-[#f7f7f7] flex font-sans">
-      {/* Sidebar */}
+      {/* Mobile Header */}
+      <header className="md:hidden fixed top-0 left-0 right-0 h-14 bg-white border-b border-gray-200 flex items-center justify-between px-4 z-20 shadow-sm">
+        <div className="flex items-center gap-3">
+          <h1 className="text-lg font-black text-gray-900 tracking-tight">Tripcngo</h1>
+          <span className="text-[10px] font-bold bg-[#1b887a]/10 text-[#1b887a] px-2 py-0.5 rounded-full">ADMIN</span>
+        </div>
+        <button 
+          onClick={() => setSidebarOpen(true)}
+          className="p-2 rounded-lg hover:bg-gray-100 transition-colors"
+        >
+          <Menu className="w-6 h-6 text-gray-600" />
+        </button>
+      </header>
+
+      {/* Mobile Sidebar Overlay */}
+      <AnimatePresence>
+        {sidebarOpen && (
+          <>
+            <motion.div 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="md:hidden fixed inset-0 bg-black/50 z-30"
+              onClick={() => setSidebarOpen(false)}
+            />
+            <motion.aside 
+              initial={{ x: -280 }}
+              animate={{ x: 0 }}
+              exit={{ x: -280 }}
+              transition={{ type: 'spring', damping: 25, stiffness: 300 }}
+              className="md:hidden w-72 bg-white flex flex-col fixed h-full z-40 shadow-xl"
+            >
+              <div className="p-4 border-b border-gray-100 flex items-center justify-between">
+                <div className="flex flex-col">
+                  <h1 className="text-lg font-black text-gray-900 tracking-tight">Tripcngo</h1>
+                  <span className="text-[10px] text-gray-400 truncate max-w-[140px]">{user?.email}</span>
+                </div>
+                <button 
+                  onClick={() => setSidebarOpen(false)}
+                  className="p-2 rounded-lg hover:bg-gray-100 transition-colors"
+                >
+                  <X className="w-5 h-5 text-gray-500" />
+                </button>
+              </div>
+              <nav className="flex-1 p-4 space-y-2 overflow-y-auto">
+                {/* 内容管理 - 可折叠 */}
+                <div className="space-y-1">
+                  <button 
+                    onClick={() => setMobileMenuExpanded(mobileMenuExpanded === 'content' ? null : 'content')}
+                    className={`w-full flex items-center justify-between gap-3 px-4 py-3 rounded-xl font-bold transition-all ${activeAdminView === 'articles' && !showForm ? 'bg-[#1b887a] text-white shadow-md' : 'text-gray-500 hover:bg-gray-100'}`}
+                  >
+                    <div className="flex items-center gap-3">
+                      <FileText className="w-5 h-5" /> 内容管理
+                    </div>
+                    {mobileMenuExpanded === 'content' ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+                  </button>
+                  <AnimatePresence>
+                    {mobileMenuExpanded === 'content' && (
+                      <motion.div
+                        initial={{ height: 0, opacity: 0 }}
+                        animate={{ height: 'auto', opacity: 1 }}
+                        exit={{ height: 0, opacity: 0 }}
+                        transition={{ duration: 0.2 }}
+                        className="overflow-hidden"
+                      >
+                        <div className="pl-4 space-y-1 py-1">
+                          <button 
+                            onClick={() => { setActiveAdminView('articles'); setShowForm(false); setSidebarOpen(false); setMobileMenuExpanded(null); }}
+                            className={`w-full flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-medium transition-all ${activeAdminView === 'articles' && !showForm ? 'bg-[#1b887a]/10 text-[#1b887a]' : 'text-gray-400 hover:bg-gray-50 hover:text-gray-600'}`}
+                          >
+                            文章列表
+                          </button>
+                          <button 
+                            onClick={() => { setShowForm(true); setSidebarOpen(false); setMobileMenuExpanded(null); }}
+                            className={`w-full flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-medium transition-all ${showForm ? 'bg-[#1b887a]/10 text-[#1b887a]' : 'text-gray-400 hover:bg-gray-50 hover:text-gray-600'}`}
+                          >
+                            发布文章
+                          </button>
+                        </div>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </div>
+
+                {/* 城市管理 - 可折叠 */}
+                <div className="space-y-1">
+                  <button 
+                    onClick={() => setMobileMenuExpanded(mobileMenuExpanded === 'cities' ? null : 'cities')}
+                    className={`w-full flex items-center justify-between gap-3 px-4 py-3 rounded-xl font-bold transition-all ${activeAdminView === 'cities' && !showForm ? 'bg-[#1b887a] text-white shadow-md' : 'text-gray-500 hover:bg-gray-100'}`}
+                  >
+                    <div className="flex items-center gap-3">
+                      <Building2 className="w-5 h-5" /> 城市管理
+                    </div>
+                    {mobileMenuExpanded === 'cities' ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+                  </button>
+                  <AnimatePresence>
+                    {mobileMenuExpanded === 'cities' && (
+                      <motion.div
+                        initial={{ height: 0, opacity: 0 }}
+                        animate={{ height: 'auto', opacity: 1 }}
+                        exit={{ height: 0, opacity: 0 }}
+                        transition={{ duration: 0.2 }}
+                        className="overflow-hidden"
+                      >
+                        <div className="pl-4 space-y-1 py-1">
+                          <button 
+                            onClick={() => { setActiveAdminView('cities'); setShowForm(false); setSidebarOpen(false); setMobileMenuExpanded(null); }}
+                            className={`w-full flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-medium transition-all ${activeAdminView === 'cities' && !showForm ? 'bg-[#1b887a]/10 text-[#1b887a]' : 'text-gray-400 hover:bg-gray-50 hover:text-gray-600'}`}
+                          >
+                            城市列表
+                          </button>
+                          <button 
+                            onClick={() => { setEditingCity(null); setShowCityForm(true); setSidebarOpen(false); setMobileMenuExpanded(null); }}
+                            className="w-full flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-medium text-gray-400 hover:bg-gray-50 hover:text-gray-600 transition-all"
+                          >
+                            新增城市
+                          </button>
+                        </div>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </div>
+
+                {/* 签证与签名 - 可折叠 */}
+                <div className="space-y-1">
+                  <button 
+                    onClick={() => setMobileMenuExpanded(mobileMenuExpanded === 'visa' ? null : 'visa')}
+                    className={`w-full flex items-center justify-between gap-3 px-4 py-3 rounded-xl font-bold transition-all ${activeAdminView === 'visa' && !showForm ? 'bg-[#1b887a] text-white shadow-md' : 'text-gray-500 hover:bg-gray-100'}`}
+                  >
+                    <div className="flex items-center gap-3">
+                      <Globe className="w-5 h-5" /> 签证与签名
+                    </div>
+                    {mobileMenuExpanded === 'visa' ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+                  </button>
+                  <AnimatePresence>
+                    {mobileMenuExpanded === 'visa' && (
+                      <motion.div
+                        initial={{ height: 0, opacity: 0 }}
+                        animate={{ height: 'auto', opacity: 1 }}
+                        exit={{ height: 0, opacity: 0 }}
+                        transition={{ duration: 0.2 }}
+                        className="overflow-hidden"
+                      >
+                        <div className="pl-4 space-y-1 py-1">
+                          <button 
+                            onClick={() => { setActiveAdminView('visa'); setShowForm(false); setSidebarOpen(false); setMobileMenuExpanded(null); }}
+                            className={`w-full flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-medium transition-all ${activeAdminView === 'visa' && !showForm ? 'bg-[#1b887a]/10 text-[#1b887a]' : 'text-gray-400 hover:bg-gray-50 hover:text-gray-600'}`}
+                          >
+                            签证管理
+                          </button>
+                        </div>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </div>
+
+                {/* 目录应用 - 可折叠 */}
+                <div className="space-y-1">
+                  <button 
+                    onClick={() => setMobileMenuExpanded(mobileMenuExpanded === 'apps' ? null : 'apps')}
+                    className={`w-full flex items-center justify-between gap-3 px-4 py-3 rounded-xl font-bold transition-all ${activeAdminView === 'apps' && !showForm ? 'bg-[#1b887a] text-white shadow-md' : 'text-gray-500 hover:bg-gray-100'}`}
+                  >
+                    <div className="flex items-center gap-3">
+                      <Plane className="w-5 h-5" /> 目录应用
+                    </div>
+                    {mobileMenuExpanded === 'apps' ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+                  </button>
+                  <AnimatePresence>
+                    {mobileMenuExpanded === 'apps' && (
+                      <motion.div
+                        initial={{ height: 0, opacity: 0 }}
+                        animate={{ height: 'auto', opacity: 1 }}
+                        exit={{ height: 0, opacity: 0 }}
+                        transition={{ duration: 0.2 }}
+                        className="overflow-hidden"
+                      >
+                        <div className="pl-4 space-y-1 py-1">
+                          <button 
+                            onClick={() => { setActiveAdminView('apps'); setShowForm(false); setSidebarOpen(false); setMobileMenuExpanded(null); }}
+                            className={`w-full flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-medium transition-all ${activeAdminView === 'apps' && !showForm ? 'bg-[#1b887a]/10 text-[#1b887a]' : 'text-gray-400 hover:bg-gray-50 hover:text-gray-600'}`}
+                          >
+                            应用管理
+                          </button>
+                        </div>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </div>
+
+                {/* 静态页面 - 可折叠 */}
+                <div className="space-y-1">
+                  <button 
+                    onClick={() => setMobileMenuExpanded(mobileMenuExpanded === 'pages' ? null : 'pages')}
+                    className={`w-full flex items-center justify-between gap-3 px-4 py-3 rounded-xl font-bold transition-all ${activeAdminView === 'pages' && !showForm ? 'bg-[#1b887a] text-white shadow-md' : 'text-gray-500 hover:bg-gray-100'}`}
+                  >
+                    <div className="flex items-center gap-3">
+                      <FileText className="w-5 h-5" /> 静态页面
+                    </div>
+                    {mobileMenuExpanded === 'pages' ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+                  </button>
+                  <AnimatePresence>
+                    {mobileMenuExpanded === 'pages' && (
+                      <motion.div
+                        initial={{ height: 0, opacity: 0 }}
+                        animate={{ height: 'auto', opacity: 1 }}
+                        exit={{ height: 0, opacity: 0 }}
+                        transition={{ duration: 0.2 }}
+                        className="overflow-hidden"
+                      >
+                        <div className="pl-4 space-y-1 py-1">
+                          <button 
+                            onClick={() => { setActiveAdminView('pages'); setShowForm(false); setSidebarOpen(false); setMobileMenuExpanded(null); }}
+                            className={`w-full flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-medium transition-all ${activeAdminView === 'pages' && !showForm ? 'bg-[#1b887a]/10 text-[#1b887a]' : 'text-gray-400 hover:bg-gray-50 hover:text-gray-600'}`}
+                          >
+                            页面管理
+                          </button>
+                        </div>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </div>
+
+                {/* 翻译管理 - 可折叠 */}
+                <div className="space-y-1">
+                  <button 
+                    onClick={() => setMobileMenuExpanded(mobileMenuExpanded === 'translations' ? null : 'translations')}
+                    className={`w-full flex items-center justify-between gap-3 px-4 py-3 rounded-xl font-bold transition-all ${activeAdminView === 'translations' && !showForm ? 'bg-[#1b887a] text-white shadow-md' : 'text-gray-500 hover:bg-gray-100'}`}
+                  >
+                    <div className="flex items-center gap-3">
+                      <Languages className="w-5 h-5" /> 翻译管理
+                    </div>
+                    {mobileMenuExpanded === 'translations' ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+                  </button>
+                  <AnimatePresence>
+                    {mobileMenuExpanded === 'translations' && (
+                      <motion.div
+                        initial={{ height: 0, opacity: 0 }}
+                        animate={{ height: 'auto', opacity: 1 }}
+                        exit={{ height: 0, opacity: 0 }}
+                        transition={{ duration: 0.2 }}
+                        className="overflow-hidden"
+                      >
+                        <div className="pl-4 space-y-1 py-1">
+                          <button 
+                            onClick={() => { setActiveAdminView('translations'); setShowForm(false); setSidebarOpen(false); setMobileMenuExpanded(null); }}
+                            className={`w-full flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-medium transition-all ${activeAdminView === 'translations' && !showForm ? 'bg-[#1b887a]/10 text-[#1b887a]' : 'text-gray-400 hover:bg-gray-50 hover:text-gray-600'}`}
+                          >
+                            翻译管理
+                          </button>
+                        </div>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </div>
+              </nav>
+              <div className="p-4 border-t border-gray-100 pb-8">
+                <button 
+                  onClick={handleLogout}
+                  className="w-full flex items-center gap-3 px-4 py-3 rounded-xl font-bold text-gray-500 hover:bg-red-50 hover:text-red-500 transition-all"
+                >
+                  <LogOut className="w-5 h-5" /> 退出系统
+                </button>
+              </div>
+            </motion.aside>
+          </>
+        )}
+      </AnimatePresence>
+
+      {/* Desktop Sidebar */}
       <aside className="w-64 bg-white border-r border-gray-200 flex flex-col fixed h-full z-10 hidden md:flex shadow-sm">
         <div className="p-6 border-b border-gray-100 flex items-center justify-between">
           <div className="flex flex-col">
@@ -1210,7 +1480,7 @@ export default function Admin() {
       </aside>
 
       {/* Main Content */}
-      <main className="flex-1 md:ml-64 p-6 md:p-10">
+      <main className="flex-1 md:ml-64 p-4 md:p-10 pt-16 md:pt-10">
         <div className="max-w-[1240px] mx-auto">
           <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-6">
             <div>
