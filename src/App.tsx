@@ -44,7 +44,19 @@ function Layout() {
 function RootRedirect() {
   const { language } = useLanguage();
   const location = useLocation();
-  const langPrefix = language === 'zh' ? 'cn' : 'en';
+  const langPrefixMap: Record<string, string> = {
+    zh: 'cn',
+    tw: 'tw',
+    en: 'en',
+    ja: 'ja',
+    ko: 'ko',
+    ru: 'ru',
+    fr: 'fr',
+    es: 'es',
+    de: 'de',
+    it: 'it'
+  };
+  const langPrefix = langPrefixMap[language] || 'en';
   
   // Prevent redirect loop if mounted on root
   const targetPath = location.pathname === '/' ? `/${langPrefix}` : `/${langPrefix}${location.pathname}`;
@@ -53,15 +65,25 @@ function RootRedirect() {
 
 function LangRoute() {
   const { langParam } = useParams();
-  const { language, setLanguage } = useLanguage();
+  const { setLanguage } = useLanguage();
 
   useEffect(() => {
-    if (langParam === 'cn' && language !== 'zh') {
-      setLanguage('zh');
-    } else if (langParam === 'en' && language !== 'en') {
-      setLanguage('en');
-    }
-  }, [langParam, language, setLanguage]);
+    const langMap: Record<string, string> = {
+      cn: 'zh',
+      tw: 'tw',
+      en: 'en',
+      ja: 'ja',
+      ko: 'ko',
+      ru: 'ru',
+      fr: 'fr',
+      es: 'es',
+      de: 'de',
+      it: 'it'
+    };
+    const targetLang = langMap[langParam || ''] || 'en';
+    // 只从 URL 同步到 Context，不依赖 Context 状态以避免竞态
+    setLanguage(targetLang as any);
+  }, [langParam, setLanguage]);
 
   return (
     <Routes>
@@ -96,7 +118,8 @@ function LangRoute() {
 
 function LangRouteWrapper() {
   const { langParam } = useParams();
-  if (langParam !== 'cn' && langParam !== 'en') {
+  const validPrefixes = ['cn', 'tw', 'en', 'ja', 'ko', 'ru', 'fr', 'es', 'de', 'it'];
+  if (!langParam || !validPrefixes.includes(langParam)) {
       return <RootRedirect />;
   }
   return <LangRoute />;

@@ -53,8 +53,8 @@ const AboutUs = () => {
                         <p className="text-gray-600 mt-4 leading-relaxed">{t('about.story.p5')}</p>
                     </div>
                     <img 
-                        src="https://images.unsplash.com/photo-1545569341-9eb8b30179d6?w=800&q=80&auto=format&fit=crop" 
-                        alt="City Skyline" 
+                        src="https://static.tripcngo.com/ing/image1bg.jpg" 
+                        alt="Our Story" 
                         className="rounded-xl shadow-lg"
                     />
                 </div>
@@ -65,13 +65,15 @@ const AboutUs = () => {
                     <p className="text-center text-gray-500 mb-10">{t('about.team.subtitle')}</p>
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
                         {[
-                            { name: "Miracle Zhou", role: language === 'zh' ? "创始人，户外登山爱好者" : "Founder, Outdoor Enthusiast" },
-                            { name: "Wood Mao", role: language === 'zh' ? "旅行推荐官，骑行16000公里环游中国" : "Travel Specialist, Circled China on Bike" },
-                            { name: "Ting Luo", role: language === 'zh' ? "旅行推荐官，小众旅行爱好者" : "Travel Specialist, Hidden Gem Explorer" },
-                            { name: "Aguest Chen", role: language === 'zh' ? "旅行推荐官，英语老师，爱好旅行" : "Travel Specialist, English Teacher" }
+                            { name: "Miracle Zhou", role: language === 'zh' ? "创始人，户外登山爱好者" : "Founder, Outdoor Enthusiast", img: "https://static.tripcngo.com/ing/Miracle%20Zhou.jpg" },
+                            { name: "Wood Mao", role: language === 'zh' ? "旅行推荐官，骑行16000公里环游中国" : "Travel Specialist, Circled China on Bike", img: "https://static.tripcngo.com/ing/Wood%20Mao.jpg" },
+                            { name: "Ting Luo", role: language === 'zh' ? "旅行推荐官，小众旅行爱好者" : "Travel Specialist, Hidden Gem Explorer", img: "https://static.tripcngo.com/ing/Ting%20Luo.jpg" },
+                            { name: "Aguest Chen", role: language === 'zh' ? "旅行推荐官，英语老师，爱好旅行" : "Travel Specialist, English Teacher", img: "https://static.tripcngo.com/ing/Aguest%20Chen.jpg" }
                         ].map((member, i) => (
                             <div key={i} className="text-center">
-                                <div className="w-full aspect-square bg-gray-200 rounded-lg mb-4 flex items-center justify-center text-4xl">👤</div>
+                                <div className="w-full aspect-square rounded-lg mb-4 overflow-hidden">
+                                    <img src={member.img} alt={member.name} className="w-full h-full object-cover" />
+                                </div>
                                 <h3 className="font-bold">{member.name}</h3>
                                 <p className="text-sm text-gray-600">{member.role}</p>
                             </div>

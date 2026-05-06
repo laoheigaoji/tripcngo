@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { Globe, ChevronDown, Menu, X, CheckSquare, Compass, PlayCircle, BookOpen, Shield, ScanLine, Type, Calculator, Languages, Check } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
-import { useLanguage } from '../context/LanguageContext';
+import { useLanguage, Language } from '../context/LanguageContext';
 import Apps from '../pages/Apps';
 
 export default function Navbar() {
@@ -13,7 +13,19 @@ export default function Navbar() {
   const [showLangBanner, setShowLangBanner] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
-  const langPrefix = language === 'zh' ? 'cn' : 'en';
+  const langToPrefix: Record<string, string> = {
+    zh: 'cn',
+    tw: 'tw',
+    en: 'en',
+    ja: 'ja',
+    ko: 'ko',
+    ru: 'ru',
+    fr: 'fr',
+    es: 'es',
+    de: 'de',
+    it: 'it'
+  };
+  const langPrefix = langToPrefix[language] || 'en';
 
   useEffect(() => {
     const handleScroll = () => {
@@ -63,8 +75,16 @@ export default function Navbar() {
   ];
 
   const languages = [
-    { code: 'zh', name: '简体中文', flag: 'CN' },
-    { code: 'en', name: 'English', flag: 'EN' }
+    { code: 'zh', name: '简体中文', flag: 'https://pub-bfcc5034e6b14811955a8bed50650469.r2.dev/ing/%E4%B8%AD%E5%9B%BD%E5%9B%BD%E6%97%97.png' },
+    { code: 'en', name: 'English', flag: 'https://pub-bfcc5034e6b14811955a8bed50650469.r2.dev/ing/USA.png' },
+    { code: 'ja', name: '日本語', flag: 'https://pub-bfcc5034e6b14811955a8bed50650469.r2.dev/ing/%E6%97%A5%E6%9C%AC%E5%9B%BD%E6%97%97.png' },
+    { code: 'ko', name: '한국어', flag: 'https://pub-bfcc5034e6b14811955a8bed50650469.r2.dev/ing/%E9%9F%A9%E5%9B%BD%E5%9B%BD%E6%97%97.png' },
+    { code: 'ru', name: 'Русский', flag: 'https://static.tripcngo.com/%E4%BF%84%E7%BD%97%E6%96%AF%E5%9B%BD%E6%97%97.png' },
+    { code: 'fr', name: 'Français', flag: 'https://pub-bfcc5034e6b14811955a8bed50650469.r2.dev/ing/%E6%B3%95%E5%9B%BD%E5%9B%BD%E6%97%97.png' },
+    { code: 'es', name: 'Español', flag: 'https://static.tripcngo.com/%E8%A5%BF%E7%8F%AD%E7%89%99%E5%9B%BD%E6%97%97-%E6%96%B9.png' },
+    { code: 'de', name: 'Deutsch', flag: 'https://pub-bfcc5034e6b14811955a8bed50650469.r2.dev/ing/%E5%BE%B7%E5%9B%BD%E5%9B%BD%E6%97%97.png' },
+    { code: 'tw', name: '繁體中文', flag: 'https://pub-bfcc5034e6b14811955a8bed50650469.r2.dev/ing/%E7%B9%81%E4%BD%93%E4%B8%AD%E6%96%87.png' },
+    { code: 'it', name: 'Italiano', flag: 'https://static.tripcngo.com/%E6%84%8F%E5%A4%A7%E5%88%A9%E5%9B%BD%E6%97%97.png' }
   ];
 
   return (
@@ -274,19 +294,28 @@ export default function Navbar() {
                   key={lang.code}
                   className="w-full flex items-center justify-between px-4 py-2.5 text-sm hover:bg-gray-50 transition-colors text-left"
                   onClick={() => {
-                    const newLangPrefix = lang.code === 'zh' ? 'cn' : 'en';
+                    setLanguage(lang.code as Language);
+                    const langPrefixMap: Record<string, string> = {
+                      zh: 'cn', tw: 'tw', en: 'en', ja: 'ja',
+                      ko: 'ko', ru: 'ru', fr: 'fr', es: 'es',
+                      de: 'de', it: 'it'
+                    };
+                    const newLangPrefix = langPrefixMap[lang.code] || 'en';
                     let newPath = location.pathname;
                     const pathParts = newPath.split('/');
-                    if (pathParts[1] === 'cn' || pathParts[1] === 'en') {
+                    const validPrefixes = ['cn', 'tw', 'en', 'ja', 'ko', 'ru', 'fr', 'es', 'de', 'it'];
+                    if (validPrefixes.includes(pathParts[1])) {
                       pathParts[1] = newLangPrefix;
                       newPath = pathParts.join('/');
                     } else {
                       newPath = `/${newLangPrefix}${newPath === '/' ? '' : newPath}`;
                     }
                     navigate(newPath + location.search);
+                    setIsLangDropdownOpen(false);
                   }}
                 >
                   <div className="flex items-center gap-3">
+                    <img src={lang.flag} alt={lang.name} className="w-5 h-4 object-cover rounded-sm" />
                     <span className="font-medium">{lang.name}</span>
                   </div>
                   {language === lang.code && <Check className="w-4 h-4 text-green-600" />}
@@ -306,24 +335,60 @@ export default function Navbar() {
 
         {/* Mobile Actions */}
         <div className="md:hidden flex items-center gap-2">
-          <button 
-            className="p-2 rounded-full bg-white/10 border border-white/20 flex items-center justify-center mr-1"
-            onClick={() => {
-              const newLangPrefix = language === 'zh' ? 'en' : 'cn';
-              let newPath = location.pathname;
-              const pathParts = newPath.split('/');
-              if (pathParts[1] === 'cn' || pathParts[1] === 'en') {
-                pathParts[1] = newLangPrefix;
-                newPath = pathParts.join('/');
-              } else {
-                newPath = `/${newLangPrefix}${newPath === '/' ? '' : newPath}`;
-              }
-              navigate(newPath + location.search);
-            }}
-            title={language === 'zh' ? 'Switch to English' : '切换为中文'}
-          >
-            <Globe className="w-5 h-5" />
-          </button>
+          <div className="relative">
+            <button 
+              className="p-2 rounded-full bg-white/10 border border-white/20 flex items-center justify-center mr-1"
+              onClick={() => setIsLangDropdownOpen(!isLangDropdownOpen)}
+            >
+              <Globe className="w-5 h-5" />
+            </button>
+
+            {/* Mobile Language Dropdown */}
+            <div className={`absolute top-full right-0 mt-2 w-48 bg-gray-900 rounded-lg shadow-xl border border-gray-700 py-1 text-white transition-all duration-200 transform origin-top-right z-50
+              ${isLangDropdownOpen ? 'opacity-100 visible translate-y-0' : 'opacity-0 invisible -translate-y-2'}
+            `}>
+              {languages.map((lang) => (
+                <button
+                  key={lang.code}
+                  className="w-full flex items-center justify-between px-4 py-2.5 text-sm hover:bg-gray-800 transition-colors text-left"
+                  onClick={() => {
+                    setLanguage(lang.code as Language);
+                    const langPrefixMap: Record<string, string> = {
+                      zh: 'cn', tw: 'tw', en: 'en', ja: 'ja',
+                      ko: 'ko', ru: 'ru', fr: 'fr', es: 'es',
+                      de: 'de', it: 'it'
+                    };
+                    const newLangPrefix = langPrefixMap[lang.code] || 'en';
+                    let newPath = location.pathname;
+                    const pathParts = newPath.split('/');
+                    const validPrefixes = ['cn', 'tw', 'en', 'ja', 'ko', 'ru', 'fr', 'es', 'de', 'it'];
+                    if (validPrefixes.includes(pathParts[1])) {
+                      pathParts[1] = newLangPrefix;
+                      newPath = pathParts.join('/');
+                    } else {
+                      newPath = `/${newLangPrefix}${newPath === '/' ? '' : newPath}`;
+                    }
+                    navigate(newPath + location.search);
+                    setIsLangDropdownOpen(false);
+                  }}
+                >
+                  <div className="flex items-center gap-3">
+                    <img src={lang.flag} alt={lang.name} className="w-5 h-4 object-cover rounded-sm" />
+                    <span className="font-medium">{lang.name}</span>
+                  </div>
+                  {language === lang.code && <Check className="w-4 h-4 text-green-400" />}
+                </button>
+              ))}
+            </div>
+
+            {/* Click outside to close */}
+            {isLangDropdownOpen && (
+              <div 
+                className="fixed inset-0 z-[-1]" 
+                onClick={() => setIsLangDropdownOpen(false)}
+              />
+            )}
+          </div>
           
           <button 
             className="p-2 rounded-md"
@@ -372,32 +437,6 @@ export default function Navbar() {
                 </Link>
               ))}
             </nav>
-            
-            <div className="mt-auto pt-8 flex items-center justify-between">
-              <div className="flex gap-4">
-                {languages.map((lang) => (
-                   <button 
-                    key={lang.code}
-                    className={`px-4 py-2 rounded-full border flex items-center gap-2 ${language === lang.code ? 'bg-green-600 border-green-600' : 'bg-transparent border-white/20'}`}
-                    onClick={() => {
-                      const newLangPrefix = lang.code === 'zh' ? 'cn' : 'en';
-                      let newPath = location.pathname;
-                      const pathParts = newPath.split('/');
-                      if (pathParts[1] === 'cn' || pathParts[1] === 'en') {
-                        pathParts[1] = newLangPrefix;
-                        newPath = pathParts.join('/');
-                      } else {
-                        newPath = `/${newLangPrefix}${newPath === '/' ? '' : newPath}`;
-                      }
-                      navigate(newPath + location.search);
-                    }}
-                   >
-                     <Globe className="w-4 h-4" />
-                     <span>{lang.name}</span>
-                   </button>
-                ))}
-              </div>
-            </div>
           </motion.div>
         )}
       </AnimatePresence>
