@@ -67,10 +67,15 @@ const SEO: React.FC<SEOProps> = ({
   
   const fullTitle = currentTitle ? `${currentTitle} | tripcngo.com | ${suffix}` : (isHome ? siteTitle : siteTitle);
   
-  const hreflangTags = Object.entries(languageMap).map(([lang, config]) => ({
-    lang: config.hreflang,
-    href: `${BASE_URL}${config.path}${url.replace(BASE_URL, '')}`
-  }));
+  const hreflangTags = Object.entries(languageMap).map(([lang, config]) => {
+    const currentPath = url.replace(BASE_URL, '');
+    const langPath = languageMap[language].path;
+    const relativePart = currentPath.startsWith(langPath) ? currentPath.substring(langPath.length) : currentPath;
+    return {
+      lang: config.hreflang,
+      href: `${BASE_URL}${config.path}${relativePart}`
+    };
+  });
   
   const ogLocale = languageMap[language]?.hreflang || 'zh-CN';
   const ogLocales = hreflangTags.map(t => t.lang).filter(l => l !== ogLocale);

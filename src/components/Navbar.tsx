@@ -408,7 +408,7 @@ export default function Navbar() {
             animate={{ opacity: 1, x: 0 }}
             exit={{ opacity: 0, x: '100%' }}
             transition={{ type: 'tween', duration: 0.3 }}
-            className="fixed inset-0 bg-[#1a1a1a] z-50 p-6 flex flex-col text-white h-screen overflow-y-auto"
+            className="fixed top-0 bottom-0 right-0 w-[85%] bg-white z-50 p-6 flex flex-col text-gray-900 h-screen overflow-y-auto shadow-2xl"
           >
             <div className="flex justify-between items-center mb-8">
               <div className="flex flex-col">
@@ -416,7 +416,7 @@ export default function Navbar() {
                 <span className="text-[10px] text-gray-400 tracking-wider -mt-1">{t('nav.slogan')}</span>
               </div>
               <button 
-                className="p-2 hover:bg-white/10 rounded-md"
+                className="p-2 hover:bg-gray-100 rounded-md text-gray-900"
                 onClick={() => { setIsMobileMenuOpen(false); setMobileExpandedMenu(null); }}
               >
                 <X className="w-6 h-6" />
@@ -486,22 +486,24 @@ export default function Navbar() {
                       className="overflow-hidden"
                     >
                       <div className="pl-4 pb-4 space-y-3">
-                        <div className="text-green-400 text-sm font-bold mb-2 mt-2">{t('discover.hotCities')}</div>
-                        <Link to={`/${langPrefix}/cities/beijing`} onClick={() => { setIsMobileMenuOpen(false); setMobileExpandedMenu(null); }} className="block text-gray-300 hover:text-green-400 text-base py-1">{t('city.beijing')}</Link>
-                        <Link to={`/${langPrefix}/cities/shanghai`} onClick={() => { setIsMobileMenuOpen(false); setMobileExpandedMenu(null); }} className="block text-gray-300 hover:text-green-400 text-base py-1">{t('city.shanghai')}</Link>
-                        <Link to={`/${langPrefix}/cities/LZ1r5Fsq3bOUHUeKVgIv`} onClick={() => { setIsMobileMenuOpen(false); setMobileExpandedMenu(null); }} className="block text-gray-300 hover:text-green-400 text-base py-1">{t('city.guangzhou')}</Link>
-                        <Link to={`/${langPrefix}/cities/oNIvYqn2fcHSUN6mpv7G`} onClick={() => { setIsMobileMenuOpen(false); setMobileExpandedMenu(null); }} className="block text-gray-300 hover:text-green-400 text-base py-1">{t('city.shenzhen')}</Link>
-                        <Link to={`/${langPrefix}/cities/XxxHqxEftFPTAfw09w37`} onClick={() => { setIsMobileMenuOpen(false); setMobileExpandedMenu(null); }} className="block text-gray-300 hover:text-green-400 text-base py-1">{t('city.hangzhou')}</Link>
-                        <Link to={`/${langPrefix}/cities/eVvE8j6wkETbi3jgn2Kc`} onClick={() => { setIsMobileMenuOpen(false); setMobileExpandedMenu(null); }} className="block text-gray-300 hover:text-green-400 text-base py-1">{t('city.chongqing')}</Link>
-                        <Link to={`/${langPrefix}/cities/lOvgtPfMDTaEi3jIre9D`} onClick={() => { setIsMobileMenuOpen(false); setMobileExpandedMenu(null); }} className="block text-gray-300 hover:text-green-400 text-base py-1">{t('city.chengdu')}</Link>
-                        <Link to={`/${langPrefix}/cities/AM4LKEQcsclFhG1LuSKn`} onClick={() => { setIsMobileMenuOpen(false); setMobileExpandedMenu(null); }} className="block text-gray-300 hover:text-green-400 text-base py-1">{t('city.xian')}</Link>
-                        <Link to={`/${langPrefix}/cities/YF8WzVigZrymgqJJLanF`} onClick={() => { setIsMobileMenuOpen(false); setMobileExpandedMenu(null); }} className="block text-gray-300 hover:text-green-400 text-base py-1">{t('city.changsha')}</Link>
-                        <Link to={`/${langPrefix}/cities/KI6GE4ovZK6fmWTqUx5q`} onClick={() => { setIsMobileMenuOpen(false); setMobileExpandedMenu(null); }} className="block text-gray-300 hover:text-green-400 text-base py-1">{t('city.xiamen')}</Link>
-                        <Link to={`/${langPrefix}/cities`} onClick={() => { setIsMobileMenuOpen(false); setMobileExpandedMenu(null); }} className="block text-green-400 hover:text-green-300 text-sm font-medium py-2">{t('discover.moreCities')} &gt;&gt;</Link>
-                        <div className="border-t border-white/10 pt-3 mt-3">
-                          <div className="text-green-400 text-sm font-bold mb-2">{t('discover.guides')}</div>
-                          <Link to={`/${langPrefix}/articles`} onClick={() => { setIsMobileMenuOpen(false); setMobileExpandedMenu(null); }} className="block text-gray-300 hover:text-green-400 text-base py-1">{t('discover.guides')}</Link>
-                          <Link to={`/${langPrefix}/guide`} onClick={() => { setIsMobileMenuOpen(false); setMobileExpandedMenu(null); }} className="block text-gray-300 hover:text-green-400 text-base py-1">{t('discover.pocket')}</Link>
+                        <div className="text-green-600 text-sm font-bold mb-2 mt-2">{t('discover.hotCities')}</div>
+                        <div className="grid grid-cols-2 gap-2">
+                            <Link to={`/${langPrefix}/cities/beijing`} onClick={() => { setIsMobileMenuOpen(false); setMobileExpandedMenu(null); }} className="block text-gray-700 hover:text-green-600 text-sm py-1 truncate">{t('city.beijing')}</Link>
+                            <Link to={`/${langPrefix}/cities/shanghai`} onClick={() => { setIsMobileMenuOpen(false); setMobileExpandedMenu(null); }} className="block text-gray-700 hover:text-green-600 text-sm py-1 truncate">{t('city.shanghai')}</Link>
+                            <Link to={`/${langPrefix}/cities/LZ1r5Fsq3bOUHUeKVgIv`} onClick={() => { setIsMobileMenuOpen(false); setMobileExpandedMenu(null); }} className="block text-gray-700 hover:text-green-600 text-sm py-1 truncate">{t('city.guangzhou')}</Link>
+                            <Link to={`/${langPrefix}/cities/oNIvYqn2fcHSUN6mpv7G`} onClick={() => { setIsMobileMenuOpen(false); setMobileExpandedMenu(null); }} className="block text-gray-700 hover:text-green-600 text-sm py-1 truncate">{t('city.shenzhen')}</Link>
+                            <Link to={`/${langPrefix}/cities/XxxHqxEftFPTAfw09w37`} onClick={() => { setIsMobileMenuOpen(false); setMobileExpandedMenu(null); }} className="block text-gray-700 hover:text-green-600 text-sm py-1 truncate">{t('city.hangzhou')}</Link>
+                            <Link to={`/${langPrefix}/cities/eVvE8j6wkETbi3jgn2Kc`} onClick={() => { setIsMobileMenuOpen(false); setMobileExpandedMenu(null); }} className="block text-gray-700 hover:text-green-600 text-sm py-1 truncate">{t('city.chongqing')}</Link>
+                            <Link to={`/${langPrefix}/cities/lOvgtPfMDTaEi3jIre9D`} onClick={() => { setIsMobileMenuOpen(false); setMobileExpandedMenu(null); }} className="block text-gray-700 hover:text-green-600 text-sm py-1 truncate">{t('city.chengdu')}</Link>
+                            <Link to={`/${langPrefix}/cities/AM4LKEQcsclFhG1LuSKn`} onClick={() => { setIsMobileMenuOpen(false); setMobileExpandedMenu(null); }} className="block text-gray-700 hover:text-green-600 text-sm py-1 truncate">{t('city.xian')}</Link>
+                            <Link to={`/${langPrefix}/cities/YF8WzVigZrymgqJJLanF`} onClick={() => { setIsMobileMenuOpen(false); setMobileExpandedMenu(null); }} className="block text-gray-700 hover:text-green-600 text-sm py-1 truncate">{t('city.changsha')}</Link>
+                            <Link to={`/${langPrefix}/cities/KI6GE4ovZK6fmWTqUx5q`} onClick={() => { setIsMobileMenuOpen(false); setMobileExpandedMenu(null); }} className="block text-gray-700 hover:text-green-600 text-sm py-1 truncate">{t('city.xiamen')}</Link>
+                        </div>
+                        <Link to={`/${langPrefix}/cities`} onClick={() => { setIsMobileMenuOpen(false); setMobileExpandedMenu(null); }} className="block text-green-600 hover:text-green-500 text-sm font-medium py-2">{t('discover.moreCities')} &gt;&gt;</Link>
+                        <div className="border-t border-gray-100 pt-3 mt-3">
+                          <div className="text-green-600 text-sm font-bold mb-2">{t('discover.guides')}</div>
+                          <Link to={`/${langPrefix}/articles`} onClick={() => { setIsMobileMenuOpen(false); setMobileExpandedMenu(null); }} className="block text-gray-700 hover:text-green-600 text-base py-1">{t('discover.guides')}</Link>
+                          <Link to={`/${langPrefix}/guide`} onClick={() => { setIsMobileMenuOpen(false); setMobileExpandedMenu(null); }} className="block text-gray-700 hover:text-green-600 text-base py-1">{t('discover.pocket')}</Link>
                         </div>
                       </div>
                     </motion.div>

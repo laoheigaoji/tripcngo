@@ -11,8 +11,10 @@ export default function AuthCallback() {
       if (session) {
         // Auth successful
         if (window.opener) {
-          // Send message to parent if needed, but Supabase localStorage sync usually handles it
+          // Send message to parent
           window.opener.postMessage({ type: 'AUTH_SUCCESS' }, window.location.origin);
+          // Redirect to the desired path in the opener window
+          window.opener.location.href = window.location.origin + '/ja/guide';
           window.close();
         } else {
           // If not in a popup, redirect to home

@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { supabaseAdmin } from '../../lib/supabase';
+import { supabaseAdmin } from '../../lib/supabaseAdmin';
 import { Plus, Edit2, Trash2, Save, X } from 'lucide-react';
 
 interface PageSection {

@@ -68,7 +68,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           queryParams: {
             prompt: 'select_account',
           },
-          redirectTo: window.location.origin + '/auth/callback',
+          // 计算当前的 origin，确保在 iframe 中也能正确工作
+          redirectTo: `${window.location.origin}/auth/callback`,
           skipBrowserRedirect: true,
         },
       });

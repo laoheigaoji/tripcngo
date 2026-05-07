@@ -3,6 +3,7 @@ import { useParams, Link } from 'react-router-dom';
 import { motion } from 'motion/react';
 import { useLanguage } from '../../context/LanguageContext';
 import SEO from '../../components/SEO';
+import ShareButton from '../../components/ShareButton';
 import { 
   ChevronRight, 
   Eye, 
@@ -334,15 +335,18 @@ export default function GuideDetail() {
       <section className="bg-[#005043] pt-32 pb-16 text-white">
         <div className="max-w-[1240px] mx-auto px-6">
           {/* Breadcrumbs */}
-          <nav className="flex items-center gap-2 text-white/60 text-[13px] mb-8 overflow-x-auto whitespace-nowrap scrollbar-hide">
-             <Link to={`/${langPrefix}`} className="hover:text-white transition-colors flex items-center gap-1">
-               <ChevronRight className="w-4 h-4" /> {t('nav.home')}
-             </Link>
-             <ChevronRight className="w-3 h-3 opacity-40 shrink-0" />
-             <Link to={`/${langPrefix}/articles`} className="hover:text-white transition-colors">{t('discover.guides')}</Link>
-             <ChevronRight className="w-3 h-3 opacity-40 shrink-0" />
-             <span className="text-white/40 truncate">{displayTitle}</span>
-          </nav>
+          <div className="flex items-center justify-between gap-4 mb-8">
+            <nav className="flex items-center gap-2 text-white/60 text-[13px] overflow-x-auto whitespace-nowrap scrollbar-hide">
+               <Link to={`/${langPrefix}`} className="hover:text-white transition-colors flex items-center gap-1">
+                 <ChevronRight className="w-4 h-4" /> {t('nav.home')}
+               </Link>
+               <ChevronRight className="w-3 h-3 opacity-40 shrink-0" />
+               <Link to={`/${langPrefix}/articles`} className="hover:text-white transition-colors">{t('discover.guides')}</Link>
+               <ChevronRight className="w-3 h-3 opacity-40 shrink-0" />
+               <span className="text-white/40 truncate">{displayTitle}</span>
+            </nav>
+            <ShareButton title={displayTitle} url={window.location.href} />
+          </div>
 
           <motion.h1 
             initial={{ opacity: 0, y: 10 }}

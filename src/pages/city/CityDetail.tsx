@@ -5,6 +5,7 @@ import { useLanguage } from '../../context/LanguageContext';
 import SEO from '../../components/SEO';
 import { supabase } from '../../lib/supabase';
 import WeatherWidget from '../../components/WeatherWidget';
+import ShareButton from '../../components/ShareButton';
 import { fallbackCities } from '../../data/fallbackData';
 
 const iconMap: Record<string, React.ElementType> = {
@@ -277,12 +278,13 @@ export default function CityDetail() {
         </div>
 
         <div className="max-w-7xl mx-auto px-6 relative z-10">
-          <div className="mb-10 pb-10 border-b border-white/10 flex flex-wrap items-center gap-6">
+          <div className="mb-10 pb-10 border-b border-white/10 flex flex-wrap items-center justify-between gap-6">
             <h1 className="text-4xl md:text-6xl font-extrabold tracking-tight text-white flex items-baseline gap-4">
               {getCityName()} 
               {language === 'zh' && <span className="text-white/40 font-medium text-2xl md:text-4xl">{getCityAltName()}</span>}
               {language !== 'zh' && <span className="text-white/40 font-medium text-xl md:text-2xl">{getI18n(city, 'name_zh')}</span>}
             </h1>
+            <ShareButton title={getCityName()} url={window.location.href} />
             <div className="flex flex-wrap items-center gap-3">
               {(city.tags || []).map((tag: any, idx: number) => {
                 // 语言代码到后缀的映射
