@@ -4588,12 +4588,34 @@ const detectIPCountry = async (): Promise<string | null> => {
 
 export const LanguageProvider = ({ children }: { children: ReactNode }) => {
   const [language, setLanguage] = useState<Language>(() => {
-    // 1. 优先使用本地保存的语言
+    // 1. 优先从 URL 路径获取语言 (最高优先级，方便分享链接)
+    const path = window.location.pathname;
+    const pathParts = path.split('/');
+    const urlPrefix = pathParts[1];
+    
+    const prefixToLang: Record<string, Language> = {
+      'cn': 'zh',
+      'en': 'en',
+      'ja': 'ja',
+      'ko': 'ko',
+      'ru': 'ru',
+      'fr': 'fr',
+      'es': 'es',
+      'de': 'de',
+      'tw': 'tw',
+      'it': 'it'
+    };
+
+    if (urlPrefix && prefixToLang[urlPrefix]) {
+      return prefixToLang[urlPrefix];
+    }
+
+    // 2. 其次使用本地保存的语言
     const saved = localStorage.getItem('tripcngo_lang');
     if (saved && ['zh', 'en', 'ja', 'ko', 'ru', 'fr', 'es', 'de', 'tw', 'it'].includes(saved)) {
       return saved as Language;
     }
-    // 2. 检测浏览器语言设置
+    // 3. 最后检测浏览器语言设置
     return detectBrowserLanguage();
   });
 
@@ -4634,11 +4656,16 @@ export const LanguageProvider = ({ children }: { children: ReactNode }) => {
     loadDbTranslations();
   }, [language]);
 
-  // 基于 IP 检测语言（首次加载时）
+  // 基于 IP 检测语言 (仅在没有明确的 URL 语言前缀且没有保存设置时执行)
   useEffect(() => {
     const saved = localStorage.getItem('tripcngo_lang');
-    // 如果用户已经有保存的语言设置，不进行 IP 检测
-    if (saved) {
+    const path = window.location.pathname;
+    const pathParts = path.split('/');
+    const urlPrefix = pathParts[1];
+    const validPrefixes = ['cn', 'en', 'ja', 'ko', 'ru', 'fr', 'es', 'de', 'tw', 'it'];
+    
+    // 如果用户已经有保存的设置，或者当前 URL 已经带有语言前缀，则不进行 IP 检测
+    if (saved || validPrefixes.includes(urlPrefix)) {
       setIpChecked(true);
       return;
     }
