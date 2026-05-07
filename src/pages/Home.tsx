@@ -38,31 +38,6 @@ const getLocalizedFAQ = (faq: HomeFAQ, language: string) => {
   };
 };
 
-// 获取指南多语言标题和描述
-const getGuideI18n = (guide: any, field: 'title' | 'subtitle', language: string) => {
-  if (!guide) return '';
-  
-  // 中文直接返回
-  if (language === 'zh') {
-    return guide[field] || '';
-  }
-  
-  // 其他语言查找对应字段
-  const langFieldMap: Record<string, string> = {
-    'en': `${field}En`,
-    'ja': `${field}Ja`,
-    'ko': `${field}Ko`,
-    'ru': `${field}Ru`,
-    'fr': `${field}Fr`,
-    'es': `${field}Es`,
-    'de': `${field}De`,
-    'tw': `${field}Tw`,
-    'it': `${field}It`,
-  };
-  
-  return guide[langFieldMap[language]] || guide[`${field}En`] || guide[field] || '';
-};
-
 // 备用FAQ数据（用于数据库连接失败时）
 const fallbackFAQS = [
   { 
@@ -209,7 +184,7 @@ export default function Home() {
   const [faqs, setFaqs] = useState<HomeFAQ[]>([]);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
-  const langPrefix = language === 'zh' ? 'cn' : language;
+  const langPrefix = language === 'zh' ? 'cn' : 'en';
 
   useEffect(() => {
     const fetchData = async () => {
@@ -222,65 +197,29 @@ export default function Home() {
             try {
               const { data, error } = await supabase
                 .from('articles')
-                .select('id, thumbnail, title, titleEn, titleJa, titleKo, titleRu, titleFr, titleEs, titleDe, titleTw, titleIt, subtitle, subtitleEn, subtitleJa, subtitleKo, subtitleRu, subtitleFr, subtitleEs, subtitleDe, subtitleTw, subtitleIt, views')
+                .select('id, thumbnail, title, title_en, title_ja, title_ko, subtitle, subtitle_en, subtitle_ja, subtitle_ko, views')
                 .order('createdAt', { ascending: false })
                 .limit(6);
                 
               if (error) throw error;
 
-              const fetchedData = data || [];
-              const mappedData = fetchedData.map((doc: any) => ({
+              const mappedData = data?.map((doc: any) => ({
                  id: doc.id,
                  img: doc.thumbnail || '',
                  title: doc.title || '',
-                 titleEn: doc.titleEn || doc.title || '',
-                 titleJa: doc.titleJa || '',
-                 titleKo: doc.titleKo || '',
-                 titleRu: doc.titleRu || '',
-                 titleFr: doc.titleFr || '',
-                 titleEs: doc.titleEs || '',
-                 titleDe: doc.titleDe || '',
-                 titleTw: doc.titleTw || '',
-                 titleIt: doc.titleIt || '',
-                 subtitle: doc.subtitle || '',
-                 subtitleEn: doc.subtitleEn || doc.subtitle || '',
-                 subtitleJa: doc.subtitleJa || '',
-                 subtitleKo: doc.subtitleKo || '',
-                 subtitleRu: doc.subtitleRu || '',
-                 subtitleFr: doc.subtitleFr || '',
-                 subtitleEs: doc.subtitleEs || '',
-                 subtitleDe: doc.subtitleDe || '',
-                 subtitleTw: doc.subtitleTw || '',
-                 subtitleIt: doc.subtitleIt || '',
-                 views: doc.views || 0
-              }));
+                 enTitle: doc.title_en || doc.title || '',
+                 jaTitle: doc.title_ja || doc.title_en || doc.title || '',
+                 koTitle: doc.title_ko || doc.title_en || doc.title || '',
+                 desc: doc.subtitle || '',
+                 enDesc: doc.subtitle_en || doc.subtitle || '',
+                 jaDesc: doc.subtitle_ja || doc.subtitle_en || doc.subtitle || '',
+                 koDesc: doc.subtitle_ko || doc.subtitle_en || doc.subtitle || '',
+                 views: doc.views || undefined
+              })) || [];
               
-              // If no data from DB, use fallback but process it to match structure
-              if (mappedData.length === 0 && fallbackArticles.length > 0) {
-                setGuides(fallbackArticles.map(a => ({
-                  id: a.id,
-                  img: a.img,
-                  title: a.title,
-                  titleEn: a.enTitle,
-                  subtitle: a.desc,
-                  subtitleEn: a.enDesc,
-                  views: a.views
-                })));
-              } else {
-                setGuides(mappedData);
-              }
+              setGuides(mappedData.length > 0 ? mappedData : fallbackArticles);
             } catch (err) {
               console.error("Error fetching latest guides:", err);
-              // Fail-safe with fallback labels
-              setGuides(fallbackArticles.map(a => ({
-                id: a.id,
-                img: a.img,
-                title: a.title,
-                titleEn: a.enTitle,
-                subtitle: a.desc,
-                subtitleEn: a.enDesc,
-                views: a.views
-              })));
             }
           })(),
 
@@ -292,14 +231,9 @@ export default function Home() {
                 .select('*');
                 
               if (error) throw error;
-              if (data && data.length > 0) {
-                setCities(data);
-              } else {
-                setCities(fallbackCities);
-              }
+              setCities(data || []);
             } catch (err) {
               console.error("Error fetching cities:", err);
-              setCities(fallbackCities);
             }
           })(),
 
@@ -313,9 +247,7 @@ export default function Home() {
                 .order('sort_order', { ascending: true });
                 
               if (error) throw error;
-              if (data && data.length > 0) {
-                setFaqs(data);
-              }
+              setFaqs(data || []);
             } catch (err) {
               console.error("Error fetching FAQs:", err);
             }
@@ -324,8 +256,7 @@ export default function Home() {
       } catch (err) {
         console.error("Global data fetch error in Home:", err);
       } finally {
-        // Controlled delay for smoother loading transition
-        setTimeout(() => setLoading(false), 300);
+        setLoading(false);
       }
     };
     
@@ -538,21 +469,20 @@ export default function Home() {
       {/* Popular Cities */}
       <section className="py-20 bg-white">
         <div className="max-w-[1400px] mx-auto px-6">
-          <div className="flex flex-col items-center justify-center mb-10 text-center">
+          <div className="flex flex-col items-center justify-center mb-8 text-center">
             <h2 className="text-3xl font-bold text-gray-900 mb-3">{t('home.cities.title')}</h2>
-            <button className="text-[#1b887a] text-sm font-semibold hover:underline flex items-center gap-1" onClick={() => navigate(`/${langPrefix}/cities`)}>
+            <button className="text-[#1b887a] text-sm font-medium hover:underline" onClick={() => navigate(`/${langPrefix}/cities`)}>
                {t('home.cities.more')}
-               <ChevronRight className="w-4 h-4" />
             </button>
           </div>
-          <div className={`grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 ${loading ? 'animate-pulse' : ''}`}>
+          <div className={`grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 ${loading ? 'animate-pulse' : ''}`}>
             {loading ? (
               [...Array(6)].map((_, i) => (
-                  <div key={i} className="bg-white rounded-2xl border border-gray-100 overflow-hidden shadow-sm flex flex-col">
-                    <div className="bg-gray-100 h-[240px] w-full animate-shimmer" />
-                    <div className="p-5 space-y-3 flex-1">
-                      <div className="h-6 bg-gray-100 rounded-lg w-2/3" />
-                      <div className="h-4 bg-gray-100 rounded-lg w-1/3" />
+                  <div key={i} className="bg-white rounded-xl border border-gray-100 overflow-hidden h-[300px] flex flex-col shadow-sm">
+                    <div className="bg-gray-200 h-[220px] w-full" />
+                    <div className="p-4 space-y-2 flex-1 flex flex-col justify-center">
+                      <div className="h-4 bg-gray-200 rounded w-1/2" />
+                      <div className="h-3 bg-gray-200 rounded w-1/4" />
                     </div>
                   </div>
               ))
@@ -560,30 +490,27 @@ export default function Home() {
               cities.slice(0, 6).map((city) => (
                 <div 
                   key={city.id} 
-                  className="relative group rounded-2xl overflow-hidden cursor-pointer bg-white border border-gray-100 hover:shadow-xl transition-all duration-500"
+                  className="relative group rounded-xl overflow-hidden cursor-pointer bg-white border border-gray-100 hover:shadow-lg transition-all duration-300"
                   onClick={() => navigate(`/${langPrefix}/cities/${city.id}`)}
                 >
-                  <div className="relative h-[240px] md:h-[280px]">
-                    <img src={city.listCover || city.heroImage || city.img} alt={language === 'zh' ? city.name : city.enName} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+                  <div className="relative h-[240px] md:h-[260px]">
+                    <img src={city.listCover || city.heroImage || city.img} alt={language === 'zh' ? city.name : city.enName} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                    <div className="absolute inset-0 bg-black/10 group-hover:bg-transparent transition-colors" />
                   </div>
-                  <div className="p-5 flex items-center justify-between bg-white border-t border-gray-50">
+                  <div className="p-4 flex items-center justify-between bg-white border-t border-gray-100">
                     <div>
-                      <div className="text-[17px] font-bold text-gray-900 group-hover:text-[#1b887a] transition-colors">{language === 'zh' ? city.name : (city.enName || city.name)}</div>
-                      <div className="text-xs text-gray-400 font-medium uppercase tracking-widest mt-0.5">{city.enName || city.name}</div>
+                      <span className="text-[15px] font-bold text-gray-900">{language === 'zh' ? city.name : (city.enName || city.name)}</span>
+                      <span className="ml-2 text-xs text-gray-500 font-medium uppercase tracking-wider">{city.enName || city.name}</span>
                     </div>
-                    <div className="flex gap-4 text-gray-400">
+                    <div className="flex gap-3 text-gray-500">
                       <button 
                         onClick={(e) => toggleWantToVisit(e, city.id)}
-                        className={`flex items-center gap-1.5 text-[13px] font-medium transition-all hover:text-red-500 ${votedCities.includes(city.id) ? 'text-red-500 scale-110' : ''}`}
+                        className={`flex items-center gap-1 text-xs font-medium transition-colors hover:text-red-500 ${votedCities.includes(city.id) ? 'text-red-500' : ''}`}
                       >
-                        <Heart className={`w-4 h-4 ${votedCities.includes(city.id) ? 'fill-red-500 text-red-500' : ''}`} /> 
+                        <Heart className={`w-3.5 h-3.5 ${votedCities.includes(city.id) ? 'fill-red-500 text-red-500' : ''}`} /> 
                         {city.stats?.wantToVisit || 0}
                       </button>
-                      <span className="flex items-center gap-1.5 text-[13px] font-medium transition-colors hover:text-[#1b887a]">
-                        <ThumbsUp className="w-4 h-4 text-[#1b887a] fill-[#1b887a]" /> 
-                        {city.stats?.recommended || 0}
-                      </span>
+                      <span className="flex items-center gap-1 text-xs font-medium"><ThumbsUp className="w-3.5 h-3.5 text-[#1b887a] fill-[#1b887a]" /> {city.stats?.recommended || 0}</span>
                     </div>
                   </div>
                 </div>
@@ -594,55 +521,66 @@ export default function Home() {
       </section>
 
       {/* Wandering Guides */}
-      <section className="py-24 max-w-[1400px] mx-auto px-6">
-        <div className="flex justify-between items-end mb-12">
-          <div>
-            <h2 className="text-3xl font-bold text-gray-900 mb-2">{t('home.guides.title')}</h2>
-            <div className="h-1 w-12 bg-[#1b887a] rounded-full" />
-          </div>
-          <button className="text-[#1b887a] text-sm font-semibold hover:underline flex items-center gap-1" onClick={() => navigate(`/${langPrefix}/articles`)}>
+      <section className="py-20 max-w-[1400px] mx-auto px-6">
+        <div className="flex justify-between items-end mb-10">
+          <h2 className="text-3xl font-bold text-gray-900">{t('home.guides.title')}</h2>
+          <button className="text-[#1b887a] text-sm font-medium hover:underline" onClick={() => navigate(`/${langPrefix}/articles`)}>
              {t('home.guides.more')}
-             <ChevronRight className="w-4 h-4" />
           </button>
         </div>
-        <div className={`grid grid-cols-1 sm:grid-cols-2 gap-y-12 gap-x-10 ${loading ? 'animate-pulse' : ''}`}>
+        <div className={`grid grid-cols-1 md:grid-cols-2 gap-y-10 gap-x-8 ${loading ? 'animate-pulse' : ''}`}>
           {loading ? (
              [...Array(4)].map((_, i) => (
-               <div key={i} className="flex flex-col xl:flex-row gap-6 bg-transparent">
-                 <div className="w-full xl:w-[240px] h-[160px] bg-gray-100 rounded-xl shadow-sm flex-shrink-0" />
+               <div key={i} className="flex flex-col sm:flex-row gap-5 bg-transparent">
+                 <div className="w-full sm:w-[200px] h-[140px] bg-gray-200 rounded-md shadow-sm flex-shrink-0" />
                  <div className="flex-1 space-y-3 py-2">
-                   <div className="h-6 bg-gray-100 rounded-lg w-5/6"></div>
-                   <div className="h-4 bg-gray-100 rounded-lg w-full"></div>
-                   <div className="h-4 bg-gray-100 rounded-lg w-2/3"></div>
-                   <div className="mt-4 h-4 bg-gray-100 rounded-lg w-1/4"></div>
+                   <div className="h-5 bg-gray-200 rounded w-3/4"></div>
+                   <div className="h-4 bg-gray-200 rounded w-full"></div>
+                   <div className="h-4 bg-gray-200 rounded w-5/6"></div>
                  </div>
                </div>
             ))
           ) : (
-            guides.slice(0, 4).map((guide, i) => (
-             <div key={i} className="flex flex-col xl:flex-row gap-6 bg-transparent cursor-pointer group" onClick={() => navigate(`/${langPrefix}/articles/${guide.id}`)}>
-               <div className="w-full xl:w-[240px] h-[160px] overflow-hidden rounded-xl flex-shrink-0 shadow-sm border border-gray-100 bg-gray-50">
-                  <img src={guide.img} alt={getGuideI18n(guide, 'title', language)} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" />
+            guides.map((guide, i) => {
+              // 多语言标题和描述选择
+              const displayTitle = language === 'zh' 
+                ? guide.title 
+                : language === 'ja' 
+                  ? guide.jaTitle 
+                  : language === 'ko' 
+                    ? guide.koTitle 
+                    : guide.enTitle || guide.title;
+              const displayDesc = language === 'zh' 
+                ? guide.desc 
+                : language === 'ja' 
+                  ? guide.jaDesc 
+                  : language === 'ko' 
+                    ? guide.koDesc 
+                    : guide.enDesc || guide.desc;
+              
+              return (
+             <div key={i} className="flex flex-col sm:flex-row gap-5 bg-transparent cursor-pointer group" onClick={() => navigate(`/${langPrefix}/articles/${guide.id}`)}>
+               <div className="w-full sm:w-[200px] h-[140px] overflow-hidden rounded-md flex-shrink-0 shadow-sm border border-gray-200">
+                  <img src={guide.img} alt={displayTitle} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
                </div>
-               <div className="flex flex-col py-1 flex-1">
-                 <h3 className="text-xl font-bold text-gray-900 leading-snug group-hover:text-[#1b887a] transition-colors mb-3 line-clamp-2">
-                    {getGuideI18n(guide, 'title', language)}
+               <div className="flex flex-col py-1">
+                 <h3 className="text-[17px] font-bold text-gray-900 leading-snug group-hover:text-[#1b887a] transition-colors mb-2 line-clamp-2">
+                    {displayTitle}
                  </h3>
-                 <p className="text-gray-500 text-sm line-clamp-2 mb-4 leading-relaxed">
-                   {getGuideI18n(guide, 'subtitle', language)}
+                 <p className="text-gray-500 text-[13px] line-clamp-3 mb-3 leading-relaxed">
+                   {displayDesc}
                  </p>
                  {guide.views !== undefined && (
-                   <div className="mt-auto pt-2 flex items-center gap-2">
-                     <div className="flex items-center gap-1 bg-red-50 px-2 py-1 rounded-md">
-                       <ThumbsUp className="w-3.5 h-3.5 text-red-500 shrink-0 fill-red-500" />
-                       <span className="text-red-500 font-bold text-xs">{guide.views}</span>
-                     </div>
-                     <span className="text-gray-400 text-xs font-medium">{t('home.guides.helpful')}</span>
+                   <div className="mt-auto text-xs flex items-center gap-1">
+                     <ThumbsUp className="w-3.5 h-3.5 text-red-500 shrink-0" />
+                     <span className="text-red-500 font-medium">{guide.views}</span>
+                     <span className="text-gray-500">{t('home.guides.helpful')}</span>
                    </div>
                  )}
                </div>
              </div>
-            ))
+            );
+            })
           )}
         </div>
       </section>

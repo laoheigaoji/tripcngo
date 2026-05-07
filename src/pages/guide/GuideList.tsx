@@ -52,7 +52,7 @@ export default function GuideList() {
     const snakeFieldName = `${baseField}_${language}`;
     const camelFieldName = `${baseField}${language.charAt(0).toUpperCase() + language.slice(1)}`;
     
-    return item[snakeFieldName] || item[camelFieldName] || item[`${baseField}En`] || item[`${baseField}_en`] || item[baseField] || '';
+    return item[snakeFieldName] || item[camelFieldName] || item[`${baseField}En`] || item[`${baseField}_en`] || '';
   };
 
   useEffect(() => {

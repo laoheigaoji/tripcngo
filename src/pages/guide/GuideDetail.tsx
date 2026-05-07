@@ -49,7 +49,7 @@ export default function GuideDetail() {
       const snakeField = `${baseField}_${language}`;
       return language === 'zh' 
         ? (item.name || item.nameZh || item.enName || '')
-        : (item[snakeField] || item[camelField] || item.enName || item.name || '');
+        : (item[snakeField] || item[camelField] || item.enName || '');
     }
     
     // 中文：直接返回 baseField（如 title, subtitle, content）
@@ -61,7 +61,7 @@ export default function GuideDetail() {
     const snakeFieldName = `${baseField}_${language}`;
     const camelFieldName = `${baseField}${language.charAt(0).toUpperCase() + language.slice(1)}`;
     
-    return item[snakeFieldName] || item[camelFieldName] || item[`${baseField}En`] || item[`${baseField}_en`] || item[baseField] || '';
+    return item[snakeFieldName] || item[camelFieldName] || item[`${baseField}En`] || item[`${baseField}_en`] || '';
   };
 
   // 获取数组字段的翻译版本
@@ -80,9 +80,9 @@ export default function GuideDetail() {
   const langPrefix = language === 'zh' ? 'cn' : language;
 
   // 获取文章的多语言标题
-  const displayTitle = article ? (getI18n(article, 'title') || article.title || '') : '';
-  const displaySubtitle = article ? (getI18n(article, 'subtitle') || article.subtitle || '') : '';
-  const displayContent = article ? (getI18n(article, 'content') || article.content || '') : '';
+  const displayTitle = article ? (getI18n(article, 'title') || article.titleEn || article.title || '') : '';
+  const displaySubtitle = article ? (getI18n(article, 'subtitle') || article.subtitleEn || article.subtitle || '') : '';
+  const displayContent = article ? (getI18n(article, 'content') || article.contentEn || article.content || '') : '';
 
   const [commentName, setCommentName] = useState('');
   const [commentText, setCommentText] = useState('');
