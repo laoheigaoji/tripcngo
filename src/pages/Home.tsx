@@ -182,11 +182,13 @@ export default function Home() {
   const [guides, setGuides] = useState<any[]>([]);
   const [cities, setCities] = useState<any[]>([]);
   const [faqs, setFaqs] = useState<HomeFAQ[]>([]);
+  const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
   const langPrefix = language === 'zh' ? 'cn' : 'en';
 
   useEffect(() => {
     const fetchData = async () => {
+      setLoading(true);
       // Parallelize all fetches
       try {
         await Promise.all([
@@ -249,6 +251,8 @@ export default function Home() {
         ]);
       } catch (err) {
         console.error("Global data fetch error in Home:", err);
+      } finally {
+        setLoading(false);
       }
     };
     
@@ -467,35 +471,41 @@ export default function Home() {
                {t('home.cities.more')}
             </button>
           </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {cities.slice(0, 6).map((city) => (
-              <div 
-                key={city.id} 
-                className="relative group rounded-xl overflow-hidden cursor-pointer bg-white border border-gray-100 hover:shadow-lg transition-all duration-300"
-                onClick={() => navigate(`/${langPrefix}/cities/${city.id}`)}
-              >
-                <div className="relative h-[240px] md:h-[260px]">
-                  <img src={city.listCover || city.heroImage || city.img} alt={language === 'zh' ? city.name : city.enName} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
-                  <div className="absolute inset-0 bg-black/10 group-hover:bg-transparent transition-colors" />
-                </div>
-                <div className="p-4 flex items-center justify-between bg-white border-t border-gray-100">
-                  <div>
-                    <span className="text-[15px] font-bold text-gray-900">{language === 'zh' ? city.name : (city.enName || city.name)}</span>
-                    <span className="ml-2 text-xs text-gray-500 font-medium uppercase tracking-wider">{city.enName || city.name}</span>
+          <div className={`grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 ${loading ? 'animate-pulse' : ''}`}>
+            {loading ? (
+              [...Array(6)].map((_, i) => (
+                  <div key={i} className="bg-gray-200 rounded-xl h-[300px] w-full" />
+              ))
+            ) : (
+              cities.slice(0, 6).map((city) => (
+                <div 
+                  key={city.id} 
+                  className="relative group rounded-xl overflow-hidden cursor-pointer bg-white border border-gray-100 hover:shadow-lg transition-all duration-300"
+                  onClick={() => navigate(`/${langPrefix}/cities/${city.id}`)}
+                >
+                  <div className="relative h-[240px] md:h-[260px]">
+                    <img src={city.listCover || city.heroImage || city.img} alt={language === 'zh' ? city.name : city.enName} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                    <div className="absolute inset-0 bg-black/10 group-hover:bg-transparent transition-colors" />
                   </div>
-                  <div className="flex gap-3 text-gray-500">
-                    <button 
-                      onClick={(e) => toggleWantToVisit(e, city.id)}
-                      className={`flex items-center gap-1 text-xs font-medium transition-colors hover:text-red-500 ${votedCities.includes(city.id) ? 'text-red-500' : ''}`}
-                    >
-                      <Heart className={`w-3.5 h-3.5 ${votedCities.includes(city.id) ? 'fill-red-500 text-red-500' : ''}`} /> 
-                      {city.stats?.wantToVisit || 0}
-                    </button>
-                    <span className="flex items-center gap-1 text-xs font-medium"><ThumbsUp className="w-3.5 h-3.5 text-[#1b887a] fill-[#1b887a]" /> {city.stats?.recommended || 0}</span>
+                  <div className="p-4 flex items-center justify-between bg-white border-t border-gray-100">
+                    <div>
+                      <span className="text-[15px] font-bold text-gray-900">{language === 'zh' ? city.name : (city.enName || city.name)}</span>
+                      <span className="ml-2 text-xs text-gray-500 font-medium uppercase tracking-wider">{city.enName || city.name}</span>
+                    </div>
+                    <div className="flex gap-3 text-gray-500">
+                      <button 
+                        onClick={(e) => toggleWantToVisit(e, city.id)}
+                        className={`flex items-center gap-1 text-xs font-medium transition-colors hover:text-red-500 ${votedCities.includes(city.id) ? 'text-red-500' : ''}`}
+                      >
+                        <Heart className={`w-3.5 h-3.5 ${votedCities.includes(city.id) ? 'fill-red-500 text-red-500' : ''}`} /> 
+                        {city.stats?.wantToVisit || 0}
+                      </button>
+                      <span className="flex items-center gap-1 text-xs font-medium"><ThumbsUp className="w-3.5 h-3.5 text-[#1b887a] fill-[#1b887a]" /> {city.stats?.recommended || 0}</span>
+                    </div>
                   </div>
                 </div>
-              </div>
-            ))}
+              ))
+            )}
           </div>
         </div>
       </section>
@@ -508,8 +518,20 @@ export default function Home() {
              {t('home.guides.more')}
           </button>
         </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-y-10 gap-x-8">
-          {guides.map((guide, i) => (
+        <div className={`grid grid-cols-1 md:grid-cols-2 gap-y-10 gap-x-8 ${loading ? 'animate-pulse' : ''}`}>
+          {loading ? (
+             [...Array(4)].map((_, i) => (
+               <div key={i} className="flex gap-5 bg-transparent">
+                 <div className="w-[200px] h-[140px] bg-gray-200 rounded-md shadow-sm" />
+                 <div className="flex-1 space-y-3 py-1">
+                   <div className="h-4 bg-gray-200 rounded w-3/4"></div>
+                   <div className="h-3 bg-gray-200 rounded w-full"></div>
+                   <div className="h-3 bg-gray-200 rounded w-5/6"></div>
+                 </div>
+               </div>
+            ))
+          ) : (
+            guides.map((guide, i) => (
              <div key={i} className="flex flex-col sm:flex-row gap-5 bg-transparent cursor-pointer group" onClick={() => navigate(`/${langPrefix}/articles/${guide.id}`)}>
                <div className="w-full sm:w-[200px] h-[140px] overflow-hidden rounded-md flex-shrink-0 shadow-sm border border-gray-200">
                   <img src={guide.img} alt={language === 'zh' ? guide.title : guide.enTitle} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
@@ -530,7 +552,8 @@ export default function Home() {
                  )}
                </div>
              </div>
-          ))}
+            ))
+          )}
         </div>
       </section>
 

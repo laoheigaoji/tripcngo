@@ -155,7 +155,15 @@ export default function GuideList() {
             {loading ? (
               <div className="space-y-6">
                 {[1,2,3].map(i => (
-                  <div key={i} className="bg-white h-[200px] rounded-2xl animate-pulse" />
+                  <div key={i} className="bg-white rounded-2xl shadow-sm border border-gray-100 flex flex-col md:flex-row h-[220px] animate-pulse">
+                    <div className="md:w-[340px] h-full bg-gray-200" />
+                    <div className="flex-1 p-8 space-y-4">
+                      <div className="h-4 bg-gray-200 rounded w-1/4" />
+                      <div className="h-8 bg-gray-200 rounded w-3/4" />
+                      <div className="h-4 bg-gray-200 rounded w-full" />
+                      <div className="h-4 bg-gray-200 rounded w-full" />
+                    </div>
+                  </div>
                 ))}
               </div>
             ) : currentArticles.length > 0 ? (

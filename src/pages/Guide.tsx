@@ -149,6 +149,13 @@ export default function Guide() {
 
   const handleUnlockAction = async () => {
     if (!user) {
+      // 在移动端禁用自动弹窗登录
+      const isMobile = window.innerWidth < 768;
+      if (isMobile) {
+        // 在移动端，如果未登录，不做任何操作或者提示登录
+        return;
+      }
+      
       setPendingUnlock(true);
       try {
         await signInWithGoogle();

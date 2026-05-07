@@ -195,11 +195,14 @@ export default function CityDetail() {
   };
 
   // 获取城市主名称
-  const getCityName = () => getI18n(city, 'name') || city?.name || '';
+  const getCityName = () => {
+    if (language !== 'zh' && city?.enName) return city.enName;
+    return getI18n(city, 'name') || city?.name || '';
+  };
   const getCityAltName = () => {
-    const altLang = language === 'zh' ? 'en' : 'zh';
-    const langMap: Record<string, string> = { 'zh': 'zh', 'en': 'en', 'ja': 'ja', 'ko': 'ko', 'ru': 'ru', 'fr': 'fr', 'es': 'es', 'de': 'de', 'tw': 'tw', 'it': 'it' };
-    return city?.[`name_${altLang}`] || city?.enName || city?.name || '';
+    // 如果当前是中文，显示英文；如果是其他语言，显示中文
+    if (language === 'zh') return city?.enName || '';
+    return city?.name || '';
   };
 
   const handleStatsUpdate = async (field: 'wantToVisit' | 'recommended') => {
@@ -280,11 +283,11 @@ export default function CityDetail() {
         <div className="max-w-7xl mx-auto px-6 relative z-10">
           <div className="mb-10 pb-10 border-b border-white/10 flex flex-wrap items-center justify-between gap-6">
             <h1 className="text-4xl md:text-6xl font-extrabold tracking-tight text-white flex items-baseline gap-4">
-              {getCityName()} 
-              {language === 'zh' && <span className="text-white/40 font-medium text-2xl md:text-4xl">{getCityAltName()}</span>}
-              {language !== 'zh' && <span className="text-white/40 font-medium text-xl md:text-2xl">{getI18n(city, 'name_zh')}</span>}
+              {getCityName()}
+              {getCityAltName() && getCityAltName() !== getCityName() && (
+                <span className="text-white/40 font-medium text-xl md:text-2xl">{getCityAltName()}</span>
+              )}
             </h1>
-            <ShareButton title={getCityName()} url={window.location.href} />
             <div className="flex flex-wrap items-center gap-3">
               {(city.tags || []).map((tag: any, idx: number) => {
                 // 语言代码到后缀的映射
@@ -354,6 +357,7 @@ export default function CityDetail() {
                   <span>{voted.recommended ? (isEn ? 'Recommended' : '已推荐给他人') : t('city.stats.recommended')}</span> 
                   <span className="bg-black/20 px-2 py-0.5 rounded-lg text-xs">{city.stats?.recommended || 0}</span>
                 </button>
+                <ShareButton title={getCityName()} url={window.location.href} />
               </div>
             </div>
 
