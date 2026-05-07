@@ -376,5 +376,6 @@
   "visa.doc.L.itinerary": "여행 일정표",
   "visa.doc.L.itinerary.desc": "중국 관광 일정 관련 자료 (호텔 예약, 항공권 등)",
   "visa.doc.L.invitation": "초청장/일정표",
-  "visa.doc.L.invitation.desc": "중국 쪽 여행사 또는 초청자가 작성한 초청장 및 관광 일정표"
+  "visa.doc.L.invitation.desc": "중국 쪽 여행사 또는 초청자가 작성한 초청장 및 관광 일정표",
+  "share.button": "공유"
 }

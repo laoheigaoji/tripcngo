@@ -376,5 +376,6 @@
   "visa.doc.L.itinerary": "Reiseroute",
   "visa.doc.L.itinerary.desc": "Dokumentation des China-Reiseroute (Hotelbuchung, Flugtickets usw.)",
   "visa.doc.L.invitation": "Einladungsschreiben/Reiseplan",
-  "visa.doc.L.invitation.desc": "Einladungsschreiben und Reiseroute von chinesischem Reisebüro oder Gastgeber"
+  "visa.doc.L.invitation.desc": "Einladungsschreiben und Reiseroute von chinesischem Reisebüro oder Gastgeber",
+  "share.button": "Teilen"
 }

@@ -429,7 +429,7 @@
   "visa.transit.ports.Jiangxi": "江西", "visa.transit.ports.Jiangxi.Ports": "南昌昌北国际机场", "visa.transit.ports.Jiangxi.Area": "南昌市、景德镇市",
   "visa.transit.ports.Guangxi": "广西", "visa.transit.ports.Guangxi.Ports": "南宁吴圩国际机场、桂林两江国际机场、北海福成机场、北海港（客运）", "visa.transit.ports.Guangxi.Area": "南宁市、柳州市、桂林市、梧州市、北海市、防城港市、钦州市、贵港市、玉林市、贺州市、河池市、来宾市",
   "visa.transit.ports.Sichuan": "四川", "visa.transit.ports.Sichuan.Ports": "成都双流国际机场、成都天府国际机场", "visa.transit.ports.Sichuan.Area": "成都市、自贡市、泸州市、德阳市、遂宁市、内江市、乐山市、宜宾市、雅安市、眉山市、资阳市",
-  "visa.transit.ports.Yunnan": "云南", "visa.transit.ports.Yunnan.Ports": "昆明长水国际机场、丽江三义国际机场、磨憨铁路口岸", "visa.transit.ports.Yunnan.Area": "昆明市、玉溪市、红河哈尼族彝族自治州、普洱市、西双版纳傣族自治州、丽江市、大理白族自治州", "share.button": "一键分享",
+  "visa.transit.ports.Yunnan": "云南", "visa.transit.ports.Yunnan.Ports": "昆明长水国际机场、丽江三义国际机场、磨憨铁路口岸", "visa.transit.ports.Yunnan.Area": "昆明市、玉溪市、红河哈尼族彝族自治州、普洱市、西双版纳傣族自治州、丽江市、大理白族自治州",
   "visa.faq.title": "常见问题",
   "visa.faq.q1": "这240小时是从什么时候开始计算的?",
   "visa.faq.a1": "240小时从入境当天的次日零时起计算，出境当天的24时止。例如：12月1日入境，则10天免签期限为12月2日0时至12月11日24时，必须在12月11日24时前出境。",

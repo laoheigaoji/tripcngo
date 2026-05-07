@@ -376,5 +376,6 @@
   "visa.doc.L.itinerary": "Itinerario",
   "visa.doc.L.itinerary.desc": "Documentación del itinerario turístico en China (reserva de hotel, boletos de avión, etc.)",
   "visa.doc.L.invitation": "Carta de invitación/Programa",
-  "visa.doc.L.invitation.desc": "Carta de invitación y programa turístico preparados por la agencia china o el anfitrión"
+  "visa.doc.L.invitation.desc": "Carta de invitación y programa turístico preparados por la agencia china o el anfitrión",
+  "share.button": "Compartir"
 }

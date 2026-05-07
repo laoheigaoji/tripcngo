@@ -444,5 +444,6 @@
   "visa.transit.ports.Jiangxi": "江西", "visa.transit.ports.Jiangxi.Ports": "南昌昌北国際空港", "visa.transit.ports.Jiangxi.Area": "南昌市、景德鎮市",
   "visa.transit.ports.Guangxi": "広西", "visa.transit.ports.Guangxi.Ports": "南寧呉墟国際空港、桂林両江国際空港、北海福成空港、北海港（旅客）", "visa.transit.ports.Guangxi.Area": "南寧市、柳州市、桂林市、梧州市、北海市、防城港市、欽州市、貴港市、玉林市、賀州市、河池市、来賓市",
   "visa.transit.ports.Sichuan": "四川", "visa.transit.ports.Sichuan.Ports": "成都双流国際空港、成都天府国際空港", "visa.transit.ports.Sichuan.Area": "成都市、自貢市、瀘州市、德陽市、遂宁市、内江市、楽山市、宜賓市、雅安市、眉山市、資阳市",
-  "visa.transit.ports.Yunnan": "雲南", "visa.transit.ports.Yunnan.Ports": "昆明長水国際空港、麗江三元国際空港、磨憨鉄道口岸", "visa.transit.ports.Yunnan.Area": "昆明市、玉渓市、红河ハニ族イ族自治州、普洱市、西双版納タイ族自治州、麗江市、大理パピール族自治州"
+  "visa.transit.ports.Yunnan": "雲南", "visa.transit.ports.Yunnan.Ports": "昆明長水国際空港、麗江三元国際空港、磨憨鉄道口岸", "visa.transit.ports.Yunnan.Area": "昆明市、玉渓市、红河ハニ族イ族自治州、普洱市、西双版納タイ族自治州、麗江市、大理パピール族自治州",
+  "share.button": "シェア"
 }

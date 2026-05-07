@@ -361,5 +361,6 @@
   "visa.doc.S2.title": "私人事務（S2）簽證所需材料",
   "visa.doc.S2.special": "私人事務（S2）特殊材料",
   "visa.doc.S2.invitation": "邀請函",
-  "visa.doc.S2.invitation.desc": "中國方邀請人出具的邀請函（私人事務需停留者應附相關證明文件）"
+  "visa.doc.S2.invitation.desc": "中國方邀請人出具的邀請函（私人事務需停留者應附相關證明文件）",
+  "share.button": "分享"
 }
