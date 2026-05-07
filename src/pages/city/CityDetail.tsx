@@ -278,13 +278,17 @@ export default function CityDetail() {
         </div>
 
         <div className="max-w-7xl mx-auto px-6 relative z-10">
-          <div className="mb-10 pb-10 border-b border-white/10 flex flex-wrap items-center gap-6">
-            <h1 className="text-4xl md:text-6xl font-extrabold tracking-tight text-white flex flex-wrap items-baseline gap-4">
+          <div className="mb-10 pb-10 border-b border-white/10 flex flex-wrap items-center gap-4 md:gap-5">
+            <h1 className="text-4xl md:text-6xl font-extrabold tracking-tight text-white mb-0">
               {getCityName()}
-              {getCityEnName() && getCityEnName() !== getCityName() && <span className="text-white/40 font-medium text-2xl md:text-4xl">{getCityEnName()}</span>}
-              {language !== 'zh' && getCityZhName() !== getCityName() && <span className="text-white/40 font-medium text-xl md:text-2xl">{getCityZhName()}</span>}
             </h1>
-            <div className="flex flex-wrap items-center gap-3">
+            {getCityEnName() && getCityEnName() !== getCityName() && (
+              <span className="text-white/40 font-medium text-2xl md:text-4xl tracking-tight">{getCityEnName()}</span>
+            )}
+            {language !== 'zh' && getCityZhName() !== getCityName() && (
+              <span className="text-white/40 font-medium text-xl md:text-2xl tracking-tight">{getCityZhName()}</span>
+            )}
+            <div className="flex flex-wrap items-center gap-3 ml-1 md:ml-3">
                 {(city.tags || []).map((tag: any, idx: number) => {
                   const langSuffixMap: Record<string, string> = {
                     'en': 'En', 'ja': 'Ja', 'ko': 'Ko', 'ru': 'Ru',

@@ -45,27 +45,18 @@ const SEO: React.FC<SEOProps> = ({
   schemaData,
   isHome = false
 }) => {
-  const { language } = useLanguage();
+  const { language, t } = useLanguage();
   
-  const currentTitle = language === 'zh' ? titleZh : title;
-  const siteTitleZh = '中国旅行指南 | tripcngo.com';
-  const siteTitleEn = 'China Travel Guide | tripcngo.com';
-  const siteTitle = language === 'zh' ? siteTitleZh : siteTitleEn;
-  const suffixZh = '中国旅行指南';
-  const suffixEn = 'China Travel Guide';
-  const suffix = language === 'zh' ? suffixZh : suffixEn;
+  const currentTitle = language === 'zh' ? (titleZh || title) : title;
+  const suffix = t('seo.suffix', language === 'zh' ? '旅行中国出发 - 您的终极中国旅游指南' : 'Travel China Go - Your Ultimate China Travel Guide');
   
-  const currentDescription = language === 'zh' ? descriptionZh : description;
-  const defaultDescriptionZh = '您的中国旅行终极指南。提供最新的免签政策、签证指引、交通攻略和目的地深度报告。';
-  const defaultDescriptionEn = 'Your ultimate guide to traveling in China. Latest visa-free policies, visa guides, transportation tips, and destination reports.';
-  const metaDescription = currentDescription || (language === 'zh' ? defaultDescriptionZh : defaultDescriptionEn);
+  const currentDescription = language === 'zh' ? (descriptionZh || description) : description;
+  const metaDescription = currentDescription || t('seo.defaultDescription', language === 'zh' ? '您的中国旅行终极指南。提供最新的免签政策、签证指引、交通攻略和目的地深度报告。' : 'Your ultimate guide to traveling in China. Latest visa-free policies, visa guides, transportation tips, and destination reports.');
   
-  const currentKeywords = language === 'zh' ? keywordsZh : keywords;
-  const defaultKeywordsZh = '中国旅游, 免签中国, 144小时过境免签, 240小时过境免签, 中国签证, 中国城市, 中国旅行攻略, 中国入境指南';
-  const defaultKeywordsEn = 'China travel, visa free China, 144h transit visa free, 240h transit visa, China visa, China cities, China travel guide, China entry guide';
-  const metaKeywords = currentKeywords || (language === 'zh' ? defaultKeywordsZh : defaultKeywordsEn);
+  const currentKeywords = language === 'zh' ? (keywordsZh || keywords) : keywords;
+  const metaKeywords = currentKeywords || t('seo.defaultKeywords', language === 'zh' ? '中国旅游, 免签中国, 144小时过境免签, 240小时过境免签, 中国签证, 中国城市, 中国旅行攻略, 中国入境指南' : 'China travel, visa free China, 144h transit visa free, 240h transit visa, China visa, China cities, China travel guide, China entry guide');
   
-  const fullTitle = currentTitle ? `${currentTitle} | tripcngo.com | ${suffix}` : (isHome ? siteTitle : siteTitle);
+  const fullTitle = currentTitle ? `${currentTitle} | tripcngo.com | ${suffix}` : `tripcngo.com | ${suffix}`;
   
   const hreflangTags = Object.entries(languageMap).map(([lang, config]) => {
     const currentPath = url.replace(BASE_URL, '');

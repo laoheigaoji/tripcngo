@@ -189,7 +189,6 @@
   "sidebar.hotline": "服務熱線",
   "sidebar.interaction": "互動交流",
   "sidebar.ask": "咨詢",
-  "nav.title": "簽證業務",
   "nav.types": "簽證種類",
   "nav.photo": "照片要求",
   "nav.fee": "費用表",
@@ -362,5 +361,9 @@
   "visa.doc.S2.special": "私人事務（S2）特殊材料",
   "visa.doc.S2.invitation": "邀請函",
   "visa.doc.S2.invitation.desc": "中國方邀請人出具的邀請函（私人事務需停留者應附相關證明文件）",
-  "share.button": "分享"
+  "share.button": "分享",
+  "seo.suffix": "旅行中國出發 - 您的終極中國旅遊指南",
+  "seo.siteTitle": "旅行中國出發 - 您的終極中國旅遊指南 | tripcngo.com",
+  "seo.defaultDescription": "您的中國旅行終極指南。提供最新的免簽政策、簽證指引、交通攻略和目的地深度報告。",
+  "seo.defaultKeywords": "中國旅遊, 免簽中國, 144小時過境免簽, 240小時過境免簽, 中國簽證, 中國城市, 中國旅行攻略, 中國入境指南"
 }
