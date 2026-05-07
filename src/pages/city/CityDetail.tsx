@@ -196,14 +196,11 @@ export default function CityDetail() {
 
   // 获取城市主名称
   const getCityName = () => {
-    if (language !== 'zh' && city?.enName) return city.enName;
     return getI18n(city, 'name') || city?.name || '';
   };
-  const getCityAltName = () => {
-    // 如果当前是中文，显示英文；如果是其他语言，显示中文
-    if (language === 'zh') return city?.enName || '';
-    return city?.name || '';
-  };
+  
+  const getCityEnName = () => city?.enName || '';
+  const getCityZhName = () => city?.name || '';
 
   const handleStatsUpdate = async (field: 'wantToVisit' | 'recommended') => {
     if (!id || !city) return;
@@ -281,44 +278,43 @@ export default function CityDetail() {
         </div>
 
         <div className="max-w-7xl mx-auto px-6 relative z-10">
-          <div className="mb-10 pb-10 border-b border-white/10 flex flex-wrap items-center justify-between gap-6">
-            <h1 className="text-4xl md:text-6xl font-extrabold tracking-tight text-white flex items-baseline gap-4">
-              {getCityName()}
-              {getCityAltName() && getCityAltName() !== getCityName() && (
-                <span className="text-white/40 font-medium text-xl md:text-2xl">{getCityAltName()}</span>
-              )}
-            </h1>
-            <div className="flex flex-wrap items-center gap-3">
-              {(city.tags || []).map((tag: any, idx: number) => {
-                // 语言代码到后缀的映射
-                const langSuffixMap: Record<string, string> = {
-                  'en': 'En', 'ja': 'Ja', 'ko': 'Ko', 'ru': 'Ru',
-                  'fr': 'Fr', 'es': 'Es', 'de': 'De', 'tw': 'Tw', 'it': 'It'
-                };
-                const suffix = langSuffixMap[language];
-                
-                // 获取标签翻译
-                let tagText = tag.text || '';
-                if (language !== 'zh') {
-                  // 1. 优先从内联翻译字段获取（如 tag.jaText）
-                  if (suffix && tag[`text${suffix}`]) {
-                    tagText = tag[`text${suffix}`];
-                  } else {
-                    // 2. 回退到 translations JSONB 字段
-                    const tagTranslations = getTranslation(language)?.tags?.[idx];
-                    if (tagTranslations?.text) {
-                      tagText = tagTranslations.text;
-                    } else if (tagTranslations?.text?.text) {
-                      tagText = tagTranslations.text;
+          <div className="mb-10 pb-10 border-b border-white/10">
+            <div className="flex flex-col gap-4">
+              <div className="flex flex-col gap-1">
+                <h1 className="text-4xl md:text-6xl font-extrabold tracking-tight text-white">
+                  {getCityName()}
+                </h1>
+                <div className="flex flex-wrap items-baseline gap-x-4">
+                  {getCityEnName() && <span className="text-white/60 font-bold text-xl md:text-3xl tracking-tight">{getCityEnName()}</span>}
+                  {language !== 'zh' && <span className="text-white/30 font-medium text-lg md:text-xl">{getCityZhName()}</span>}
+                </div>
+              </div>
+              
+              <div className="flex flex-wrap items-center gap-3">
+                {(city.tags || []).map((tag: any, idx: number) => {
+                  const langSuffixMap: Record<string, string> = {
+                    'en': 'En', 'ja': 'Ja', 'ko': 'Ko', 'ru': 'Ru',
+                    'fr': 'Fr', 'es': 'Es', 'de': 'De', 'tw': 'Tw', 'it': 'It'
+                  };
+                  const suffix = langSuffixMap[language];
+                  let tagText = tag.text || '';
+                  if (language !== 'zh') {
+                    if (suffix && tag[`text${suffix}`]) {
+                      tagText = tag[`text${suffix}`];
+                    } else {
+                      const tagTranslations = getTranslation(language)?.tags?.[idx];
+                      if (tagTranslations?.text) {
+                        tagText = tagTranslations.text;
+                      }
                     }
                   }
-                }
-                return (
-                  <span key={idx} className="px-5 py-2 bg-[#e6f4ea] text-[#1b887a] rounded-full text-[10px] font-black shadow-sm border border-[#1b887a]/20 tracking-widest uppercase">
-                    {tagText}
-                  </span>
-                );
-              })}
+                  return (
+                    <span key={idx} className="px-4 py-1.5 bg-emerald-500/20 text-emerald-400 rounded-full text-[10px] font-black shadow-sm border border-emerald-500/30 tracking-widest uppercase">
+                      {tagText}
+                    </span>
+                  );
+                })}
+              </div>
             </div>
           </div>
 

@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Heart, ThumbsUp } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import CardSkeleton from '../components/CardSkeleton';
 import SEO from '../components/SEO';
 import { useLanguage } from '../context/LanguageContext';
 import { supabase } from '../lib/supabase';
@@ -76,9 +75,17 @@ export default function Cities() {
       </div>
 
       <div className="max-w-[1240px] mx-auto px-6">
-        <div className={`grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6`}>
+        <div className={`grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 ${loading ? 'animate-pulse' : ''}`}>
           {loading ? (
-             [...Array(ITEMS_PER_PAGE)].map((_, i) => <CardSkeleton key={i} />)
+             [...Array(ITEMS_PER_PAGE)].map((_, i) => (
+               <div key={i} className="bg-white rounded-md border border-gray-100 overflow-hidden h-[300px] flex flex-col shadow-sm">
+                 <div className="bg-gray-200 h-[240px] w-full" />
+                 <div className="p-4 space-y-2 flex-1 flex flex-col justify-center">
+                   <div className="h-4 bg-gray-200 rounded w-1/2" />
+                   <div className="h-3 bg-gray-200 rounded w-1/4" />
+                 </div>
+               </div>
+             ))
           ) : (
             currentCities.map((city) => (
               <Link to={`/${langPrefix}/cities/${city.id}`} key={city.id} className="relative group rounded-md overflow-hidden bg-white border border-gray-100 shadow-sm transition-all duration-300 block">

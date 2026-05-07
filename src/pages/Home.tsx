@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'motion/react';
 import { Search, ChevronRight, Heart, ThumbsUp, ChevronDown, ChevronUp, MapPin } from 'lucide-react';
-import CardSkeleton from '../components/CardSkeleton';
 import { useNavigate } from 'react-router-dom';
 import { useLanguage } from '../context/LanguageContext';
 import SEO from '../components/SEO';
@@ -472,9 +471,17 @@ export default function Home() {
                {t('home.cities.more')}
             </button>
           </div>
-          <div className={`grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6`}>
+          <div className={`grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 ${loading ? 'animate-pulse' : ''}`}>
             {loading ? (
-              [...Array(6)].map((_, i) => <CardSkeleton key={i} />)
+              [...Array(6)].map((_, i) => (
+                  <div key={i} className="bg-white rounded-xl border border-gray-100 overflow-hidden h-[300px] flex flex-col shadow-sm">
+                    <div className="bg-gray-200 h-[220px] w-full" />
+                    <div className="p-4 space-y-2 flex-1 flex flex-col justify-center">
+                      <div className="h-4 bg-gray-200 rounded w-1/2" />
+                      <div className="h-3 bg-gray-200 rounded w-1/4" />
+                    </div>
+                  </div>
+              ))
             ) : (
               cities.slice(0, 6).map((city) => (
                 <div 
@@ -520,12 +527,12 @@ export default function Home() {
         <div className={`grid grid-cols-1 md:grid-cols-2 gap-y-10 gap-x-8 ${loading ? 'animate-pulse' : ''}`}>
           {loading ? (
              [...Array(4)].map((_, i) => (
-               <div key={i} className="flex gap-5 bg-transparent">
-                 <div className="w-[200px] h-[140px] bg-gray-200 rounded-md shadow-sm" />
-                 <div className="flex-1 space-y-3 py-1">
-                   <div className="h-4 bg-gray-200 rounded w-3/4"></div>
-                   <div className="h-3 bg-gray-200 rounded w-full"></div>
-                   <div className="h-3 bg-gray-200 rounded w-5/6"></div>
+               <div key={i} className="flex flex-col sm:flex-row gap-5 bg-transparent">
+                 <div className="w-full sm:w-[200px] h-[140px] bg-gray-200 rounded-md shadow-sm flex-shrink-0" />
+                 <div className="flex-1 space-y-3 py-2">
+                   <div className="h-5 bg-gray-200 rounded w-3/4"></div>
+                   <div className="h-4 bg-gray-200 rounded w-full"></div>
+                   <div className="h-4 bg-gray-200 rounded w-5/6"></div>
                  </div>
                </div>
             ))

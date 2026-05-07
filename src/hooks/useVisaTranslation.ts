@@ -12,7 +12,7 @@ import itTranslations from '../locales/it.json';
 
 type TranslationKey = keyof typeof zhTranslations;
 
-const translations: Record<string, Record<TranslationKey, string>> = {
+const translations: Record<string, any> = {
   zh: zhTranslations,
   en: enTranslations,
   ja: jaTranslations,
