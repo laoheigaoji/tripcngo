@@ -1,6 +1,8 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { supabase } from '../lib/supabase';
 
+import PaymentSuccessModal from '../components/PaymentSuccessModal';
+
 interface AuthContextType {
   user: any;
   loading: boolean;
@@ -16,6 +18,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [hasPurchased, setHasPurchased] = useState(false);
+  const [isSuccessModalOpen, setIsSuccessModalOpen] = useState(false);
 
   useEffect(() => {
     // 优先检查本地存储的购买状态
@@ -187,7 +190,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     // 告知用户状态（避免重复提示，可以存一个提示标记，或者既然完成就只提示一次）
     if (!sessionStorage.getItem('payment_alert_shown')) {
-        alert('🎉 支付成功！\n\n【重要提示】\n您的购买记录已保存在此设备浏览器的本地缓存中（LocalStorage）。\n\n注意事项：\n1. 请勿清除当前浏览器的缓存数据，否则将失去访问权限。\n2. 暂不支持跨设备跨浏览器同步。\n\n感谢您的支持，开始浏览完整内容吧！');
+        setIsSuccessModalOpen(true);
         sessionStorage.setItem('payment_alert_shown', 'true');
     }
 
@@ -220,6 +223,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   return (
     <AuthContext.Provider value={{ user, loading, hasPurchased, signInWithGoogle, simulatePurchase: initiatePayment, completePayment }}>
       {children}
+      <PaymentSuccessModal 
+        isOpen={isSuccessModalOpen} 
+        onClose={() => setIsSuccessModalOpen(false)} 
+      />
     </AuthContext.Provider>
   );
 }
