@@ -39,7 +39,7 @@ export default function ShareButton({ title, url, text }: ShareButtonProps) {
       className="flex items-center justify-center gap-2 px-4 py-2 bg-white/10 hover:bg-white/20 rounded-lg text-white text-sm font-bold transition-all border border-white/20"
     >
       <Share2 className="w-4 h-4" />
-      {t('share.button') || 'Share'}
+      {t('share.button') === 'share.button' ? 'Share' : t('share.button')}
     </button>
   );
 }
