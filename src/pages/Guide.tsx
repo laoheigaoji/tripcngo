@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Wifi, CreditCard, Globe, Compass, BookOpen, MessageCircle, Sparkles, ArrowRight, AlertTriangle, CheckCircle2, XCircle, Clock, Gift, Users, ThumbsUp, Volume2, Lock, LogIn, Shield, CreditCard as CardIcon } from 'lucide-react';
+import { Link } from 'react-router-dom';
 import { useLanguage } from '../context/LanguageContext';
 import { useAuth } from '../context/AuthContext';
 import { useTravelGuide } from '../hooks/useTravelGuide';
@@ -54,7 +55,7 @@ const SpeakerButton = ({ text, isPlaying, onClick }: { text: string; isPlaying: 
 export default function Guide() {
   const { language, t } = useLanguage();
   const { data: guideData, loading: dataLoading } = useTravelGuide(language);
-  const { user, loading: authLoading, hasPurchased, signInWithGoogle, simulatePurchase } = useAuth();
+  const { user, loading: authLoading, hasPurchased, signInWithGoogle, simulatePurchase, completePayment } = useAuth();
   const isZh = language === 'zh';
   const [playingId, setPlayingId] = useState<string | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
@@ -132,7 +133,13 @@ export default function Guide() {
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
     if (urlParams.get('unlock') === 'true' && user && !hasPurchased) {
-      handleSimulatePayment();
+      // Handle the return from Creem payment
+      const verifyPayment = async () => {
+        setIsProcessing(true);
+        await completePayment();
+        setIsProcessing(false);
+      };
+      verifyPayment();
       // 清除 URL 参数
       window.history.replaceState({}, '', window.location.pathname);
     }
@@ -321,7 +328,7 @@ export default function Guide() {
               <div>
                 <div className="flex items-center justify-between mb-3">
                   <h4 className="font-bold text-gray-800 text-sm">{guideData?.digital?.vpn?.appsTitle || '旅行必备APP'}</h4>
-                  <a href="#" className="text-green-600 text-xs hover:underline">{guideData?.digital?.vpn?.appsMoreLink || '更多工具 >>'}</a>
+                  <Link to="/apps" className="text-green-600 text-xs hover:underline">{guideData?.digital?.vpn?.appsMoreLink || '更多工具 >>'}</Link>
                 </div>
                 <div className="flex gap-4">
                   {[
@@ -330,10 +337,10 @@ export default function Guide() {
                     { name: guideData?.digital?.vpn?.appMeituan || 'MeiTuan(美团)', icon: 'https://static.tripcngo.com/ing/meituan.webp' },
                     { name: guideData?.digital?.vpn?.appXiaohongshu || 'Xiaohongshu(小红书)', icon: 'https://static.tripcngo.com/ing/xiaohongshu.webp' },
                   ].map(app => (
-                    <div key={app.name} className="flex flex-col items-center gap-1">
+                    <Link to="/apps" key={app.name} className="flex flex-col items-center gap-1 hover:opacity-80 transition-opacity">
                       <img src={app.icon} alt={app.name} className="w-12 h-12" />
                       <span className="text-xs text-gray-600 text-center leading-tight">{app.name}</span>
-                    </div>
+                    </Link>
                   ))}
                 </div>
               </div>
