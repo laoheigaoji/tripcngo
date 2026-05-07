@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Lock, CreditCard, CheckCircle2, Loader2 } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { useLanguage } from '../context/LanguageContext';
+import { useAuth } from '../context/AuthContext';
 
 interface PremiumGateProps {
   children: React.ReactNode;
@@ -10,6 +11,7 @@ interface PremiumGateProps {
 
 export default function PremiumGate({ children, isZh = true }: PremiumGateProps) {
   const { language } = useLanguage();
+  const { user, hasPurchased: authHasPurchased, initiateCheckout, signInWithGoogle } = useAuth();
   const [isLoading, setIsLoading] = useState(true);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isPurchased, setIsPurchased] = useState(false);
@@ -18,6 +20,12 @@ export default function PremiumGate({ children, isZh = true }: PremiumGateProps)
 
   // 检查登录和购买状态
   useEffect(() => {
+    if (authHasPurchased) {
+      setIsPurchased(true);
+      setIsLoading(false);
+      return;
+    }
+
     const checkAuth = async () => {
       try {
         const { data: { session } } = await supabase.auth.getSession();
@@ -53,51 +61,22 @@ export default function PremiumGate({ children, isZh = true }: PremiumGateProps)
     });
 
     return () => subscription.unsubscribe();
-  }, []);
+  }, [authHasPurchased]);
 
   // Google 登录
   const handleGoogleLogin = async () => {
     try {
-      const { error } = await supabase.auth.signInWithOAuth({
-        provider: 'google',
-        options: {
-          queryParams: {
-            prompt: 'select_account',
-          },
-        },
-      });
-      if (error) throw error;
+      await signInWithGoogle();
     } catch (error) {
       console.error('Login error:', error);
-      alert(isZh ? '登录失败，请重试' : 'Login failed, please try again');
     }
   };
 
-  // 模拟支付
+  // 支付
   const handlePay = async () => {
     setIsProcessing(true);
     try {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session?.user) {
-        alert(isZh ? '请先登录' : 'Please login first');
-        return;
-      }
-
-      // 模拟支付成功，写入购买记录
-      const { error } = await supabase
-        .from('purchases')
-        .insert({
-          user_id: session.user.id,
-          amount: 1,
-          item_id: 'all_access',
-          item_name: isZh ? '全站解锁' : 'All Access',
-          status: 'completed',
-        });
-
-      if (error) throw error;
-
-      setShowSuccess(true);
-      setIsPurchased(true);
+      await initiateCheckout();
     } catch (error) {
       console.error('Payment error:', error);
       alert(isZh ? '支付失败，请重试' : 'Payment failed, please try again');

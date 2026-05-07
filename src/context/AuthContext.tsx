@@ -8,7 +8,7 @@ interface AuthContextType {
   loading: boolean;
   hasPurchased: boolean;
   signInWithGoogle: () => Promise<void>;
-  simulatePurchase: () => Promise<void>;
+  initiateCheckout: () => Promise<void>;
   completePayment: () => Promise<void>;
 }
 
@@ -150,7 +150,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  const initiatePayment = async () => {
+  const initiateCheckout = async () => {
     // 纯无账号方案：如果没有本地分配的ID，就生成一个。
     let localToken = localStorage.getItem('device_purchase_token');
     if (!localToken) {
@@ -158,7 +158,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       localStorage.setItem('device_purchase_token', localToken);
     }
 
-    const checkoutUrl = import.meta.env.VITE_CREEM_CHECKOUT_URL || 'https://www.creem.io/test/payment/prod_5xXOa84Nq51M6OpgInrSKp';
+    const checkoutUrl = import.meta.env.VITE_CREEM_CHECKOUT_URL || 'https://www.creem.io/payment/prod_5xXOa84Nq51M6OpgInrSKp';
     if (checkoutUrl) {
       const url = new URL(checkoutUrl);
       // 有 user 则附带 user.id，没有则使用 localToken（便于之后如果有后台需求可以对账）
@@ -221,7 +221,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   return (
-    <AuthContext.Provider value={{ user, loading, hasPurchased, signInWithGoogle, simulatePurchase: initiatePayment, completePayment }}>
+    <AuthContext.Provider value={{ user, loading, hasPurchased, signInWithGoogle, initiateCheckout, completePayment }}>
       {children}
       <PaymentSuccessModal 
         isOpen={isSuccessModalOpen} 

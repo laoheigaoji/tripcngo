@@ -55,7 +55,7 @@ const SpeakerButton = ({ text, isPlaying, onClick }: { text: string; isPlaying: 
 export default function Guide() {
   const { language, t } = useLanguage();
   const { data: guideData, loading: dataLoading } = useTravelGuide(language);
-  const { user, loading: authLoading, hasPurchased, signInWithGoogle, simulatePurchase, completePayment } = useAuth();
+  const { user, loading: authLoading, hasPurchased, signInWithGoogle, initiateCheckout, completePayment } = useAuth();
   const isZh = language === 'zh';
   const [playingId, setPlayingId] = useState<string | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
@@ -124,7 +124,7 @@ export default function Guide() {
   // 自动处理登录后的解锁
   useEffect(() => {
     if (user && pendingUnlock && !hasPurchased) {
-      handleSimulatePayment();
+      handlePayment();
       setPendingUnlock(false);
     }
   }, [user, pendingUnlock, hasPurchased]);
@@ -145,17 +145,17 @@ export default function Guide() {
     }
   }, [user, hasPurchased]);
 
-  const handleSimulatePayment = async () => {
+  const handlePayment = async () => {
     setIsProcessing(true);
     try {
-      await simulatePurchase();
+      await initiateCheckout();
     } finally {
       setIsProcessing(false);
     }
   };
 
   const handleUnlockAction = async () => {
-    handleSimulatePayment();
+    handlePayment();
   };
 
   const PaywallOverlay = () => {
@@ -364,13 +364,13 @@ export default function Guide() {
               <div>
                 <h4 className="font-bold text-gray-800 mb-3 text-sm">{guideData?.digital?.payment?.tipsTitle || '使用提示'}</h4>
                 <div className="grid grid-cols-2 gap-3">
-                  <a href="/cn/articles/URfBdxNg910nkgS3ewAh" className="block border rounded-lg overflow-hidden hover:shadow-md transition-shadow">
+                  <a href={`/${language === 'zh' ? 'cn' : language}/articles/URfBdxNg910nkgS3ewAh`} className="block border rounded-lg overflow-hidden hover:shadow-md transition-shadow">
                     <div className="bg-blue-500 aspect-video flex items-center justify-center">
                       <img src="https://cxegaqhwexiidezycbyg.supabase.co/storage/v1/object/public/images/thumbnails/1778045638834-xu03em.png" alt="WeChat Pay" className="w-full h-full object-cover" />
                     </div>
                     <div className="p-2 text-xs text-gray-600 text-center">{guideData?.digital?.payment?.wechatPay || '微信支付'}</div>
                   </a>
-                  <a href="/cn/articles/article-1778045526248-1dehf0" className="block border rounded-lg overflow-hidden hover:shadow-md transition-shadow">
+                   <a href={`/${language === 'zh' ? 'cn' : language}/articles/article-1778045526248-1dehf0`} className="block border rounded-lg overflow-hidden hover:shadow-md transition-shadow">
                     <div className="bg-green-500 aspect-video flex items-center justify-center">
                       <img src="https://cxegaqhwexiidezycbyg.supabase.co/storage/v1/object/public/images/thumbnails/1777948467869-874ac90d740edd3636caab26168edba7_image_url_https_3A_2F_2Fassets.wanderchina.guide_2Fupload_2Fguide_2Fcover-4.jpg_w_3840_q_75.jpg" alt="Alipay" className="w-full h-full object-cover" />
                     </div>
