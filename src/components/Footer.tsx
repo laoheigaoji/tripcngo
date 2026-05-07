@@ -30,6 +30,9 @@ export default function Footer() {
                 <a href="https://www.facebook.com/profile.php?id=100004264274335" target="_blank" rel="noopener noreferrer" className="hover:text-white transition-colors">
                   <Facebook className="w-6 h-6" />
                 </a>
+                <a href="https://www.tiktok.com/@tripcngo" target="_blank" rel="noopener noreferrer" className="hover:text-white transition-colors">
+                  <svg viewBox="0 0 24 24" className="w-[1.375rem] h-[1.375rem] fill-current"><path d="M12.525.02c1.31-.02 2.61-.01 3.91-.02.08 1.53.63 3.09 1.75 4.17 1.12 1.11 2.7 1.62 4.24 1.79v4.03c-1.44-.05-2.89-.35-4.2-.97-.57-.26-1.1-.59-1.62-.93-.01 2.92.01 5.84-.02 8.75-.08 1.4-.54 2.79-1.35 3.94-1.31 1.92-3.58 3.17-5.91 3.21-1.43.08-2.86-.31-4.08-1.03-2.02-1.12-3.44-3.17-3.64-5.38-.02-.53-.02-1.06 0-1.59.18-1.54.77-3.03 1.77-4.18 1.83-2.06 4.67-3.07 7.37-2.67v4.06c-1.3-.23-2.61.12-3.54.91-.71.61-1.16 1.47-1.25 2.41-.05.57.02 1.15.22 1.68.34 1.09 1.25 1.98 2.37 2.22.95.19 1.95.04 2.8-.45.74-.42 1.3-1.1 1.5-1.92.12-.52.12-1.06.12-1.59V.02z"/></svg>
+                </a>
               </div>
               <div className="flex items-center gap-2 text-[#e5f5ef]/70">
                 <Mail className="w-4 h-4" />
