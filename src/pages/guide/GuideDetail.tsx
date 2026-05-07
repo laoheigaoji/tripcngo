@@ -77,7 +77,7 @@ export default function GuideDetail() {
   const [nextArticle, setNextArticle] = useState<Article | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const langPrefix = language === 'zh' ? 'cn' : 'en';
+  const langPrefix = language === 'zh' ? 'cn' : language;
 
   // 获取文章的多语言标题
   const displayTitle = article ? (getI18n(article, 'title') || article.title || '') : '';

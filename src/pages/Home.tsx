@@ -38,6 +38,31 @@ const getLocalizedFAQ = (faq: HomeFAQ, language: string) => {
   };
 };
 
+// 获取指南多语言标题和描述
+const getGuideI18n = (guide: any, field: 'title' | 'subtitle', language: string) => {
+  if (!guide) return '';
+  
+  // 中文直接返回
+  if (language === 'zh') {
+    return guide[field] || '';
+  }
+  
+  // 其他语言查找对应字段
+  const langFieldMap: Record<string, string> = {
+    'en': `${field}En`,
+    'ja': `${field}Ja`,
+    'ko': `${field}Ko`,
+    'ru': `${field}Ru`,
+    'fr': `${field}Fr`,
+    'es': `${field}Es`,
+    'de': `${field}De`,
+    'tw': `${field}Tw`,
+    'it': `${field}It`,
+  };
+  
+  return guide[langFieldMap[language]] || guide[`${field}En`] || guide[field] || '';
+};
+
 // 备用FAQ数据（用于数据库连接失败时）
 const fallbackFAQS = [
   { 
@@ -184,7 +209,7 @@ export default function Home() {
   const [faqs, setFaqs] = useState<HomeFAQ[]>([]);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
-  const langPrefix = language === 'zh' ? 'cn' : 'en';
+  const langPrefix = language === 'zh' ? 'cn' : language;
 
   useEffect(() => {
     const fetchData = async () => {
@@ -197,7 +222,7 @@ export default function Home() {
             try {
               const { data, error } = await supabase
                 .from('articles')
-                .select('id, thumbnail, title, titleEn, subtitle, subtitleEn, views')
+                .select('id, thumbnail, title, titleEn, titleJa, titleKo, titleRu, titleFr, titleEs, titleDe, titleTw, titleIt, subtitle, subtitleEn, subtitleJa, subtitleKo, subtitleRu, subtitleFr, subtitleEs, subtitleDe, subtitleTw, subtitleIt, views')
                 .order('createdAt', { ascending: false })
                 .limit(6);
                 
@@ -207,9 +232,25 @@ export default function Home() {
                  id: doc.id,
                  img: doc.thumbnail || '',
                  title: doc.title || '',
-                 enTitle: doc.titleEn || doc.title || '',
-                 desc: doc.subtitle || '',
-                 enDesc: doc.subtitleEn || doc.subtitle || '',
+                 titleEn: doc.titleEn || doc.title || '',
+                 titleJa: doc.titleJa || '',
+                 titleKo: doc.titleKo || '',
+                 titleRu: doc.titleRu || '',
+                 titleFr: doc.titleFr || '',
+                 titleEs: doc.titleEs || '',
+                 titleDe: doc.titleDe || '',
+                 titleTw: doc.titleTw || '',
+                 titleIt: doc.titleIt || '',
+                 subtitle: doc.subtitle || '',
+                 subtitleEn: doc.subtitleEn || doc.subtitle || '',
+                 subtitleJa: doc.subtitleJa || '',
+                 subtitleKo: doc.subtitleKo || '',
+                 subtitleRu: doc.subtitleRu || '',
+                 subtitleFr: doc.subtitleFr || '',
+                 subtitleEs: doc.subtitleEs || '',
+                 subtitleDe: doc.subtitleDe || '',
+                 subtitleTw: doc.subtitleTw || '',
+                 subtitleIt: doc.subtitleIt || '',
                  views: doc.views || undefined
               })) || [];
               
@@ -540,14 +581,14 @@ export default function Home() {
             guides.map((guide, i) => (
              <div key={i} className="flex flex-col sm:flex-row gap-5 bg-transparent cursor-pointer group" onClick={() => navigate(`/${langPrefix}/articles/${guide.id}`)}>
                <div className="w-full sm:w-[200px] h-[140px] overflow-hidden rounded-md flex-shrink-0 shadow-sm border border-gray-200">
-                  <img src={guide.img} alt={language === 'zh' ? guide.title : guide.enTitle} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
+                  <img src={guide.img} alt={getGuideI18n(guide, 'title', language)} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
                </div>
                <div className="flex flex-col py-1">
                  <h3 className="text-[17px] font-bold text-gray-900 leading-snug group-hover:text-[#1b887a] transition-colors mb-2 line-clamp-2">
-                    {language === 'zh' ? guide.title : (guide.enTitle || guide.title)}
+                    {getGuideI18n(guide, 'title', language)}
                  </h3>
                  <p className="text-gray-500 text-[13px] line-clamp-3 mb-3 leading-relaxed">
-                   {language === 'zh' ? guide.desc : guide.enDesc}
+                   {getGuideI18n(guide, 'subtitle', language)}
                  </p>
                  {guide.views !== undefined && (
                    <div className="mt-auto text-xs flex items-center gap-1">

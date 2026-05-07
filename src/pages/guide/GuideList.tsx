@@ -37,7 +37,7 @@ export default function GuideList() {
   const [loading, setLoading] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
   const articlesPerPage = 6;
-  const langPrefix = language === 'zh' ? 'cn' : 'en';
+  const langPrefix = language === 'zh' ? 'cn' : language;
 
   // 获取翻译文本（兼容文章数据，支持蛇形和驼峰命名）
   const getI18n = (item: any, baseField: string) => {

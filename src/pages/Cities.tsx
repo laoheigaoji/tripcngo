@@ -35,7 +35,7 @@ export default function Cities() {
   const totalPages = Math.ceil(allCities.length / ITEMS_PER_PAGE);
   const currentCities = allCities.slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE);
 
-  const langPrefix = language === 'zh' ? 'cn' : 'en';
+  const langPrefix = language === 'zh' ? 'cn' : language;
 
   return (
     <div className="w-full bg-[#f9f9f9] pb-20">
