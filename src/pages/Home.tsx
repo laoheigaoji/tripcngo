@@ -228,7 +228,8 @@ export default function Home() {
                 
               if (error) throw error;
 
-              const mappedData = data?.map((doc: any) => ({
+              const fetchedData = data || [];
+              const mappedData = fetchedData.map((doc: any) => ({
                  id: doc.id,
                  img: doc.thumbnail || '',
                  title: doc.title || '',
@@ -251,12 +252,35 @@ export default function Home() {
                  subtitleDe: doc.subtitleDe || '',
                  subtitleTw: doc.subtitleTw || '',
                  subtitleIt: doc.subtitleIt || '',
-                 views: doc.views || undefined
-              })) || [];
+                 views: doc.views || 0
+              }));
               
-              setGuides(mappedData);
+              // If no data from DB, use fallback but process it to match structure
+              if (mappedData.length === 0 && fallbackArticles.length > 0) {
+                setGuides(fallbackArticles.map(a => ({
+                  id: a.id,
+                  img: a.img,
+                  title: a.title,
+                  titleEn: a.enTitle,
+                  subtitle: a.desc,
+                  subtitleEn: a.enDesc,
+                  views: a.views
+                })));
+              } else {
+                setGuides(mappedData);
+              }
             } catch (err) {
               console.error("Error fetching latest guides:", err);
+              // Fail-safe with fallback labels
+              setGuides(fallbackArticles.map(a => ({
+                id: a.id,
+                img: a.img,
+                title: a.title,
+                titleEn: a.enTitle,
+                subtitle: a.desc,
+                subtitleEn: a.enDesc,
+                views: a.views
+              })));
             }
           })(),
 
@@ -268,9 +292,14 @@ export default function Home() {
                 .select('*');
                 
               if (error) throw error;
-              setCities(data || []);
+              if (data && data.length > 0) {
+                setCities(data);
+              } else {
+                setCities(fallbackCities);
+              }
             } catch (err) {
               console.error("Error fetching cities:", err);
+              setCities(fallbackCities);
             }
           })(),
 
@@ -284,7 +313,9 @@ export default function Home() {
                 .order('sort_order', { ascending: true });
                 
               if (error) throw error;
-              setFaqs(data || []);
+              if (data && data.length > 0) {
+                setFaqs(data);
+              }
             } catch (err) {
               console.error("Error fetching FAQs:", err);
             }
@@ -293,7 +324,8 @@ export default function Home() {
       } catch (err) {
         console.error("Global data fetch error in Home:", err);
       } finally {
-        setLoading(false);
+        // Controlled delay for smoother loading transition
+        setTimeout(() => setLoading(false), 300);
       }
     };
     
@@ -506,20 +538,21 @@ export default function Home() {
       {/* Popular Cities */}
       <section className="py-20 bg-white">
         <div className="max-w-[1400px] mx-auto px-6">
-          <div className="flex flex-col items-center justify-center mb-8 text-center">
+          <div className="flex flex-col items-center justify-center mb-10 text-center">
             <h2 className="text-3xl font-bold text-gray-900 mb-3">{t('home.cities.title')}</h2>
-            <button className="text-[#1b887a] text-sm font-medium hover:underline" onClick={() => navigate(`/${langPrefix}/cities`)}>
+            <button className="text-[#1b887a] text-sm font-semibold hover:underline flex items-center gap-1" onClick={() => navigate(`/${langPrefix}/cities`)}>
                {t('home.cities.more')}
+               <ChevronRight className="w-4 h-4" />
             </button>
           </div>
-          <div className={`grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 ${loading ? 'animate-pulse' : ''}`}>
+          <div className={`grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 ${loading ? 'animate-pulse' : ''}`}>
             {loading ? (
               [...Array(6)].map((_, i) => (
-                  <div key={i} className="bg-white rounded-xl border border-gray-100 overflow-hidden h-[300px] flex flex-col shadow-sm">
-                    <div className="bg-gray-200 h-[220px] w-full" />
-                    <div className="p-4 space-y-2 flex-1 flex flex-col justify-center">
-                      <div className="h-4 bg-gray-200 rounded w-1/2" />
-                      <div className="h-3 bg-gray-200 rounded w-1/4" />
+                  <div key={i} className="bg-white rounded-2xl border border-gray-100 overflow-hidden shadow-sm flex flex-col">
+                    <div className="bg-gray-100 h-[240px] w-full animate-shimmer" />
+                    <div className="p-5 space-y-3 flex-1">
+                      <div className="h-6 bg-gray-100 rounded-lg w-2/3" />
+                      <div className="h-4 bg-gray-100 rounded-lg w-1/3" />
                     </div>
                   </div>
               ))
@@ -527,27 +560,30 @@ export default function Home() {
               cities.slice(0, 6).map((city) => (
                 <div 
                   key={city.id} 
-                  className="relative group rounded-xl overflow-hidden cursor-pointer bg-white border border-gray-100 hover:shadow-lg transition-all duration-300"
+                  className="relative group rounded-2xl overflow-hidden cursor-pointer bg-white border border-gray-100 hover:shadow-xl transition-all duration-500"
                   onClick={() => navigate(`/${langPrefix}/cities/${city.id}`)}
                 >
-                  <div className="relative h-[240px] md:h-[260px]">
-                    <img src={city.listCover || city.heroImage || city.img} alt={language === 'zh' ? city.name : city.enName} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
-                    <div className="absolute inset-0 bg-black/10 group-hover:bg-transparent transition-colors" />
+                  <div className="relative h-[240px] md:h-[280px]">
+                    <img src={city.listCover || city.heroImage || city.img} alt={language === 'zh' ? city.name : city.enName} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
                   </div>
-                  <div className="p-4 flex items-center justify-between bg-white border-t border-gray-100">
+                  <div className="p-5 flex items-center justify-between bg-white border-t border-gray-50">
                     <div>
-                      <span className="text-[15px] font-bold text-gray-900">{language === 'zh' ? city.name : (city.enName || city.name)}</span>
-                      <span className="ml-2 text-xs text-gray-500 font-medium uppercase tracking-wider">{city.enName || city.name}</span>
+                      <div className="text-[17px] font-bold text-gray-900 group-hover:text-[#1b887a] transition-colors">{language === 'zh' ? city.name : (city.enName || city.name)}</div>
+                      <div className="text-xs text-gray-400 font-medium uppercase tracking-widest mt-0.5">{city.enName || city.name}</div>
                     </div>
-                    <div className="flex gap-3 text-gray-500">
+                    <div className="flex gap-4 text-gray-400">
                       <button 
                         onClick={(e) => toggleWantToVisit(e, city.id)}
-                        className={`flex items-center gap-1 text-xs font-medium transition-colors hover:text-red-500 ${votedCities.includes(city.id) ? 'text-red-500' : ''}`}
+                        className={`flex items-center gap-1.5 text-[13px] font-medium transition-all hover:text-red-500 ${votedCities.includes(city.id) ? 'text-red-500 scale-110' : ''}`}
                       >
-                        <Heart className={`w-3.5 h-3.5 ${votedCities.includes(city.id) ? 'fill-red-500 text-red-500' : ''}`} /> 
+                        <Heart className={`w-4 h-4 ${votedCities.includes(city.id) ? 'fill-red-500 text-red-500' : ''}`} /> 
                         {city.stats?.wantToVisit || 0}
                       </button>
-                      <span className="flex items-center gap-1 text-xs font-medium"><ThumbsUp className="w-3.5 h-3.5 text-[#1b887a] fill-[#1b887a]" /> {city.stats?.recommended || 0}</span>
+                      <span className="flex items-center gap-1.5 text-[13px] font-medium transition-colors hover:text-[#1b887a]">
+                        <ThumbsUp className="w-4 h-4 text-[#1b887a] fill-[#1b887a]" /> 
+                        {city.stats?.recommended || 0}
+                      </span>
                     </div>
                   </div>
                 </div>
@@ -558,43 +594,50 @@ export default function Home() {
       </section>
 
       {/* Wandering Guides */}
-      <section className="py-20 max-w-[1400px] mx-auto px-6">
-        <div className="flex justify-between items-end mb-10">
-          <h2 className="text-3xl font-bold text-gray-900">{t('home.guides.title')}</h2>
-          <button className="text-[#1b887a] text-sm font-medium hover:underline" onClick={() => navigate(`/${langPrefix}/articles`)}>
+      <section className="py-24 max-w-[1400px] mx-auto px-6">
+        <div className="flex justify-between items-end mb-12">
+          <div>
+            <h2 className="text-3xl font-bold text-gray-900 mb-2">{t('home.guides.title')}</h2>
+            <div className="h-1 w-12 bg-[#1b887a] rounded-full" />
+          </div>
+          <button className="text-[#1b887a] text-sm font-semibold hover:underline flex items-center gap-1" onClick={() => navigate(`/${langPrefix}/articles`)}>
              {t('home.guides.more')}
+             <ChevronRight className="w-4 h-4" />
           </button>
         </div>
-        <div className={`grid grid-cols-1 md:grid-cols-2 gap-y-10 gap-x-8 ${loading ? 'animate-pulse' : ''}`}>
+        <div className={`grid grid-cols-1 sm:grid-cols-2 gap-y-12 gap-x-10 ${loading ? 'animate-pulse' : ''}`}>
           {loading ? (
              [...Array(4)].map((_, i) => (
-               <div key={i} className="flex flex-col sm:flex-row gap-5 bg-transparent">
-                 <div className="w-full sm:w-[200px] h-[140px] bg-gray-200 rounded-md shadow-sm flex-shrink-0" />
+               <div key={i} className="flex flex-col xl:flex-row gap-6 bg-transparent">
+                 <div className="w-full xl:w-[240px] h-[160px] bg-gray-100 rounded-xl shadow-sm flex-shrink-0" />
                  <div className="flex-1 space-y-3 py-2">
-                   <div className="h-5 bg-gray-200 rounded w-3/4"></div>
-                   <div className="h-4 bg-gray-200 rounded w-full"></div>
-                   <div className="h-4 bg-gray-200 rounded w-5/6"></div>
+                   <div className="h-6 bg-gray-100 rounded-lg w-5/6"></div>
+                   <div className="h-4 bg-gray-100 rounded-lg w-full"></div>
+                   <div className="h-4 bg-gray-100 rounded-lg w-2/3"></div>
+                   <div className="mt-4 h-4 bg-gray-100 rounded-lg w-1/4"></div>
                  </div>
                </div>
             ))
           ) : (
-            guides.map((guide, i) => (
-             <div key={i} className="flex flex-col sm:flex-row gap-5 bg-transparent cursor-pointer group" onClick={() => navigate(`/${langPrefix}/articles/${guide.id}`)}>
-               <div className="w-full sm:w-[200px] h-[140px] overflow-hidden rounded-md flex-shrink-0 shadow-sm border border-gray-200">
-                  <img src={guide.img} alt={getGuideI18n(guide, 'title', language)} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
+            guides.slice(0, 4).map((guide, i) => (
+             <div key={i} className="flex flex-col xl:flex-row gap-6 bg-transparent cursor-pointer group" onClick={() => navigate(`/${langPrefix}/articles/${guide.id}`)}>
+               <div className="w-full xl:w-[240px] h-[160px] overflow-hidden rounded-xl flex-shrink-0 shadow-sm border border-gray-100 bg-gray-50">
+                  <img src={guide.img} alt={getGuideI18n(guide, 'title', language)} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" />
                </div>
-               <div className="flex flex-col py-1">
-                 <h3 className="text-[17px] font-bold text-gray-900 leading-snug group-hover:text-[#1b887a] transition-colors mb-2 line-clamp-2">
+               <div className="flex flex-col py-1 flex-1">
+                 <h3 className="text-xl font-bold text-gray-900 leading-snug group-hover:text-[#1b887a] transition-colors mb-3 line-clamp-2">
                     {getGuideI18n(guide, 'title', language)}
                  </h3>
-                 <p className="text-gray-500 text-[13px] line-clamp-3 mb-3 leading-relaxed">
+                 <p className="text-gray-500 text-sm line-clamp-2 mb-4 leading-relaxed">
                    {getGuideI18n(guide, 'subtitle', language)}
                  </p>
                  {guide.views !== undefined && (
-                   <div className="mt-auto text-xs flex items-center gap-1">
-                     <ThumbsUp className="w-3.5 h-3.5 text-red-500 shrink-0" />
-                     <span className="text-red-500 font-medium">{guide.views}</span>
-                     <span className="text-gray-500">{t('home.guides.helpful')}</span>
+                   <div className="mt-auto pt-2 flex items-center gap-2">
+                     <div className="flex items-center gap-1 bg-red-50 px-2 py-1 rounded-md">
+                       <ThumbsUp className="w-3.5 h-3.5 text-red-500 shrink-0 fill-red-500" />
+                       <span className="text-red-500 font-bold text-xs">{guide.views}</span>
+                     </div>
+                     <span className="text-gray-400 text-xs font-medium">{t('home.guides.helpful')}</span>
                    </div>
                  )}
                </div>
