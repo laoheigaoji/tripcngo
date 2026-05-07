@@ -36,7 +36,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             .eq('item_id', 'all_access')
             .limit(1);
           
-          setHasPurchased(purchases && purchases.length > 0);
+          if (purchases && purchases.length > 0) {
+            setHasPurchased(true);
+            localStorage.setItem('hasPurchased', 'true');
+          } else {
+            if (localStorage.getItem('hasPurchased') !== 'true') {
+              setHasPurchased(false);
+            }
+          }
         }
       } catch (error) {
         console.error('Auth check error:', error);
@@ -50,7 +57,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
       setUser(session?.user || null);
       if (!session?.user) {
-        setHasPurchased(false);
+        // 如果没有登录，保持 localStorage 里的购买状态，如果不为 true 才设为 false
+        if (localStorage.getItem('hasPurchased') !== 'true') {
+          setHasPurchased(false);
+        }
       } else {
         // 检查购买记录
         const { data: purchases } = await supabase
@@ -59,7 +69,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           .eq('user_id', session.user.id)
           .eq('item_id', 'all_access')
           .limit(1);
-        setHasPurchased(purchases && purchases.length > 0);
+        
+        if (purchases && purchases.length > 0) {
+          setHasPurchased(true);
+          localStorage.setItem('hasPurchased', 'true');
+        } else {
+          // 如果云端没有，但本地有，可能刚买完还没同步（在补充方案下），保持本地状态
+          if (localStorage.getItem('hasPurchased') !== 'true') {
+            setHasPurchased(false);
+          }
+        }
       }
     });
 
@@ -70,19 +89,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     // 处理支付成功回调
     const params = new URLSearchParams(window.location.search);
     if (params.get('unlock') === 'true') {
-      const processPayment = async () => {
-        // 直接在此处完成支付记录（本地存储方案）
-        await completePayment();
-        
-        if (window.opener) {
-          window.opener.postMessage('creem_payment_success', '*');
-          setTimeout(() => window.close(), 500); // 尝试关闭弹窗
-        }
-        // 清理 URL
+      if (window.opener) {
+        // 如果是支付弹窗回调回来，通知主窗口并关闭
+        window.opener.postMessage('creem_payment_success', '*');
+        setTimeout(() => window.close(), 100);
+      } else {
+        // 如果是在当前窗口直接跳转回来的
+        completePayment();
         window.history.replaceState({}, document.title, window.location.pathname);
-      };
-      
-      processPayment();
+      }
     }
 
     const handleMessage = (event: MessageEvent) => {
@@ -93,7 +108,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     window.addEventListener('message', handleMessage);
     return () => window.removeEventListener('message', handleMessage);
-  }, [user, hasPurchased]);
+  }, []); // 移除 user, hasPurchased 依赖，避免重复执行
 
   const signInWithGoogle = async () => {
     try {
