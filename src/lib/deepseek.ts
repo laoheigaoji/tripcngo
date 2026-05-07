@@ -1,6 +1,6 @@
 import OpenAI from 'openai';
 
-const deepseekKey = import.meta.env.VITE_DEEPSEEK_API_KEY || 'sk-59621d871ea2481ebb5cef488b8137be';
+const deepseekKey = import.meta.env.VITE_DEEPSEEK_API_KEY;
 
 export const deepseek = new OpenAI({
   apiKey: deepseekKey,

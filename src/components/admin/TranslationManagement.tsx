@@ -51,7 +51,7 @@ export default function TranslationManagement() {
       if (filterCategory) {
         query = query.eq('category', filterCategory);
       }
-      const { data, error } = await query.orderBy('key');
+      const { data, error } = await query.order('key');
       if (error) throw error;
       setTranslations(data || []);
     } catch (e) {

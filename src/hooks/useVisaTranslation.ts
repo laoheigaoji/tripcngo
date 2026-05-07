@@ -10,19 +10,19 @@ import deTranslations from '../locales/de.json';
 import twTranslations from '../locales/tw.json';
 import itTranslations from '../locales/it.json';
 
-type TranslationKey = keyof typeof zhTranslations;
+type TranslationKey = string;
 
 const translations: Record<string, Record<TranslationKey, string>> = {
-  zh: zhTranslations,
-  en: enTranslations,
-  ja: jaTranslations,
-  ko: koTranslations,
-  ru: ruTranslations,
-  fr: frTranslations,
-  es: esTranslations,
-  de: deTranslations,
-  tw: twTranslations,
-  it: itTranslations,
+  zh: zhTranslations as any,
+  en: enTranslations as any,
+  ja: jaTranslations as any,
+  ko: koTranslations as any,
+  ru: ruTranslations as any,
+  fr: frTranslations as any,
+  es: esTranslations as any,
+  de: deTranslations as any,
+  tw: twTranslations as any,
+  it: itTranslations as any,
 };
 
 // Supported languages in the app

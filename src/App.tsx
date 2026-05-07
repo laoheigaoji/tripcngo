@@ -1,6 +1,7 @@
 import React, { useEffect } from 'react';
 import { BrowserRouter, Routes, Route, Outlet, Navigate, useLocation, useParams } from 'react-router-dom';
 import { LanguageProvider, useLanguage } from './context/LanguageContext';
+import { AuthProvider } from './context/AuthContext';
 import Navbar from './components/Navbar';
 import Footer from './components/Footer';
 import Home from './pages/Home';
@@ -23,6 +24,7 @@ import GuideList from './pages/guide/GuideList';
 import GuideDetail from './pages/guide/GuideDetail';
 import Admin from './pages/Admin';
 import Migration from './pages/Migration';
+import AuthCallback from './pages/AuthCallback';
 import ZodiacCalculator from './pages/tools/ZodiacCalculator';
 import CharacterCounter from './pages/tools/CharacterCounter';
 import PinyinSegmentation from './pages/tools/PinyinSegmentation';
@@ -128,14 +130,17 @@ function LangRouteWrapper() {
 export default function App() {
   return (
     <LanguageProvider>
-      <BrowserRouter>
-        <Routes>
-          <Route path="/admin" element={<Admin />} />
-          <Route path="/migration" element={<Migration />} />
-          <Route path="/:langParam/*" element={<LangRouteWrapper />} />
-          <Route path="*" element={<RootRedirect />} />
-        </Routes>
-      </BrowserRouter>
+      <AuthProvider>
+        <BrowserRouter>
+          <Routes>
+            <Route path="/admin" element={<Admin />} />
+            <Route path="/migration" element={<Migration />} />
+            <Route path="/auth/callback" element={<AuthCallback />} />
+            <Route path="/:langParam/*" element={<LangRouteWrapper />} />
+            <Route path="*" element={<RootRedirect />} />
+          </Routes>
+        </BrowserRouter>
+      </AuthProvider>
     </LanguageProvider>
   );
 }

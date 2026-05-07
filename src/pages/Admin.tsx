@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Trash2, Plus, LogOut, ChevronRight, ChevronDown, ChevronUp, Save, Image as ImageIcon, Filter, FileText, Languages, Building2, Globe, FileSignature, Plane, Menu, X } from 'lucide-react';
+import { Trash2, Plus, LogOut, ChevronRight, ChevronDown, ChevronUp, Save, Image as ImageIcon, Filter, FileText, Languages, Building2, Globe, FileSignature, Plane, Menu, X, RefreshCw } from 'lucide-react';
 import Markdown from 'react-markdown';
 import MDEditor from '@uiw/react-md-editor';
 import TurndownService from 'turndown';
@@ -15,6 +15,7 @@ import VisaManagement from '../components/admin/VisaManagement';
 import TranslationManagement from '../components/admin/TranslationManagement';
 import AppsManagement from '../components/admin/AppsManagement';
 import PageSectionsManagement from '../components/admin/PageSectionsManagement';
+import DataBackupManagement from '../components/admin/DataBackupManagement';
 
 // 支持的语言配置
 const SUPPORTED_LANGUAGES = [
@@ -112,7 +113,7 @@ export default function Admin() {
   const [showForm, setShowForm] = useState(false);
   const [showCityForm, setShowCityForm] = useState(false);
   const [editingCity, setEditingCity] = useState<CityData | null>(null);
-  const [activeAdminView, setActiveAdminView] = useState<'articles' | 'cities' | 'visa' | 'translations' | 'apps' | 'pages'>('articles');
+  const [activeAdminView, setActiveAdminView] = useState<'articles' | 'cities' | 'visa' | 'translations' | 'apps' | 'pages' | 'backup'>('articles');
   const [editingId, setEditingId] = useState<string | null>(null);
   const [isPreview, setIsPreview] = useState(false);
   const [activeTab, setActiveTab] = useState<LanguageCode>('zh');
@@ -1408,6 +1409,39 @@ export default function Admin() {
                     )}
                   </AnimatePresence>
                 </div>
+
+                {/* 备份恢复 - 可折叠 */}
+                <div className="space-y-1">
+                  <button 
+                    onClick={() => setMobileMenuExpanded(mobileMenuExpanded === 'backup' ? null : 'backup')}
+                    className={`w-full flex items-center justify-between gap-3 px-4 py-3 rounded-xl font-bold transition-all ${activeAdminView === 'backup' && !showForm ? 'bg-[#1b887a] text-white shadow-md' : 'text-gray-500 hover:bg-gray-100'}`}
+                  >
+                    <div className="flex items-center gap-3">
+                      <RefreshCw className="w-5 h-5" /> 备份恢复
+                    </div>
+                    {mobileMenuExpanded === 'backup' ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+                  </button>
+                  <AnimatePresence>
+                    {mobileMenuExpanded === 'backup' && (
+                      <motion.div
+                        initial={{ height: 0, opacity: 0 }}
+                        animate={{ height: 'auto', opacity: 1 }}
+                        exit={{ height: 0, opacity: 0 }}
+                        transition={{ duration: 0.2 }}
+                        className="overflow-hidden"
+                      >
+                        <div className="pl-4 space-y-1 py-1">
+                          <button 
+                            onClick={() => { setActiveAdminView('backup'); setShowForm(false); setSidebarOpen(false); setMobileMenuExpanded(null); }}
+                            className={`w-full flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-medium transition-all ${activeAdminView === 'backup' && !showForm ? 'bg-[#1b887a]/10 text-[#1b887a]' : 'text-gray-400 hover:bg-gray-50 hover:text-gray-600'}`}
+                          >
+                            备份恢复
+                          </button>
+                        </div>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </div>
               </nav>
               <div className="p-4 border-t border-gray-100 pb-8">
                 <button 
@@ -1467,6 +1501,12 @@ export default function Admin() {
             className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-bold transition-all ${activeAdminView === 'translations' && !showForm ? 'bg-[#1b887a] text-white shadow-md' : 'text-gray-500 hover:bg-gray-50'}`}
           >
             <Languages className="w-5 h-5" /> 翻译管理
+          </button>
+          <button 
+            onClick={() => { setActiveAdminView('backup'); setShowForm(false); }}
+            className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-bold transition-all ${activeAdminView === 'backup' && !showForm ? 'bg-[#1b887a] text-white shadow-md' : 'text-gray-500 hover:bg-gray-50'}`}
+          >
+            <RefreshCw className="w-5 h-5" /> 备份恢复
           </button>
         </nav>
         <div className="p-4 border-t border-gray-100 pb-8">
@@ -1832,6 +1872,8 @@ export default function Admin() {
                 <PageSectionsManagement />
               ) : activeAdminView === 'translations' ? (
                 <TranslationManagement />
+              ) : activeAdminView === 'backup' ? (
+                <DataBackupManagement />
               ) : null}
             </>
           )}

@@ -214,8 +214,8 @@ export default function CityForm({ city, onClose, onSave }: CityFormProps) {
         // 翻译最佳旅行时间
         if (formData.bestTravelTime.strongText) {
           try {
-            const strongTextKey = getLangField('bestTravelTime.strongText', langCode);
-            (newData as any)[strongTextKey] = await askDeepSeek(
+            const fieldName = 'strongText' + langCode.charAt(0).toUpperCase() + langCode.slice(1);
+            (newData.bestTravelTime as any)[fieldName] = await askDeepSeek(
               `Translate the following Chinese text to ${langName}. Only output the translated text, no explanations:\n\n${formData.bestTravelTime.strongText}`
             );
             updateProgress(langName, '最佳旅行时间');
@@ -226,7 +226,7 @@ export default function CityForm({ city, onClose, onSave }: CityFormProps) {
         
         if (formData.bestTravelTime.paragraphs.length > 0) {
           try {
-            const bestTimeParasKey = getLangField('bestTravelTime.paragraphs', langCode);
+            const fieldName = 'paragraphs' + langCode.charAt(0).toUpperCase() + langCode.slice(1);
             const translatedParagraphs = [];
             for (const para of formData.bestTravelTime.paragraphs) {
               const translated = await askDeepSeek(
@@ -235,7 +235,7 @@ export default function CityForm({ city, onClose, onSave }: CityFormProps) {
               translatedParagraphs.push(translated);
               updateProgress(langName, '旅行时间段落');
             }
-            (newData as any)[bestTimeParasKey] = translatedParagraphs;
+            (newData.bestTravelTime as any)[fieldName] = translatedParagraphs;
           } catch (e) {
             console.warn(`Failed to translate bestTravelTime paragraphs to ${langCode}:`, e);
           }
@@ -264,8 +264,8 @@ export default function CityForm({ city, onClose, onSave }: CityFormProps) {
         // ========== 新增：翻译城市信息 ==========
         if (formData.info.area) {
           try {
-            const areaKey = getLangField('info.area', langCode);
-            (newData as any)[areaKey] = await askDeepSeek(
+            const fieldName = 'area' + langCode.charAt(0).toUpperCase() + langCode.slice(1);
+            (newData.info as any)[fieldName] = await askDeepSeek(
               `Translate the following Chinese text to ${langName}. Only output the translated text, no explanations:\n\n${formData.info.area}`
             );
             updateProgress(langName, '城市面积');
@@ -276,8 +276,8 @@ export default function CityForm({ city, onClose, onSave }: CityFormProps) {
         
         if (formData.info.population) {
           try {
-            const popKey = getLangField('info.population', langCode);
-            (newData as any)[popKey] = await askDeepSeek(
+            const fieldName = 'population' + langCode.charAt(0).toUpperCase() + langCode.slice(1);
+            (newData.info as any)[fieldName] = await askDeepSeek(
               `Translate the following Chinese text to ${langName}. Only output the translated text, no explanations:\n\n${formData.info.population}`
             );
             updateProgress(langName, '城市人口');

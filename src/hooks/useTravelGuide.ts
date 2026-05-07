@@ -29,6 +29,7 @@ export interface GuideData {
     gift: Record<string, string>;
     social: Record<string, string>;
   };
+  paywall: Record<string, string>;
 }
 
 export function useTravelGuide(language: string = 'zh') {
@@ -63,7 +64,8 @@ export function useTravelGuide(language: string = 'zh') {
           digital: { vpn: {}, payment: {} },
           language: { vocabulary: {} },
           character: {},
-          culture: { dining: {}, gift: {}, social: {} }
+          culture: { dining: {}, gift: {}, social: {} },
+          paywall: {}
         });
       }
     } catch (err: any) {
@@ -96,7 +98,8 @@ function organizeGuideData(items: TravelGuideItem[], currentLanguage: string): G
       dining: {},
       gift: {},
       social: {}
-    }
+    },
+    paywall: {}
   };
 
   // 按语言和 key 分组，同一 key 只保留一个语言版本
@@ -160,6 +163,9 @@ function organizeGuideData(items: TravelGuideItem[], currentLanguage: string): G
         } else if (subsection === 'social') {
           result.culture.social[key] = value;
         }
+        break;
+      case 'paywall':
+        result.paywall[key] = value;
         break;
     }
   });

@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { Wifi, CreditCard, Globe, Compass, BookOpen, MessageCircle, Sparkles, ArrowRight, AlertTriangle, CheckCircle2, XCircle, Clock, Gift, Users, ThumbsUp, Volume2 } from 'lucide-react';
+import { Wifi, CreditCard, Globe, Compass, BookOpen, MessageCircle, Sparkles, ArrowRight, AlertTriangle, CheckCircle2, XCircle, Clock, Gift, Users, ThumbsUp, Volume2, Lock, LogIn, Shield, CreditCard as CardIcon } from 'lucide-react';
 import { useLanguage } from '../context/LanguageContext';
+import { useAuth } from '../context/AuthContext';
 import { useTravelGuide } from '../hooks/useTravelGuide';
 import SEO from '../components/SEO';
+import { motion, AnimatePresence } from 'motion/react';
 
 // 备用翻译映射 - 当数据库无数据时使用
 const fallbackTranslations: Record<string, Record<string, string>> = {
@@ -51,9 +53,14 @@ const SpeakerButton = ({ text, isPlaying, onClick }: { text: string; isPlaying: 
 
 export default function Guide() {
   const { language, t } = useLanguage();
-  const { data: guideData, loading } = useTravelGuide(language);
+  const { data: guideData, loading: dataLoading } = useTravelGuide(language);
+  const { user, loading: authLoading, hasPurchased, signInWithGoogle, simulatePurchase } = useAuth();
   const isZh = language === 'zh';
   const [playingId, setPlayingId] = useState<string | null>(null);
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [pendingUnlock, setPendingUnlock] = useState(false);
+
+  const loading = dataLoading || (authLoading && !user);
 
   // 从数据库获取翻译文本的辅助函数
   const getText = (section: string, key: string, fallback: string = ''): string => {
@@ -63,14 +70,11 @@ export default function Guide() {
     if (sectionData && typeof sectionData === 'object') {
       const subsectionData = sectionData[key];
       if (subsectionData && typeof subsectionData === 'object') {
-        // 对于嵌套结构，尝试获取当前语言的值
         const value = subsectionData[language] || subsectionData['zh'] || subsectionData['en'];
         if (value) return value;
       }
-      // 对于VPN等有subsection的结构
       if (key === 'vpn' || key === 'payment') {
         const subsection = subsectionData;
-        // 返回sectionTitle作为默认
         return subsection?.sectionTitle || fallback;
       }
       const value = subsectionData;
@@ -81,49 +85,134 @@ export default function Guide() {
 
   // 语音合成函数
   const speak = (text: string, id: string) => {
-    // 如果正在播放同一个，则停止
     if (playingId === id) {
       window.speechSynthesis.cancel();
       setPlayingId(null);
       return;
     }
-
-    // 停止之前的播放
     window.speechSynthesis.cancel();
-
     const utterance = new SpeechSynthesisUtterance(text);
-    utterance.lang = 'zh-CN'; // 设置为中文
-    utterance.rate = 0.8; // 稍微放慢语速
+    utterance.lang = 'zh-CN';
+    utterance.rate = 0.8;
     utterance.pitch = 1;
-
-    // 尝试选择中文语音
     const voices = window.speechSynthesis.getVoices();
     const zhVoice = voices.find(v => v.lang.includes('zh') || v.lang.includes('CN'));
     if (zhVoice) {
       utterance.voice = zhVoice;
     }
-
     utterance.onstart = () => setPlayingId(id);
     utterance.onend = () => setPlayingId(null);
     utterance.onerror = () => setPlayingId(null);
-
     window.speechSynthesis.speak(utterance);
   };
 
-  // 组件卸载时停止播放
+  // 生命周期管理
   useEffect(() => {
     return () => {
       window.speechSynthesis.cancel();
     };
   }, []);
 
-  // 预加载语音列表
   useEffect(() => {
     window.speechSynthesis.getVoices();
     window.speechSynthesis.onvoiceschanged = () => {
       window.speechSynthesis.getVoices();
     };
   }, []);
+
+  // 自动处理登录后的解锁
+  useEffect(() => {
+    if (user && pendingUnlock && !hasPurchased) {
+      handleSimulatePayment();
+      setPendingUnlock(false);
+    }
+  }, [user, pendingUnlock, hasPurchased]);
+
+  // 处理从登录页返回时自动解锁
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('unlock') === 'true' && user && !hasPurchased) {
+      handleSimulatePayment();
+      // 清除 URL 参数
+      window.history.replaceState({}, '', window.location.pathname);
+    }
+  }, [user, hasPurchased]);
+
+  const handleSimulatePayment = async () => {
+    setIsProcessing(true);
+    try {
+      await simulatePurchase();
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
+  const handleUnlockAction = async () => {
+    if (!user) {
+      setPendingUnlock(true);
+      try {
+        await signInWithGoogle();
+      } catch (error) {
+        setPendingUnlock(false);
+        console.error('Sign in failed:', error);
+      }
+      return;
+    }
+    handleSimulatePayment();
+  };
+
+  const PaywallOverlay = () => {
+    // 从数据库获取翻译，或使用 fallback
+    const paywallTitle = guideData?.paywall?.title || (isZh ? '支付 $1，解锁完整内容' : 'Pay $1, unlock full content');
+    const paywallButton = guideData?.paywall?.buttonText || (isZh ? '支付 $1 解锁全部' : 'Pay $1 Unlock All');
+    const paywallLoading = guideData?.paywall?.loadingText || (isZh ? '正在解锁...' : 'Unlocking...');
+    
+    return (
+      <div className="absolute inset-0 z-20 flex items-center justify-center p-6 bg-slate-900/10 backdrop-blur-md rounded-2xl overflow-hidden">
+        {/* Decorative Background Elements */}
+        <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none">
+          <div className="absolute -top-[20%] -left-[10%] w-[60%] h-[60%] bg-[#1b887a]/10 rounded-full blur-[100px]" />
+          <div className="absolute -bottom-[20%] -right-[10%] w-[60%] h-[60%] bg-[#1b887a]/5 rounded-full blur-[100px]" />
+        </div>
+
+        <motion.div 
+          initial={{ opacity: 0, scale: 0.9, y: 20 }}
+          animate={{ opacity: 1, scale: 1, y: 0 }}
+          transition={{ type: "spring", damping: 25, stiffness: 300 }}
+          className="max-w-md w-full bg-white/95 backdrop-blur-2xl rounded-[2.5rem] shadow-[0_32px_64px_-16px_rgba(0,0,0,0.1)] border border-white/50 p-10 text-center relative z-30"
+        >
+          {/* Lock Icon with Glow */}
+          <div className="relative w-24 h-24 mx-auto mb-8">
+            <div className="absolute inset-0 bg-[#1b887a]/20 rounded-full blur-2xl animate-pulse" />
+            <div className="relative w-full h-full bg-gradient-to-br from-[#1b887a] to-[#25ad9b] rounded-full flex items-center justify-center shadow-lg shadow-[#1b887a]/30">
+              <Lock className="w-10 h-10 text-white" />
+            </div>
+          </div>
+          
+          <p className="text-slate-600 mb-10 leading-relaxed font-medium">
+            {paywallTitle}
+          </p>
+
+          <div className="space-y-6">
+            <motion.button
+              whileHover={{ scale: 1.02, y: -2 }}
+              whileTap={{ scale: 0.98 }}
+              onClick={handleUnlockAction}
+              disabled={isProcessing}
+              className="w-full flex items-center justify-center gap-3 bg-slate-900 hover:bg-slate-800 text-white font-bold py-5 px-6 rounded-2xl transition-all shadow-xl shadow-slate-200 disabled:opacity-50 relative overflow-hidden group"
+            >
+              <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000" />
+              {!user && <img src="https://www.google.com/favicon.ico" alt="Google" className="w-5 h-5 flex-shrink-0" />}
+              {user && <CardIcon className="w-5 h-5 text-[#25ad9b]" />}
+              <span>
+                {isProcessing ? paywallLoading : paywallButton}
+              </span>
+            </motion.button>
+          </div>
+        </motion.div>
+      </div>
+    );
+  };
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -140,7 +229,7 @@ export default function Guide() {
           className="absolute inset-0 w-full h-full object-cover"
         />
         <div className="absolute inset-0 bg-gradient-to-b from-black/50 via-black/30 to-black/60" />
-        <div className="relative text-center text-white px-6 max-w-3xl">
+        <div className="relative text-center text-white px-6 max-w-3xl pt-24">
           <div className="inline-flex items-center gap-2 bg-white/20 backdrop-blur-sm px-4 py-2 rounded-full mb-6">
             <Sparkles className="w-4 h-4" />
             <span className="text-sm font-medium">{guideData?.hero?.badge || (isZh ? '旅行必备指南' : 'Essential Travel Guide')}</span>
@@ -162,20 +251,20 @@ export default function Guide() {
       <div className="max-w-6xl mx-auto px-4 md:px-6 py-12 space-y-6">
         
         {/* 数字生存工具包 */}
-        <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
+        <div className="relative">
           {/* 标题区域 */}
-          <div className="text-center py-8 border-b border-gray-100">
-            <h2 className="text-2xl font-bold text-gray-900 mb-2">{guideData?.digital?.sectionTitle || (isZh ? '数字生存工具包' : 'Digital Survival Kit')}</h2>
+          <div className="text-center py-8">
+            <h2 className="text-3xl font-bold text-gray-900 mb-2">{guideData?.digital?.sectionTitle || (isZh ? '数字生存工具包' : 'Digital Survival Kit')}</h2>
             <p className="text-gray-500">{guideData?.digital?.sectionSubtitle || (isZh ? '网络连接与移动支付的必备指南' : 'Essential guide for internet and mobile payments')}</p>
           </div>
           
-          <div className="p-6 grid md:grid-cols-2 gap-6">
+          <div className="grid md:grid-cols-2 gap-8 transition-all duration-700">
             {/* 左侧：互联网连接VPN */}
             <div className="space-y-5">
               {/* 标题 */}
               <div className="text-center">
-                <h3 className="font-bold text-lg text-gray-900">{guideData?.digital?.vpn?.title || '互联网连接：VPN'}</h3>
-                <p className="text-sm text-gray-500 mt-1">{guideData?.digital?.vpn?.subtitle || '访问国际互联网服务的必备工具'}</p>
+                <h3 className="font-bold text-lg text-gray-900">{guideData?.digital?.vpn?.title || (isZh ? '互联网连接：VPN' : 'Internet Connectivity: VPN')}</h3>
+                <p className="text-sm text-gray-500 mt-1">{guideData?.digital?.vpn?.subtitle || (isZh ? '访问国际互联网服务的必备工具' : 'Essential tools to stay connected with the world')}</p>
               </div>
               
               {/* 重要提醒 */}
@@ -183,16 +272,16 @@ export default function Guide() {
                 <div className="flex items-start gap-3">
                   <AlertTriangle className="w-5 h-5 text-amber-500 flex-shrink-0 mt-0.5" />
                   <div>
-                    <div className="font-bold text-amber-800 text-sm">{guideData?.digital?.vpn?.importantTitle || '重要提醒'}</div>
-                    <div className="text-amber-700 text-sm mt-1">{guideData?.digital?.vpn?.importantDesc || '必须在入华前下载并安装VPN！在中国境内无法下载。'}</div>
+                    <div className="font-bold text-amber-800 text-sm">{guideData?.digital?.vpn?.importantTitle || (isZh ? '重要提醒' : 'CRITICAL SETUP')}</div>
+                    <div className="text-amber-700 text-sm mt-1">{guideData?.digital?.vpn?.importantDesc || (isZh ? '必须在入华前下载并安装VPN！在中国境内无法下载。' : 'You MUST install a VPN before arriving in China. App stores and VPN sites are blocked locally.')}</div>
                   </div>
                 </div>
               </div>
               
               {/* 为什么需要VPN */}
               <div>
-                <h4 className="font-bold text-gray-800 mb-2 text-sm">{guideData?.digital?.vpn?.whyNeedTitle || '为什么需要VPN?'}</h4>
-                <p className="text-sm text-gray-600 leading-relaxed">{guideData?.digital?.vpn?.whyNeedDesc || '中国对互联网内容进行严格审查，许多国外社交媒体、新闻网站、搜索引擎等在中国无法直接访问，如谷歌、YouTube、WhatsApp、Facebook和Instagram。'}</p>
+                <h4 className="font-bold text-gray-800 mb-2 text-sm">{guideData?.digital?.vpn?.whyNeedTitle || (isZh ? '为什么需要VPN?' : 'Why you need a VPN?')}</h4>
+                <p className="text-sm text-gray-600 leading-relaxed">{guideData?.digital?.vpn?.whyNeedDesc || (isZh ? '中国对互联网内容进行严格审查，许多国外社交媒体、新闻网站、搜索引擎等在中国无法直接访问，如谷歌、YouTube、WhatsApp、Facebook和Instagram。' : 'WhatsApp, Google, Instagram, and Facebook are all blocked. A reputable VPN is your only way to use these services and stay in touch.')}</p>
               </div>
               
               {/* 手机网络选择 */}
@@ -247,24 +336,24 @@ export default function Guide() {
             <div className="space-y-5">
               {/* 标题 */}
               <div className="text-center">
-                <h3 className="font-bold text-lg text-gray-900">{guideData?.digital?.payment?.title || '移动支付'}</h3>
-                <p className="text-sm text-gray-500 mt-1">{guideData?.digital?.payment?.subtitle || '中国移动支付生态详解'}</p>
+                <h3 className="font-bold text-lg text-gray-900">{guideData?.digital?.payment?.title || (isZh ? '移动支付' : 'Mobile Payments')}</h3>
+                <p className="text-sm text-gray-500 mt-1">{guideData?.digital?.payment?.subtitle || (isZh ? '中国移动支付生态详解' : 'Mastering the local payment ecosystem')}</p>
               </div>
               
               {/* 绿色提示框 */}
               <div className="bg-green-50 border border-green-200 rounded-lg p-4">
-                <div className="font-bold text-green-800 text-sm mb-1">{guideData?.digital?.payment?.international || '国际版支付宝/微信'}</div>
-                <div className="text-green-700 text-sm">{guideData?.digital?.payment?.internationalDesc || '支持绑定外国银行卡，适合短期游客'}</div>
+                <div className="font-bold text-green-800 text-sm mb-1">{guideData?.digital?.payment?.international || (isZh ? '国际版支付宝/微信' : 'International Card Support')}</div>
+                <div className="text-green-700 text-sm">{guideData?.digital?.payment?.internationalDesc || (isZh ? '支持绑定外国银行卡，适合短期游客' : 'You can now bind Visa/Mastercard directly to local apps. Highly recommended.')}</div>
               </div>
               
               {/* 首选支付宝 */}
               <div>
-                <h4 className="font-bold text-gray-800 mb-3 text-sm">{guideData?.digital?.payment?.alipay || '支付宝'}</h4>
+                <h4 className="font-bold text-gray-800 mb-3 text-sm">{guideData?.digital?.payment?.alipay || (isZh ? '支付宝' : 'Alipay (Top Choice)')}</h4>
                 
                 <div className="mb-4">
-                  <div className="font-semibold text-sm text-gray-700 mb-3">{guideData?.digital?.payment?.alipayDesc || '中国最大的第三方支付平台'}</div>
+                  <div className="font-semibold text-sm text-gray-700 mb-3">{guideData?.digital?.payment?.alipayDesc || (isZh ? '中国最大的第三方支付平台' : 'The most traveler-friendly payment platform in China.')}</div>
                   <div className="space-y-2">
-                    {(guideData?.digital?.payment?.tips || '').split('|').map((tip, i) => (
+                    {(guideData?.digital?.payment?.tips || (isZh ? '下载官方APP|完成身份认证|进行支付测试' : 'Download the App|Verify your identity|Link your international card')).split('|').map((tip, i) => (
                       <div key={i} className="flex items-start gap-3">
                         <span className="w-5 h-5 bg-gray-200 text-gray-600 rounded text-xs flex items-center justify-center font-bold flex-shrink-0 mt-0.5">{i + 1}</span>
                         <span className="text-sm text-gray-700">{tip}</span>
@@ -297,14 +386,14 @@ export default function Guide() {
         </div>
 
         {/* 语言工具箱 */}
-        <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
+        <div className="relative pt-12 border-t border-gray-200">
           {/* 标题区域 */}
-          <div className="text-center py-8 border-b border-gray-100">
-            <h2 className="text-2xl font-bold text-gray-900 mb-2">{guideData?.language?.vocabulary?.sectionTitle || (isZh ? '语言工具箱' : 'Language Toolkit')}</h2>
+          <div className="text-center py-8">
+            <h2 className="text-3xl font-bold text-gray-900 mb-2">{guideData?.language?.vocabulary?.sectionTitle || (isZh ? '语言工具箱' : 'Language Toolkit')}</h2>
             <p className="text-gray-500">{guideData?.language?.vocabulary?.sectionSubtitle || (isZh ? '高频词汇与实用短语' : 'High-frequency vocabulary and common phrases')}</p>
           </div>
           
-          <div className="p-6 space-y-8">
+          <div className={`space-y-12 transition-all duration-700 ${!hasPurchased ? 'blur-md select-none pointer-events-none opacity-50' : ''}`}>
             {/* 高频核心词汇 */}
             <div>
               <h3 className="font-bold text-gray-800 mb-4 text-lg">{guideData?.language?.vocabulary?.vocabularyTitle || (isZh ? '高频核心词汇' : 'High-Frequency Core Vocabulary')}</h3>
@@ -325,7 +414,7 @@ export default function Guide() {
                   const displayPinyin = guideData?.language?.vocabulary?.[`${v.key}Pinyin`] || v.pinyin;
                   const displayEn = guideData?.language?.vocabulary?.[`${v.key}Meaning`] || v.en;
                   return (
-                    <div key={v.key} className="bg-white border border-gray-200 rounded-lg p-4 flex items-center justify-between hover:shadow-md transition-shadow">
+                    <div key={v.key} className="flex items-center justify-between py-4 border-b border-gray-100 last:border-0 transition-colors hover:bg-gray-100/50">
                       <div>
                         <div className="flex items-baseline gap-2">
                           <span className="text-lg font-bold text-gray-900">{displayText}</span>
@@ -349,7 +438,7 @@ export default function Guide() {
               <h3 className="font-bold text-gray-800 mb-4 text-lg">{guideData?.language?.vocabulary?.phraseTitle || (isZh ? '实用短语' : 'Practical Phrases')}</h3>
               <div className="grid md:grid-cols-2 gap-6">
                 {/* 用餐与点菜 */}
-                <div className="bg-white border border-gray-200 rounded-xl p-5">
+                <div className="p-0">
                   <div className="flex items-center gap-2 mb-4">
                     <span className="text-xl">🍽️</span>
                     <span className="font-bold text-gray-800">{isZh ? '用餐与点菜' : 'Dining & Ordering'}</span>
@@ -384,7 +473,7 @@ export default function Guide() {
                 </div>
 
                 {/* 问路与交通 */}
-                <div className="bg-white border border-gray-200 rounded-xl p-5">
+                <div className="p-0">
                   <div className="flex items-center gap-2 mb-4">
                     <span className="text-xl">🧭</span>
                     <span className="font-bold text-gray-800">{isZh ? '问路与交通' : 'Directions & Transit'}</span>
@@ -420,14 +509,15 @@ export default function Guide() {
               </div>
             </div>
           </div>
+          {!hasPurchased && <PaywallOverlay />}
         </div>
 
         {/* 核心汉字快速识别 */}
-        <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
-          <div className="p-6">
-            <h2 className="font-bold text-gray-800 mb-6 text-lg">{guideData?.character?.sectionTitle || (isZh ? '核心汉字快速识别' : 'Essential Chinese Characters')}</h2>
+        <div className="relative pt-12 border-t border-gray-200">
+          <div className={`transition-all duration-700 ${!hasPurchased ? 'blur-md select-none pointer-events-none opacity-50' : ''}`}>
+            <h2 className="font-bold text-gray-800 mb-6 text-xl text-center">{guideData?.character?.sectionTitle || (isZh ? '核心汉字快速识别' : 'Essential Chinese Characters')}</h2>
             
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-6">
               {[
                 { key: '男', pinyin: 'nán', img: 'https://static.tripcngo.com/ing/男.jpg' },
                 { key: '女', pinyin: 'nǚ', img: 'https://static.tripcngo.com/ing/女.jpg' },
@@ -443,7 +533,7 @@ export default function Guide() {
                 const displayPinyin = guideData?.character?.[`${char.key}Pinyin`] || char.pinyin;
                 const displayMeaning = guideData?.character?.[`${char.key}Meaning`] || char.pinyin;
                 return (
-                  <div key={char.key} className="bg-white border border-gray-200 rounded-xl p-4 text-center hover:shadow-md transition-shadow">
+                  <div key={char.key} className="p-4 text-center border-b border-gray-100 sm:border-0">
                     <div className="mb-2">
                       <span className="text-xl font-bold text-gray-900">{displayChar}</span>
                       <span className="text-sm text-gray-500 ml-1">({displayPinyin})</span>
@@ -458,14 +548,14 @@ export default function Guide() {
         </div>
 
         {/* 文化指南针 */}
-        <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
+        <div className="relative pt-12 border-t border-gray-200">
           {/* 标题区域 */}
-          <div className="text-center py-8 border-b border-gray-100">
-            <h2 className="text-2xl font-bold text-gray-900 mb-2">{guideData?.culture?.dining?.sectionTitle || (isZh ? '文化指南针' : 'Culture Compass')}</h2>
+          <div className="text-center py-8">
+            <h2 className="text-3xl font-bold text-gray-900 mb-2">{guideData?.culture?.dining?.sectionTitle || (isZh ? '文化指南针' : 'Culture Compass')}</h2>
             <p className="text-gray-500">{guideData?.culture?.dining?.sectionSubtitle || (isZh ? '了解中国礼仪文化，让旅行更顺畅' : 'Understanding Chinese etiquette makes travel smoother')}</p>
           </div>
           
-          <div className="p-6 space-y-8">
+          <div className={`space-y-12 transition-all duration-700 ${!hasPurchased ? 'blur-md select-none pointer-events-none opacity-50' : ''}`}>
             {/* 餐饮礼仪 */}
             <div>
               <h3 className="font-bold text-gray-800 mb-4 text-lg">{isZh ? '餐饮礼仪' : 'Dining Etiquette'}</h3>
@@ -521,11 +611,11 @@ export default function Guide() {
               <h3 className="font-bold text-gray-800 mb-4 text-lg">{guideData?.culture?.gift?.title || (isZh ? '赠礼的艺术' : 'The Art of Gift Giving')}</h3>
               <div className="grid md:grid-cols-3 gap-4">
                 {/* 合适的礼物 */}
-                <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
-                  <div className="bg-gray-50 px-4 py-3 text-center border-b border-gray-200">
+                <div className="overflow-hidden">
+                  <div className="py-3 text-center border-b border-gray-200">
                     <span className="font-semibold text-gray-700">{guideData?.culture?.gift?.goodTitle || (isZh ? '合适的礼物' : 'Appropriate Gifts')}</span>
                   </div>
-                  <ul className="p-4 space-y-2 text-sm text-gray-700">
+                  <ul className="py-4 space-y-2 text-sm text-gray-700">
                     <li className="flex items-start gap-2">
                       <span className="text-gray-400">•</span>
                       <span>{guideData?.culture?.gift?.goodTip1 || (isZh ? '茶叶（龙井、普洱等）' : 'Tea (Longjing, Pu-erh, etc.)')}</span>
@@ -546,11 +636,11 @@ export default function Guide() {
                 </div>
                 
                 {/* 禁忌的礼物 */}
-                <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
-                  <div className="bg-gray-50 px-4 py-3 text-center border-b border-gray-200">
+                <div className="overflow-hidden">
+                  <div className="py-3 text-center border-b border-gray-200">
                     <span className="font-semibold text-gray-700">{guideData?.culture?.gift?.avoidTitle || (isZh ? '禁忌的礼物' : 'Taboo Gifts')}</span>
                   </div>
-                  <ul className="p-4 space-y-2 text-sm text-gray-700">
+                  <ul className="py-4 space-y-2 text-sm text-gray-700">
                     <li className="flex items-start gap-2">
                       <span className="text-gray-400">•</span>
                       <span>{guideData?.culture?.gift?.avoidTip1 || (isZh ? '钟（与「终」同音）' : 'Clocks — sounds like "end"')}</span>
@@ -571,11 +661,11 @@ export default function Guide() {
                 </div>
                 
                 {/* 赠礼仪式 */}
-                <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
-                  <div className="bg-gray-50 px-4 py-3 text-center border-b border-gray-200">
+                <div className="overflow-hidden">
+                  <div className="py-3 text-center border-b border-gray-200">
                     <span className="font-semibold text-gray-700">{guideData?.culture?.gift?.ritualTitle || (isZh ? '赠礼仪式' : 'Gift Giving Etiquette')}</span>
                   </div>
-                  <ul className="p-4 space-y-2 text-sm text-gray-700">
+                  <ul className="py-4 space-y-2 text-sm text-gray-700">
                     <li className="flex items-start gap-2">
                       <span className="text-gray-400">•</span>
                       <span>{guideData?.culture?.gift?.ritualTip1 || (isZh ? '双手递送礼物表示尊重' : 'Give gifts with both hands as respect')}</span>
@@ -592,13 +682,13 @@ export default function Guide() {
         </div>
 
         {/* 通用社交意识 */}
-        <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
-          <div className="p-6">
-            <h2 className="font-bold text-gray-800 mb-6 text-lg">{guideData?.culture?.social?.title || (isZh ? '通用社交意识' : 'General Social Awareness')}</h2>
+        <div className="relative pt-12 border-t border-gray-200">
+          <div className={`transition-all duration-700 ${!hasPurchased ? 'blur-md select-none pointer-events-none opacity-50' : ''}`}>
+            <h2 className="font-bold text-gray-800 mb-8 text-xl text-center">{guideData?.culture?.social?.title || (isZh ? '通用社交意识' : 'General Social Awareness')}</h2>
             
-            <div className="grid md:grid-cols-2 gap-4">
+            <div className="grid md:grid-cols-2 gap-6">
               {/* 敏感话题 */}
-              <div className="bg-gray-50 rounded-xl p-5 border border-gray-200">
+              <div className="py-5 border-b border-gray-100 last:border-0 md:border-b-0">
                 <div className="flex items-center gap-2 mb-3">
                   <div className="w-5 h-5 bg-gray-800 rounded-full flex items-center justify-center">
                     <span className="text-white text-xs font-bold">i</span>
@@ -611,7 +701,7 @@ export default function Guide() {
               </div>
               
               {/* 好客 */}
-              <div className="bg-gray-50 rounded-xl p-5 border border-gray-200">
+              <div className="py-5 border-b border-gray-100 last:border-0 md:border-b-0">
                 <div className="flex items-center gap-2 mb-3">
                   <div className="w-5 h-5 bg-gray-800 rounded-full flex items-center justify-center">
                     <span className="text-white text-xs font-bold">i</span>
@@ -624,7 +714,7 @@ export default function Guide() {
               </div>
               
               {/* 面子 */}
-              <div className="bg-gray-50 rounded-xl p-5 border border-gray-200">
+              <div className="py-5 border-b border-gray-100 last:border-0 md:border-b-0">
                 <div className="flex items-center gap-2 mb-3">
                   <div className="w-5 h-5 bg-gray-800 rounded-full flex items-center justify-center">
                     <span className="text-white text-xs font-bold">i</span>
@@ -637,7 +727,7 @@ export default function Guide() {
               </div>
               
               {/* 问候 */}
-              <div className="bg-gray-50 rounded-xl p-5 border border-gray-200">
+              <div className="py-5 border-b border-gray-100 last:border-0 md:border-b-0">
                 <div className="flex items-center gap-2 mb-3">
                   <div className="w-5 h-5 bg-gray-800 rounded-full flex items-center justify-center">
                     <span className="text-white text-xs font-bold">i</span>
