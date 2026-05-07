@@ -28,53 +28,6 @@ export default function Navbar() {
   };
   const langPrefix = langToPrefix[language] || 'en';
 
-  useEffect(() => {
-    const handleScroll = () => {
-      setIsScrolled(window.scrollY > 20);
-    };
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
-
-  useEffect(() => {
-    const browserLang = navigator.language.toLowerCase();
-    const isBrowserZh = browserLang.startsWith('zh');
-    const dismissed = localStorage.getItem('hideLangBanner');
-
-    if (isBrowserZh && language === 'en' && !dismissed) {
-      setShowLangBanner(true);
-    } else {
-      setShowLangBanner(false);
-    }
-  }, [language]);
-
-  const handleSwitchToZh = () => {
-    localStorage.setItem('hideLangBanner', 'true');
-    setShowLangBanner(false);
-    let newPath = location.pathname;
-    const pathParts = newPath.split('/');
-    if (pathParts[1] === 'cn' || pathParts[1] === 'en') {
-      pathParts[1] = 'cn';
-      newPath = pathParts.join('/');
-    } else {
-      newPath = `/cn${newPath === '/' ? '' : newPath}`;
-    }
-    navigate(newPath + location.search);
-  };
-
-  const handleKeepEnglish = () => {
-    localStorage.setItem('hideLangBanner', 'true');
-    setShowLangBanner(false);
-  };
-
-  const navLinks = [
-    { name: t('nav.home'), path: `/${langPrefix}` },
-    { name: t('nav.visa'), path: `/${langPrefix}/visa`, hasDropdown: true },
-    { name: t('nav.discover'), path: `/${langPrefix}/cities`, hasDropdown: true },
-    { name: t('nav.tools'), path: `/${langPrefix}/apps`, hasDropdown: true },
-    { name: t('nav.catalog'), path: `/${langPrefix}/apps` }
-  ];
-
   const languages = [
     { code: 'zh', name: '简体中文', flag: 'https://pub-bfcc5034e6b14811955a8bed50650469.r2.dev/ing/%E4%B8%AD%E5%9B%BD%E5%9B%BD%E6%97%97.png' },
     { code: 'en', name: 'English', flag: 'https://pub-bfcc5034e6b14811955a8bed50650469.r2.dev/ing/USA.png' },
@@ -88,6 +41,66 @@ export default function Navbar() {
     { code: 'it', name: 'Italiano', flag: 'https://static.tripcngo.com/%E6%84%8F%E5%A4%A7%E5%88%A9%E5%9B%BD%E6%97%97.png' }
   ];
 
+  const [detectedLang, setDetectedLang] = useState<Language | null>(null);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      setIsScrolled(window.scrollY > 20);
+    };
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
+  useEffect(() => {
+    const browserLang = navigator.language.toLowerCase();
+    const dismissed = localStorage.getItem('hideLangBanner');
+    
+    // Find matching language code
+    const matchedLang = languages.find(l => 
+      browserLang.startsWith(l.code) || 
+      (l.code === 'tw' && (browserLang === 'zh-tw' || browserLang === 'zh-hk'))
+    );
+
+    if (matchedLang && matchedLang.code !== language && !dismissed) {
+      setDetectedLang(matchedLang.code as Language);
+      setShowLangBanner(true);
+    } else {
+      setShowLangBanner(false);
+    }
+  }, [language]);
+
+  const handleSwitchLanguage = (targetLang: Language) => {
+    localStorage.setItem('hideLangBanner', 'true');
+    setShowLangBanner(false);
+    
+    setLanguage(targetLang);
+    const newLangPrefix = langToPrefix[targetLang] || 'en';
+    
+    let newPath = location.pathname;
+    const pathParts = newPath.split('/');
+    const validPrefixes = ['cn', 'tw', 'en', 'ja', 'ko', 'ru', 'fr', 'es', 'de', 'it'];
+    if (validPrefixes.includes(pathParts[1])) {
+      pathParts[1] = newLangPrefix;
+      newPath = pathParts.join('/');
+    } else {
+      newPath = `/${newLangPrefix}${newPath === '/' ? '' : newPath}`;
+    }
+    navigate(newPath + location.search);
+  };
+
+  const handleDismissBanner = () => {
+    localStorage.setItem('hideLangBanner', 'true');
+    setShowLangBanner(false);
+  };
+
+  const navLinks = [
+    { name: t('nav.home'), path: `/${langPrefix}` },
+    { name: t('nav.visa'), path: `/${langPrefix}/visa`, hasDropdown: true },
+    { name: t('nav.discover'), path: `/${langPrefix}/cities`, hasDropdown: true },
+    { name: t('nav.tools'), path: `/${langPrefix}/apps`, hasDropdown: true },
+    { name: t('nav.catalog'), path: `/${langPrefix}/apps` }
+  ];
+
   return (
     <header 
       className={`fixed top-0 w-full z-50 transition-all duration-300 flex flex-col ${
@@ -96,28 +109,53 @@ export default function Navbar() {
           : (isScrolled ? 'bg-black shadow-md' : 'bg-transparent shadow-none')
       } text-white`}
     >
-      {showLangBanner && (
-        <div className="bg-[#179B4D] w-full py-2.5 px-4 flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-6 text-[13px] sm:text-[14px]">
-          <div className="flex items-center gap-2 text-white">
-            <Globe className="w-4 h-4 sm:w-5 sm:h-5" />
-            <span>Your browser language is detected as <b>简体中文</b>. Would you like to switch?</span>
-          </div>
-          <div className="flex items-center gap-3">
-            <button 
-              onClick={handleSwitchToZh}
-              className="bg-[#FFF0F5] text-[#179B4D] px-4 py-1.5 rounded hover:bg-white font-medium transition-colors"
-            >
-              Switch to 简体中文
-            </button>
-            <button 
-              onClick={handleKeepEnglish}
-              className="bg-transparent border border-[#9ed9b9] text-white px-4 py-1.5 rounded hover:bg-white/10 transition-colors"
-            >
-              Keep English
-            </button>
-          </div>
-        </div>
-      )}
+      <AnimatePresence>
+        {showLangBanner && detectedLang && (
+          <motion.div 
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: 'auto', opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            className="bg-[#179B4D] w-full overflow-hidden"
+          >
+            <div className="py-2.5 px-4 flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-6 text-[12px] sm:text-[14px] relative">
+              <div className="flex items-center gap-2 text-white">
+                <Globe className="w-4 h-4 sm:w-5 sm:h-5 shrink-0" />
+                <span className="text-center sm:text-left leading-tight">
+                  {language === 'en' 
+                    ? `Your browser language is ${languages.find(l => l.code === detectedLang)?.name}. Switch?`
+                    : language === 'zh'
+                    ? `检测到浏览器语言为 ${languages.find(l => l.code === detectedLang)?.name}，是否切换？`
+                    : `Browser language: ${languages.find(l => l.code === detectedLang)?.name}. Switch?`}
+                </span>
+              </div>
+              <div className="flex items-center gap-3">
+                <button 
+                  onClick={() => handleSwitchLanguage(detectedLang)}
+                  className="bg-white text-[#179B4D] px-4 py-1.5 rounded-full hover:bg-white/90 font-bold transition-colors whitespace-nowrap"
+                >
+                  {language === 'en' 
+                    ? `Switch`
+                    : language === 'zh'
+                    ? `立即切换`
+                    : `Switch`}
+                </button>
+                <button 
+                  onClick={handleDismissBanner}
+                  className="bg-transparent border border-white/30 text-white px-4 py-1.5 rounded-full hover:bg-white/10 transition-colors whitespace-nowrap"
+                >
+                  {language === 'en' ? 'Keep' : language === 'zh' ? '保持当前' : 'Keep'}
+                </button>
+              </div>
+              <button 
+                onClick={handleDismissBanner}
+                className="absolute right-2 top-2 p-1 text-white/60 hover:text-white sm:static sm:p-0"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
       <div className={`w-full max-w-[1400px] mx-auto px-6 flex justify-between items-center transition-all duration-300 ${isScrolled ? 'py-3' : 'py-6'}`}>
         {/* Logo */}
         <Link to={`/${langPrefix}`} className="flex items-center gap-3">
@@ -335,7 +373,7 @@ export default function Navbar() {
         </div>
 
         {/* Mobile Actions */}
-        <div className="md:hidden flex items-center gap-2">
+        <div className="lg:hidden flex items-center gap-2">
           <div className="relative">
             <button 
               className="p-2 rounded-full bg-white/10 border border-white/20 flex items-center justify-center mr-1"
