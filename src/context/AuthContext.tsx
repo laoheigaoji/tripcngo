@@ -18,6 +18,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [hasPurchased, setHasPurchased] = useState(false);
 
   useEffect(() => {
+    // 优先检查本地存储的购买状态
+    if (localStorage.getItem('hasPurchased') === 'true') {
+      setHasPurchased(true);
+    }
+
     const checkAuth = async () => {
       try {
         const { data: { session } } = await supabase.auth.getSession();
@@ -65,25 +70,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     // 处理支付成功回调
     const params = new URLSearchParams(window.location.search);
     if (params.get('unlock') === 'true') {
-      // 如果还在加载用户信息，先等待
-      if (loading) return;
-      
       const processPayment = async () => {
-        if (user) {
-          await completePayment();
-          
-          if (window.opener) {
-            window.opener.postMessage('creem_payment_success', '*');
-            setTimeout(() => window.close(), 500); // 尝试关闭弹窗
-          }
-          // 不管是不是弹窗，如果当前页面还在，就清理 URL
-          window.history.replaceState({}, document.title, window.location.pathname);
-        } else {
-          // 这个时候已经加载完毕且没有用户，说明丢失了登录态
-          alert('支付成功！但系统未能获取到您的登录状态。请尝试重新登录，我们将自动为您恢复购买记录。');
-          // 也可以清理 URL，避免再次刷新重复弹窗
-          window.history.replaceState({}, document.title, window.location.pathname);
+        // 直接在此处完成支付记录（本地存储方案）
+        await completePayment();
+        
+        if (window.opener) {
+          window.opener.postMessage('creem_payment_success', '*');
+          setTimeout(() => window.close(), 500); // 尝试关闭弹窗
         }
+        // 清理 URL
+        window.history.replaceState({}, document.title, window.location.pathname);
       };
       
       processPayment();
@@ -91,15 +87,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     const handleMessage = (event: MessageEvent) => {
       if (event.data === 'creem_payment_success') {
-        if (user) {
-          completePayment();
-        }
+        completePayment();
       }
     };
 
     window.addEventListener('message', handleMessage);
     return () => window.removeEventListener('message', handleMessage);
-  }, [user, loading, hasPurchased]);
+  }, [user, hasPurchased]);
 
   const signInWithGoogle = async () => {
     try {
@@ -139,18 +133,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const initiatePayment = async () => {
-    if (!user) {
-      alert('请先登录');
-      return;
+    // 纯无账号方案：如果没有本地分配的ID，就生成一个。
+    let localToken = localStorage.getItem('device_purchase_token');
+    if (!localToken) {
+      localToken = 'dev_' + Math.random().toString(36).substring(2, 15);
+      localStorage.setItem('device_purchase_token', localToken);
     }
 
     const checkoutUrl = import.meta.env.VITE_CREEM_CHECKOUT_URL || 'https://www.creem.io/test/payment/prod_5xXOa84Nq51M6OpgInrSKp';
     if (checkoutUrl) {
       const url = new URL(checkoutUrl);
-      url.searchParams.append('client_reference_id', user.id);
+      // 有 user 则附带 user.id，没有则使用 localToken（便于之后如果有后台需求可以对账）
+      url.searchParams.append('client_reference_id', user ? user.id : localToken);
       url.searchParams.append('success_url', window.location.origin + window.location.pathname + '?unlock=true');
       
-      // 恢复使用弹窗的形式进行支付，以便原页面可以监听到回调
       const width = 600;
       const height = 700;
       const left = window.screenX + (window.outerWidth - width) / 2;
@@ -170,35 +166,39 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const completePayment = async () => {
-    if (!user) return;
-    try {
-      // 检查是否已经存在购买记录
-      const { data: existingPurchases } = await supabase
-        .from('purchases')
-        .select('*')
-        .eq('user_id', user.id)
-        .eq('item_id', 'all_access')
-        .limit(1);
+    // 1. 无账号核心：将购买状态直接保存在当前设备浏览器缓存
+    localStorage.setItem('hasPurchased', 'true');
+    setHasPurchased(true);
 
-      if (existingPurchases && existingPurchases.length > 0) {
-        setHasPurchased(true);
-        return;
-      }
+    // 告知用户状态（避免重复提示，可以存一个提示标记，或者既然完成就只提示一次）
+    if (!sessionStorage.getItem('payment_alert_shown')) {
+        alert('🎉 支付成功！\n\n【重要提示】\n您的购买记录已保存在此设备浏览器的本地缓存中（LocalStorage）。\n\n注意事项：\n1. 请勿清除当前浏览器的缓存数据，否则将失去访问权限。\n2. 暂不支持跨设备跨浏览器同步。\n\n感谢您的支持，开始浏览完整内容吧！');
+        sessionStorage.setItem('payment_alert_shown', 'true');
+    }
 
-      const { error } = await supabase
-        .from('purchases')
-        .insert({
+    // 2. 兼容有登录账户的情况（作为补充，如果用户碰巧登录了，还是记到云端）
+    if (user) {
+      try {
+        const { data: existingPurchases } = await supabase
+          .from('purchases')
+          .select('*')
+          .eq('user_id', user.id)
+          .eq('item_id', 'all_access')
+          .limit(1);
+
+        if (existingPurchases && existingPurchases.length > 0) {
+          return; // 已存
+        }
+
+        await supabase.from('purchases').insert({
           user_id: user.id,
           amount: 99,
           item_id: 'all_access',
           status: 'completed',
         });
-
-      if (error) throw error;
-      setHasPurchased(true);
-    } catch (error: any) {
-      console.error('Purchase validation error:', error);
-      alert('保存购买记录失败: ' + (error?.message || '未知错误') + '\n如果一直失败，请联系客服。');
+      } catch (error) {
+        console.error('补充保存至云端失败:', error);
+      }
     }
   };
 
