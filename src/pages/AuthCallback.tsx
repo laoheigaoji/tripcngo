@@ -4,33 +4,35 @@ import { supabase } from '../lib/supabase';
 export default function AuthCallback() {
   useEffect(() => {
     const handleAuth = async () => {
-      // Supabase processes the hash automatically when the app loads.
-      // We just need to give it a moment to sync.
+      // Set up a listener for auth state changes
+      const { data: { subscription } } = supabase.auth.onAuthStateChange(
+        (event, session) => {
+          if (event === 'SIGNED_IN' || session) {
+            if (window.opener) {
+              window.opener.postMessage({ type: 'AUTH_SUCCESS' }, '*');
+              window.close();
+            } else {
+              window.location.href = '/';
+            }
+          }
+        }
+      );
+
+      // Check current session just in case it's already processed
       const { data: { session } } = await supabase.auth.getSession();
-      
       if (session) {
-        // Auth successful
         if (window.opener) {
-          // Send message to parent
-          window.opener.postMessage({ type: 'AUTH_SUCCESS' }, window.location.origin);
-          // Redirect to the desired path in the opener window
-          window.opener.location.href = window.location.origin + '/ja/guide';
+          window.opener.postMessage({ type: 'AUTH_SUCCESS' }, '*');
           window.close();
         } else {
-          // If not in a popup, redirect to home
           window.location.href = '/';
         }
-      } else {
-        // No session yet, wait a bit or handle error
-        const timeout = setTimeout(() => {
-          if (window.opener) {
-            window.close();
-          } else {
-            window.location.href = '/';
-          }
-        }, 2000);
-        return () => clearTimeout(timeout);
       }
+
+      // Cleanup
+      return () => {
+        subscription.unsubscribe();
+      };
     };
 
     handleAuth();
@@ -40,7 +42,7 @@ export default function AuthCallback() {
     <div className="min-h-screen flex items-center justify-center bg-white">
       <div className="text-center">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#1b887a] mx-auto mb-4"></div>
-        <p className="text-gray-600">正在登录，请稍候...</p>
+        <p className="text-gray-600">正在登录，请稍候... Logging in...</p>
       </div>
     </div>
   );

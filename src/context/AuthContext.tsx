@@ -65,24 +65,41 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     // 处理支付成功回调
     const params = new URLSearchParams(window.location.search);
     if (params.get('unlock') === 'true') {
-      if (window.opener) {
-        window.opener.postMessage('creem_payment_success', '*');
-        window.close();
-      } else if (user) {
-        completePayment();
-        window.history.replaceState({}, document.title, window.location.pathname);
-      }
+      // 如果还在加载用户信息，先等待
+      if (loading) return;
+      
+      const processPayment = async () => {
+        if (user) {
+          await completePayment();
+          
+          if (window.opener) {
+            window.opener.postMessage('creem_payment_success', '*');
+            setTimeout(() => window.close(), 500); // 尝试关闭弹窗
+          }
+          // 不管是不是弹窗，如果当前页面还在，就清理 URL
+          window.history.replaceState({}, document.title, window.location.pathname);
+        } else {
+          // 这个时候已经加载完毕且没有用户，说明丢失了登录态
+          alert('支付成功！但系统未能获取到您的登录状态。请尝试重新登录，我们将自动为您恢复购买记录。');
+          // 也可以清理 URL，避免再次刷新重复弹窗
+          window.history.replaceState({}, document.title, window.location.pathname);
+        }
+      };
+      
+      processPayment();
     }
 
     const handleMessage = (event: MessageEvent) => {
       if (event.data === 'creem_payment_success') {
-        completePayment();
+        if (user) {
+          completePayment();
+        }
       }
     };
 
     window.addEventListener('message', handleMessage);
     return () => window.removeEventListener('message', handleMessage);
-  }, [user, hasPurchased]);
+  }, [user, loading, hasPurchased]);
 
   const signInWithGoogle = async () => {
     try {
@@ -179,8 +196,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       if (error) throw error;
       setHasPurchased(true);
-    } catch (error) {
+    } catch (error: any) {
       console.error('Purchase validation error:', error);
+      alert('保存购买记录失败: ' + (error?.message || '未知错误') + '\n如果一直失败，请联系客服。');
     }
   };
 
