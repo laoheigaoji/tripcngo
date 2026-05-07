@@ -30,11 +30,7 @@ export default function DataBackupManagement() {
       for (let i = 0; i < TABLES.length; i++) {
         const table = TABLES[i];
         const { data, error } = await supabaseAdmin.from(table.id).select('*');
-        if (error) {
-          console.warn(`Table ${table.id} might not exist or lacks data:`, error.message);
-          allData[table.id] = [];
-          continue;
-        }
+        if (error) throw error;
         allData[table.id] = data;
         setProgress(Math.round(((i + 1) / TABLES.length) * 100));
       }
@@ -43,11 +39,11 @@ export default function DataBackupManagement() {
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = `china_travel_guide_data_${new Date().toISOString().split('T')[0]}.json`;
+      a.download = `china_travel_guide_backup_${new Date().toISOString().split('T')[0]}.json`;
       a.click();
       URL.revokeObjectURL(url);
 
-      setStatus({ type: 'success', message: '所有表数据已成功导出！' });
+      setStatus({ type: 'success', message: '所有数据已成功导出！' });
     } catch (err: any) {
       console.error('Export failed:', err);
       setStatus({ type: 'error', message: '备份失败: ' + err.message });
@@ -100,41 +96,11 @@ export default function DataBackupManagement() {
     }
   };
 
-  const copySchemaSQL = () => {
-    const sql = `-- Supabase 初始化脚本
--- 在 Supabase SQL Editor 中运行以下代码以创建表结构
-
-${TABLES.map(t => `-- [${t.label}] ${t.id}
--- 注意：这里仅为占位符提示。真正的结构建议从 Supabase Dashboard -> Database -> Schema 导出
--- 或者在迁移时使用 pg_dump 工具。`).join('\n\n')}
-
--- 常用表结构参考示例：
--- CREATE TABLE IF NOT EXISTS articles (
---   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
---   title TEXT NOT NULL,
---   content TEXT,
---   category TEXT,
---   lang TEXT,
---   created_at TIMESTAMPTZ DEFAULT NOW()
--- );
-`;
-    navigator.clipboard.writeText(sql);
-    alert('SQL 结构提示已复制到剪贴板！\n\n提示：真正的表结构备份建议在 Supabase 控制台使用 "Database -> SQL Editor" 或 CLI 工具进行导出。');
-  };
-
   return (
     <div className="max-w-2xl mx-auto space-y-8 p-6">
       <div className="bg-white rounded-2xl border border-gray-200 p-8 shadow-sm">
-        <div className="flex justify-between items-start mb-2">
-          <h2 className="text-2xl font-bold text-gray-800">数据库管理</h2>
-          <button 
-            onClick={copySchemaSQL}
-            className="text-xs font-medium text-[#1b887a] hover:underline"
-          >
-            获取建表 SQL 提示
-          </button>
-        </div>
-        <p className="text-gray-500 mb-8">管理应用核心数据。注意：此功能仅备份【数据内容】，不包含表结构定义、索引或触发器。</p>
+        <h2 className="text-2xl font-bold text-gray-800 mb-2">数据备份与恢复</h2>
+        <p className="text-gray-500 mb-8">管理整个应用的核心数据，支持一键备份为 JSON 文件并在需要时恢复。</p>
 
         <div className="space-y-6">
           {/* Status Messages */}
