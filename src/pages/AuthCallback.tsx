@@ -5,24 +5,22 @@ export default function AuthCallback() {
   const [status, setStatus] = useState('正在登录，请稍候... Logging in...');
 
   useEffect(() => {
-    let checkInterval: any;
-
     const finalizeAuth = () => {
       setStatus('登录成功！Login successful!');
       if (window.opener) {
         window.opener.postMessage({ type: 'AUTH_SUCCESS' }, '*');
+        window.close();
+        
+        // Fallback info if window hasn't closed
+        setTimeout(() => {
+          setStatus('登录成功！您可以关闭此窗口。Login successful! You can close this window.');
+        }, 500);
+      } else {
+        window.location.replace('/');
       }
-      // Always try to close the window
-      window.close();
-
-      // If it's still open after a short delay, inform the user
-      setTimeout(() => {
-        setStatus('登录成功！您可以关闭此窗口。Login successful! You can close this window.');
-      }, 500);
     };
 
     const handleAuth = async () => {
-      // Set up a listener for auth state changes
       const { data: { subscription } } = supabase.auth.onAuthStateChange(
         (event, session) => {
           if (event === 'SIGNED_IN' || session) {
@@ -31,29 +29,32 @@ export default function AuthCallback() {
         }
       );
 
-      // Check current session just in case it's already processed
       const { data: { session } } = await supabase.auth.getSession();
       if (session) {
         finalizeAuth();
+      } else {
+        // 如果没有 session，等待一会儿后返回首页(没有opener时)或者关闭
+        setTimeout(() => {
+          if (window.opener) {
+            window.close();
+          } else {
+            window.location.replace('/');
+          }
+        }, 3000);
       }
 
-      // Cleanup
       return () => {
         subscription.unsubscribe();
       };
     };
 
     handleAuth();
-
-    return () => {
-      if (checkInterval) clearInterval(checkInterval);
-    };
   }, []);
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-white">
       <div className="text-center p-8 max-w-sm w-full">
-        {status.includes('正在登录') && (
+        {!status.includes('成功') && !status.includes('successful') && (
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#1b887a] mx-auto mb-4"></div>
         )}
         {(status.includes('成功') || status.includes('successful')) && (

@@ -109,7 +109,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           queryParams: {
             prompt: 'select_account',
           },
-          // 计算当前的 origin，确保在 iframe 中也能正确工作
           redirectTo: `${window.location.origin}/auth/callback`,
           skipBrowserRedirect: true,
         },
@@ -117,7 +116,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (error) throw error;
 
       if (data?.url) {
-        // 计算居中位置
         const width = 600;
         const height = 700;
         const left = window.screenX + (window.outerWidth - width) / 2;
@@ -130,7 +128,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         );
 
         if (!authWindow) {
-          alert('弹窗被拦截，请允许弹窗后重试');
+          alert('弹窗被拦截，请允许弹窗后重试。浏览器可能阻止了弹窗。');
+          // 可选地，直接本页访问： window.location.href = data.url;
         }
       }
     } catch (error) {
@@ -151,6 +150,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       url.searchParams.append('client_reference_id', user.id);
       url.searchParams.append('success_url', window.location.origin + window.location.pathname + '?unlock=true');
       
+      // 恢复使用弹窗的形式进行支付，以便原页面可以监听到回调
       const width = 600;
       const height = 700;
       const left = window.screenX + (window.outerWidth - width) / 2;
