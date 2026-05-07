@@ -39,6 +39,22 @@ export default function GuideList() {
   const articlesPerPage = 6;
   const langPrefix = language === 'zh' ? 'cn' : 'en';
 
+  // 获取翻译文本（兼容文章数据，支持蛇形和驼峰命名）
+  const getI18n = (item: any, baseField: string) => {
+    if (!item) return '';
+    
+    // 中文：直接返回 baseField（如 title, subtitle）
+    if (language === 'zh') {
+      return item[baseField] || item.title || item.subtitle || '';
+    }
+    
+    // 蛇形命名格式（如 title_ko, title_tw）和驼峰格式（如 titleKo, titleTw）
+    const snakeFieldName = `${baseField}_${language}`;
+    const camelFieldName = `${baseField}${language.charAt(0).toUpperCase() + language.slice(1)}`;
+    
+    return item[snakeFieldName] || item[camelFieldName] || item[`${baseField}En`] || item[`${baseField}_en`] || item[baseField] || '';
+  };
+
   useEffect(() => {
     const fetchArticles = async () => {
       setLoading(true);
@@ -197,10 +213,10 @@ export default function GuideList() {
                            </span>
                         </div>
                         <h2 className="text-2xl font-black text-gray-900 group-hover:text-[#1b887a] transition-colors mb-3 leading-tight">
-                          {language === 'en' && article.titleEn ? article.titleEn : article.title}
+                          {getI18n(article, 'title') || article.title}
                         </h2>
                         <p className="text-gray-500 text-sm md:text-base line-clamp-3 leading-relaxed mb-6">
-                          {language === 'en' && article.subtitleEn ? article.subtitleEn : article.subtitle}
+                          {getI18n(article, 'subtitle') || article.subtitle}
                         </p>
                       </div>
                       
