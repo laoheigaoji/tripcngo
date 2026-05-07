@@ -526,5 +526,6 @@
   "visa.transit.ports.Jiangxi": "Jiangxi", "visa.transit.ports.Jiangxi.Ports": "Nanchang Changbei International Airport", "visa.transit.ports.Jiangxi.Area": "Nanchang City, Jingdezhen City",
   "visa.transit.ports.Guangxi": "Guangxi", "visa.transit.ports.Guangxi.Ports": "Nanning Wuxu International Airport, Guilin Liangjiang International Airport, Beihai Fucheng Airport, Beihai Port (Passenger)", "visa.transit.ports.Guangxi.Area": "Nanning, Liuzhou, Guilin, Wuzhou, Beihai, Fangchenggang, Qinzhou, Guigang, Yulin, Hezhou, Hechi, Laibin",
   "visa.transit.ports.Sichuan": "Sichuan", "visa.transit.ports.Sichuan.Ports": "Chengdu Shuangliu International Airport, Chengdu Tianfu International Airport", "visa.transit.ports.Sichuan.Area": "Chengdu, Zigong, Luzhou, Deyang, Suining, Neijiang, Leshan, Yibin, Ya'an, Meishan, Ziyang",
-  "visa.transit.ports.Yunnan": "Yunnan", "visa.transit.ports.Yunnan.Ports": "Kunming Changshui International Airport, Lijiang Sanyi International Airport, Mohan Railway Port", "visa.transit.ports.Yunnan.Area": "Kunming, Yuxi, Honghe, Pu'er, Xishuangbanna, Lijiang, Dali"
+  "visa.transit.ports.Yunnan": "Yunnan", "visa.transit.ports.Yunnan.Ports": "Kunming Changshui International Airport, Lijiang Sanyi International Airport, Mohan Railway Port", "visa.transit.ports.Yunnan.Area": "Kunming, Yuxi, Honghe, Pu'er, Xishuangbanna, Lijiang, Dali",
+  "share.button": "Share"
 }

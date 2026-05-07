@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'motion/react';
 import { Search, ChevronRight, Heart, ThumbsUp, ChevronDown, ChevronUp, MapPin } from 'lucide-react';
+import CardSkeleton from '../components/CardSkeleton';
 import { useNavigate } from 'react-router-dom';
 import { useLanguage } from '../context/LanguageContext';
 import SEO from '../components/SEO';
@@ -471,11 +472,9 @@ export default function Home() {
                {t('home.cities.more')}
             </button>
           </div>
-          <div className={`grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 ${loading ? 'animate-pulse' : ''}`}>
+          <div className={`grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6`}>
             {loading ? (
-              [...Array(6)].map((_, i) => (
-                  <div key={i} className="bg-gray-200 rounded-xl h-[300px] w-full" />
-              ))
+              [...Array(6)].map((_, i) => <CardSkeleton key={i} />)
             ) : (
               cities.slice(0, 6).map((city) => (
                 <div 

@@ -113,6 +113,14 @@ export default function GuideDetail() {
 
   const handleSubmitComment = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    // 检查用户是否已登录
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
+      alert(language === 'zh' ? '请先登录谷歌账号才能评论' : 'Please log in with your Google account to comment.');
+      return;
+    }
+
     if (!commentText.trim() || !commentName.trim()) return;
 
     // CAPTCHA check
