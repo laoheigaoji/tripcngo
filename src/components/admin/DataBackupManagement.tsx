@@ -2,17 +2,22 @@ import React, { useState } from 'react';
 import { supabaseAdmin } from '../../lib/supabaseAdmin';
 import { Download, Upload, AlertCircle, CheckCircle, RefreshCw } from 'lucide-react';
 
+// 按照依赖关系排序：基础数据 -> 关联数据
 const TABLES = [
-  { id: 'articles', label: '文章数据' },
   { id: 'cities', label: '城市数据' },
+  { id: 'articles', label: '文章数据' },
   { id: 'visa_types', label: '签证类型' },
   { id: 'signature_pages', label: '签名页面' },
   { id: 'visa_documents', label: '签证材料' },
   { id: 'visa_fees', label: '签证费用' },
-  { id: 'translations', label: '翻译数据' },
   { id: 'apps_catalog', label: '目录应用' },
   { id: 'page_sections', label: '静态页板块' },
+  { id: 'home_faqs', label: '首页 FAQ' },
+  { id: 'article_comments', label: '文章评论' },
+  { id: 'travel_guide', label: '旅游指南' },
+  { id: 'purchases', label: '购买记录' },
   { id: 'feedback', label: '用户反馈' },
+  { id: 'translations', label: '翻译数据' },
 ];
 
 export default function DataBackupManagement() {
@@ -20,7 +25,73 @@ export default function DataBackupManagement() {
   const [status, setStatus] = useState<{ type: 'success' | 'error', message: string } | null>(null);
   const [progress, setProgress] = useState(0);
 
+  const handleExportTable = async (tableId: string, label: string) => {
+    setLoading(true);
+    setStatus(null);
+    try {
+      const { data, error } = await supabaseAdmin.from(tableId).select('*');
+      if (error) throw error;
+
+      const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `china_travel_guide_${tableId}_${new Date().toISOString().split('T')[0]}.json`;
+      a.click();
+      URL.revokeObjectURL(url);
+
+      setStatus({ type: 'success', message: `表 "${label}" 已成功导出！` });
+    } catch (err: any) {
+      console.error('Export failed:', err);
+      setStatus({ type: 'error', message: `导出表 "${label}" 失败: ` + err.message });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleImportTable = async (event: React.ChangeEvent<HTMLInputElement>, tableId: string, label: string) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    if (!confirm(`警告：还原操作可能会覆盖或更新表 "${label}" 中的现有数据。建议操作前先备份。是否继续？`)) {
+      event.target.value = '';
+      return;
+    }
+
+    setLoading(true);
+    setStatus(null);
+    setProgress(0);
+    try {
+      const text = await file.text();
+      const rows = JSON.parse(text);
+      
+      if (!Array.isArray(rows)) {
+        throw new Error('导入的文件格式不正确，应为 JSON 数组。');
+      }
+
+      if (rows.length > 0) {
+        const batchSize = 50;
+        for (let i = 0; i < rows.length; i += batchSize) {
+          const batch = rows.slice(i, i + batchSize);
+          const { error } = await supabaseAdmin.from(tableId).upsert(batch);
+          if (error) throw error;
+          setProgress(Math.round(((i + batch.length) / rows.length) * 100));
+        }
+      }
+
+      setStatus({ type: 'success', message: `表 "${label}" 数据已成功恢复！` });
+    } catch (err: any) {
+      console.error('Import failed:', err);
+      setStatus({ type: 'error', message: `恢复表 "${label}" 失败: ` + err.message });
+    } finally {
+      setLoading(false);
+      event.target.value = '';
+    }
+  };
+
   const handleExportAll = async () => {
+    if (!confirm('确认要导出全站备份吗？这可能需要一点时间。')) return;
+    
     setLoading(true);
     setStatus(null);
     setProgress(0);
@@ -39,14 +110,14 @@ export default function DataBackupManagement() {
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = `china_travel_guide_backup_${new Date().toISOString().split('T')[0]}.json`;
+      a.download = `china_travel_guide_FULL_BACKUP_${new Date().toISOString().split('T')[0]}.json`;
       a.click();
       URL.revokeObjectURL(url);
 
-      setStatus({ type: 'success', message: '所有数据已成功导出！' });
+      setStatus({ type: 'success', message: '所有核心数据库表已成功全量导出！' });
     } catch (err: any) {
       console.error('Export failed:', err);
-      setStatus({ type: 'error', message: '备份失败: ' + err.message });
+      setStatus({ type: 'error', message: '全量备份失败: ' + err.message });
     } finally {
       setLoading(false);
     }
@@ -56,7 +127,7 @@ export default function DataBackupManagement() {
     const file = event.target.files?.[0];
     if (!file) return;
 
-    if (!confirm('警告：还原操作可能会覆盖或更新现有数据。建议在操作前先进行一次备份。是否继续？')) {
+    if (!confirm('高风险操作：此举将尝试使用备份文件覆盖全站数据。务必确保您选择的是正确的一键备份文件。是否继续？')) {
       event.target.value = '';
       return;
     }
@@ -68,33 +139,40 @@ export default function DataBackupManagement() {
       const text = await file.text();
       const backupData = JSON.parse(text);
       
-      const tablesInBackup = Object.keys(backupData);
-      let processedCount = 0;
+      // 按照 TABLES 定义的顺序恢复，以满足外键依赖
+      const availableTablesInBackup = Object.keys(backupData);
+      const tablesToProcess = TABLES.filter(t => availableTablesInBackup.includes(t.id));
+      
+      if (tablesToProcess.length === 0) {
+        throw new Error('备份文件中未发现有效的数据表。');
+      }
 
-      for (const tableId of tablesInBackup) {
-        const rows = backupData[tableId];
+      let processedTables = 0;
+
+      for (const table of tablesToProcess) {
+        const rows = backupData[table.id];
         if (Array.isArray(rows) && rows.length > 0) {
-          // 批量 upsert 每 100 条一组
-          const batchSize = 100;
+          const batchSize = 50;
           for (let i = 0; i < rows.length; i += batchSize) {
             const batch = rows.slice(i, i + batchSize);
-            const { error } = await supabaseAdmin.from(tableId).upsert(batch);
+            const { error } = await supabaseAdmin.from(table.id).upsert(batch);
             if (error) throw error;
           }
         }
-        processedCount++;
-        setProgress(Math.round((processedCount / tablesInBackup.length) * 100));
+        processedTables++;
+        setProgress(Math.round((processedTables / tablesToProcess.length) * 100));
       }
 
-      setStatus({ type: 'success', message: '数据已成功恢复！' });
+      setStatus({ type: 'success', message: `一键恢复完成！已成功同步 ${processedTables} 张表的数据。` });
     } catch (err: any) {
       console.error('Import failed:', err);
-      setStatus({ type: 'error', message: '恢复失败: ' + err.message });
+      setStatus({ type: 'error', message: '全量恢复失败: ' + err.message });
     } finally {
       setLoading(false);
       event.target.value = '';
     }
   };
+
 
   return (
     <div className="max-w-2xl mx-auto space-y-8 p-6">
@@ -176,12 +254,38 @@ export default function DataBackupManagement() {
 
       {/* Info List */}
       <div className="bg-white rounded-2xl border border-gray-200 p-6 shadow-sm">
-        <h4 className="font-bold text-gray-800 mb-4 text-sm uppercase tracking-wider">包含的数据表 ({TABLES.length})</h4>
-        <div className="grid grid-cols-2 sm:grid-cols-3 gap-y-3 gap-x-4">
+        <h4 className="font-bold text-gray-800 mb-6 text-sm uppercase tracking-wider">数据表备份管理 ({TABLES.length})</h4>
+        <div className="space-y-3">
           {TABLES.map(table => (
-            <div key={table.id} className="flex items-center gap-2 text-sm text-gray-600">
-              <div className="w-1.5 h-1.5 bg-green-500 rounded-full"></div>
-              {table.label}
+            <div key={table.id} className="flex flex-col sm:flex-row sm:items-center justify-between p-3 rounded-xl border border-gray-50 bg-gray-50/50 gap-3 group">
+              <div className="flex items-center gap-3">
+                <div className="w-2 h-2 bg-green-500 rounded-full shadow-[0_0_8px_rgba(34,197,94,0.4)]"></div>
+                <div>
+                  <span className="font-bold text-gray-800 text-sm">{table.label}</span>
+                  <div className="text-[10px] text-gray-400 font-mono">{table.id}</div>
+                </div>
+              </div>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => handleExportTable(table.id, table.label)}
+                  disabled={loading}
+                  className="px-3 py-1.5 bg-white border border-gray-200 text-gray-600 rounded-lg text-xs font-bold hover:border-blue-500 hover:text-blue-600 transition-all flex items-center gap-1.5 shadow-sm"
+                >
+                  <Download className="w-3.5 h-3.5" />
+                  备份
+                </button>
+                <label className={`px-3 py-1.5 bg-white border border-gray-200 text-gray-600 rounded-lg text-xs font-bold hover:border-orange-500 hover:text-orange-600 transition-all flex items-center gap-1.5 shadow-sm cursor-pointer ${loading ? 'opacity-50 cursor-not-allowed' : ''}`}>
+                  <Upload className="w-3.5 h-3.5" />
+                  恢复
+                  <input
+                    type="file"
+                    accept=".json"
+                    onChange={(e) => handleImportTable(e, table.id, table.label)}
+                    disabled={loading}
+                    className="hidden"
+                  />
+                </label>
+              </div>
             </div>
           ))}
         </div>

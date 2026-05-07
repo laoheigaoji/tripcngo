@@ -103,7 +103,7 @@ export default function Navbar() {
 
   return (
     <header 
-      className={`fixed top-0 w-full z-50 transition-all duration-300 flex flex-col ${
+      className={`fixed top-0 w-full z-50 transition-all duration-300 flex flex-col pt-[env(safe-area-inset-top)] ${
         location.pathname.includes('/tools/menu') 
           ? 'bg-black shadow-md' 
           : (isScrolled ? 'bg-black shadow-md' : 'bg-transparent shadow-none')
