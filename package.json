@@ -7,8 +7,9 @@
     "dev": "vite",
     "start": "vite preview",
     "build": "vite build",
-    "preview": "vite preview",
-    "lint": "tsc -b"
+    "preview": "npm run build && wrangler dev",
+    "lint": "tsc -b",
+    "deploy": "npm run build && wrangler deploy"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.1041.0",
@@ -46,12 +47,14 @@
     "vite": "^6.2.3"
   },
   "devDependencies": {
+    "@cloudflare/vite-plugin": "^1.36.2",
     "@types/node": "^22.14.0",
     "@types/nodemailer": "^8.0.0",
     "autoprefixer": "^10.4.21",
     "tailwindcss": "^4.1.14",
     "tsx": "^4.21.0",
     "typescript": "~5.8.2",
-    "vite": "^6.2.3"
+    "vite": "^6.2.3",
+    "wrangler": "^4.88.0"
   }
 }
